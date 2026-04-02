@@ -1,0 +1,92 @@
+import React from 'react';
+import { Link, usePage } from '@inertiajs/react';
+
+export default function Navbar({ currentPage }) {
+    const { url } = usePage();
+
+    // Detect current page from URL if not passed as prop
+    const getCurrentPage = () => {
+        if (currentPage) return currentPage;
+        
+        if (url === '/') return 'home';
+        if (url.includes('about')) return 'about';
+        if (url.includes('services')) return 'services';
+        if (url.includes('faq')) return 'faq';
+        if (url.includes('login')) return 'login';
+        if (url.includes('sign up')) return 'signup';
+        return 'home';
+    };
+
+    const activePage = getCurrentPage();
+
+    const navLinks = [
+        { name: 'Home', href: '/', key: 'home' },
+        { name: 'About', href: '/about', key: 'about' },
+        { name: 'FAQs', href: '/faq', key: 'faq' },
+    ];
+
+    const isActive = (key) => activePage === key;
+
+    return (
+        <nav className="flex justify-between items-center px-10 py-4 bg-white shadow-md border-b border-blue-100 sticky top-0 z-50">
+
+            {/* LEFT SIDE — LOGO */}
+            <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity duration-200">
+                <img 
+                    src="/images/YMB_HeaderLogo.png"
+                    alt="Logo Icon"
+                    className="h-12 w-auto object-contain"
+                />
+                <img 
+                    src="/images/YMB_HeaderText.png"
+                    alt="YouthMoneyBank Text Logo"
+                    className="h-8 w-auto object-contain"
+                />
+            </Link>
+
+            {/* RIGHT SIDE — NAVIGATION */}
+            <div className="flex items-center gap-8">
+
+                {/* NAV LINKS */}
+                <div className="flex items-center gap-6">
+                    {navLinks.map((link) => (
+                        <Link
+                            key={link.key}
+                            href={link.href}
+                            className={`relative px-4 py-2 font-semibold transition-all duration-300 group ${
+                                isActive(link.key)
+                                    ? 'text-blue-700'
+                                    : 'text-gray-700 hover:text-blue-600'
+                            }`}
+                        >
+                            {link.name}
+                            {/* Animated underline */}
+                            <span
+                                className={`absolute bottom-0 left-0 h-1 bg-blue-700 rounded-full transition-all duration-300 ${
+                                    isActive(link.key) ? 'w-full' : 'w-0 group-hover:w-full'
+                                }`}
+                            />
+                        </Link>
+                    ))}
+                </div>
+
+                {/* DYNAMIC BUTTON: Pinalitan na natin yung dating hardcoded Login button */}
+                {activePage === 'login' ? (
+                    <Link href="/signup" className="cursor-pointer">
+                        <button className="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-md hover:shadow-lg cursor-pointer">
+                            Sign Up
+                        </button>
+                    </Link>
+                ) : (
+                    <Link href="/login" className="cursor-pointer">
+                        <button className="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-md hover:shadow-lg cursor-pointer">
+                            Login
+                        </button>
+                    </Link>
+                )}
+                
+            
+            </div>
+        </nav>
+    );
+}
