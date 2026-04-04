@@ -72,22 +72,25 @@ export default function FAQ() {
                 {
                     id: 'at1',
                     q: 'What are the differences between the three tiers?',
-                    a: 'Tier 1 (Starter) has a ₱3,000 limit and allows cash-in only. Tier 2 (Student) has a ₱5,000 limit with cash-in/out and additional features. Tier 3 (Advanced) goes up to ₱20,000 with full banking access and priority support.'
+                    a: 'Tier 1 (Starter) has a ₱3,000 limit and is cash-in only. Tier 2 (Student) supports cash-in/out with a ₱5,000 limit. Tier 3 (Advanced) allows ₱5,000 to ₱20,000 for users 18+ with full banking features.'
                 },
+
                 {
-                    id: 'at2',
-                    q: 'Can I upgrade my tier anytime?',
-                    a: 'Absolutely! You can upgrade your tier anytime by providing the required documentation. Simply go to your account settings and follow the upgrade process.'
+                    id: 'tm2',
+                    q: 'How do I withdraw my money?',
+                    a: 'Tier 2 and Tier 3 users can cash-out through our integrated partner bank channels. Tier 1 accounts do not support instant withdrawal but may request guardian-assisted release subject to manual review.'
                 },
+
                 {
                     id: 'at3',
                     q: 'What happens if I exceed my tier limit?',
                     a: 'You won\'t be able to deposit additional funds until your balance drops below your tier\'s limit. We recommend upgrading to a higher tier if you need more capacity.'
                 },
+
                 {
                     id: 'at4',
                     q: 'Is there a monthly fee?',
-                    a: 'No monthly fees! Youth Money Bank is completely free. We may charge minimal fees for certain services like cash-out, but these will be clearly displayed before you proceed.'
+                    a: 'There are no monthly maintenance fees. Registration is completely free, though minimal fees may apply for certain services like cash-out transactions to cover partner bank processing costs.'
                 }
             ]
         },
