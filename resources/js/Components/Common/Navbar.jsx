@@ -13,7 +13,7 @@ export default function Navbar({ currentPage }) {
         if (url.includes('services')) return 'services';
         if (url.includes('faq')) return 'faq';
         if (url.includes('login')) return 'login';
-        if (url.includes('sign up')) return 'signup';
+        if (url.includes('sign up') || url.includes('signup')) return 'signup';
         return 'home';
     };
 
@@ -70,22 +70,21 @@ export default function Navbar({ currentPage }) {
                     ))}
                 </div>
 
-                {/* DYNAMIC BUTTON: Pinalitan na natin yung dating hardcoded Login button */}
+                {/* DYNAMIC BUTTON: Added fixed width (w-28) and text-center to prevent shifting */}
                 {activePage === 'login' ? (
-                    <Link href="/signup" className="cursor-pointer">
-                        <button className="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-md hover:shadow-lg cursor-pointer">
+                    <Link href="/signup" className="cursor-pointer inline-block">
+                        <button className="w-28 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-md hover:shadow-lg cursor-pointer text-center">
                             Sign Up
                         </button>
                     </Link>
                 ) : (
-                    <Link href="/login" className="cursor-pointer">
-                        <button className="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-md hover:shadow-lg cursor-pointer">
+                    <Link href="/login" className="cursor-pointer inline-block">
+                        <button className="w-28 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-md hover:shadow-lg cursor-pointer text-center">
                             Login
                         </button>
                     </Link>
                 )}
                 
-            
             </div>
         </nav>
     );
