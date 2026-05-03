@@ -72,7 +72,7 @@ Route::post('/signup', function (Request $request) {
 // Lahat ng nasa loob nito ay kailangan NAKA-LOGIN bago mapasok
 Route::middleware(['auth'])->group(function () {
     
-    // PINAG-ISA NATING DASHBOARD ROUTE (Pinakamalinis na approach)
+    // DASHBOARD
     Route::get('/dashboard', function () {
         return Inertia::render('User/Dashboard', [
             'auth' => [
@@ -80,16 +80,35 @@ Route::middleware(['auth'])->group(function () {
             ]
         ]);
     })->name('dashboard');
+
+    // SAVINGS GOALS
+    Route::get('/goals', function () {
+        return Inertia::render('User/SavingsGoals', [
+            'auth' => ['user' => auth()->user()]
+        ]);
+    })->name('goals');
+
+    // TRANSACTIONS (Placeholder muna para di mag-error pag kinlick)
+    Route::get('/transactions', function () {
+        return Inertia::render('User/Transactions', [
+            'auth' => ['user' => auth()->user()]
+        ]);
+    })->name('transactions');
+
+    //Settings
+    Route::get('/Settings', function () {
+        return Inertia::render('User/Settings', [
+            'auth' => ['user' => auth()->user()]
+        ]);
+    })->name('transactions');
     
     // logout session
     Route::post('/logout', function (Request $request) {
         Auth::logout();
-
-        // Gamitin natin ang request() helper imbes na Request facade
         $request->session()->invalidate(); // Destroy the session data
         $request->session()->regenerateToken(); // Create a new CSRF token for safety
  
-        return redirect('/login'); // Balik sa login after logout
+        return redirect('/login');
     })->name('logout');
 
 });
