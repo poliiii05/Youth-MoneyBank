@@ -10,13 +10,11 @@ use Illuminate\Support\Str;
 
 class GoogleAuthController extends Controller
 {
-   public function redirect()
+    public function redirect()
     {
         return Socialite::driver('google')
         ->stateless()
         ->with([
-            // Tinanggal natin ang 'consent'. 
-            // 'select_account' na lang para papiliin lang ng email, tapos auto-login na kung existing!
             'prompt' => 'select_account', 
             'include_granted_scopes' => 'true'
         ])
@@ -25,20 +23,33 @@ class GoogleAuthController extends Controller
 
     public function callback()
     {
-        // 2. Idinagdag din ang ->stateless() dito bago tawagin ang user()
         $googleUser = Socialite::driver('google')->stateless()->user();
 
-        // Hanapin kung may existing user na, kung wala, gawa ng bago
-        $user = User::updateOrCreate(
-            ['email' => $googleUser->getEmail()],
-            [
+        // 1. Hanapin muna kung may existing user na gamit ang email
+        $existingUser = User::where('email', $googleUser->getEmail())->first();
+
+        if ($existingUser) {
+            // 2. Kung existing na, i-update lang ang profile picture
+            $existingUser->update([
+                'google_id' => $googleUser->getId(),
+                'profile_picture' => $googleUser->getAvatar(),
+            ]);
+            $user = $existingUser;
+      } else {
+            // 3. Kung BAGONG user, dito papasok yung PURE NUMBERS
+            // Format: 00 + Year (2026) + 5 Random Digits = e.g., 00202612345
+            $accountNum = '00' . date('Y') . str_pad(random_int(0, 99999), 5, '0', STR_PAD_LEFT);
+            
+            $user = User::create([
+                'account_number' => $accountNum,
                 'name' => $googleUser->getName(),
+                'email' => $googleUser->getEmail(),
                 'google_id' => $googleUser->getId(),
                 'profile_picture' => $googleUser->getAvatar(),
                 'password' => bcrypt(Str::random(16)),
                 'email_verified_at' => now(),
-            ]
-        );
+            ]);
+        }
 
         // I-login ang user
         Auth::login($user, true);

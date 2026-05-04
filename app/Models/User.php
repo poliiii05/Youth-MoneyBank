@@ -10,11 +10,6 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'name',
         'email',
@@ -22,27 +17,32 @@ class User extends Authenticatable
         'password',
         'google_id',
         'profile_picture',
+        'account_number', 
         'email_verified_at',
         'phone_verified_at',
+        'kyc_tier', // Dinagdag natin: Para ma-update natin if Tier 1, 2, or 3 siya
+        'is_parent', // Dinagdag natin: Para ma-identify kung Bata ba siya o Magulang
+        
+       
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
     protected $casts = [
         'email_verified_at' => 'datetime',
         'phone_verified_at' => 'datetime',
     ];
+
+    public function wallet() {
+        return $this->hasOne(Wallet::class);
+    }
+    public function savingsGoals() {
+        return $this->hasMany(SavingsGoal::class);
+    }
+    public function transactions() {
+        return $this->hasMany(Transaction::class)->orderBy('created_at', 'desc');
+    }
 }

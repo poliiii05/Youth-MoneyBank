@@ -74,10 +74,23 @@ Route::middleware(['auth'])->group(function () {
     
     // DASHBOARD
     Route::get('/dashboard', function () {
+        $user = auth()->user();
+
+        // 1. Kunin ang Unallocated Balance mula sa Wallet
+        // Gumamit tayo ng ternary operator (if-else shorthand) in case wala pang wallet record yung bagong user
+        $unallocatedBalance = $user->wallet ? $user->wallet->balance : 0.00;
+
+        // 2. Kunin ang Allocated Balance (I-su-sum natin lahat ng laman ng Savings Goals niya)
+        $allocatedBalance = $user->savingsGoals()->sum('current_amount');
+
+        // 3. Ipasa lahat ito papunta sa React Component
         return Inertia::render('User/Dashboard', [
-            'auth' => [
-                'user' => auth()->user()
-            ]
+            'auth' => ['user' => $user],
+            'finances' => [
+                'unallocated' => (float) $unallocatedBalance,
+                'allocated' => (float) $allocatedBalance,
+            ],
+            'kyc_tier' => $user->kyc_tier,
         ]);
     })->name('dashboard');
 
