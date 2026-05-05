@@ -92,7 +92,7 @@ export default function About() {
                     </div>
                 </div>
 
-                {/* HOW IT WORKS SECTION */}
+               {/* HOW IT WORKS SECTION */}
                     <section className="px-4 py-20 bg-white border-y border-slate-100">
                         <div className="max-w-7xl mx-auto md:px-4">
                             <div className="text-center mb-16">
@@ -108,21 +108,21 @@ export default function About() {
                                         icon: <Smartphone size={40} strokeWidth={1.5} />,
                                         title: 'Sign Up',
                                         desc: 'Register with just your phone or Gmail',
-                                        details: ['Quick Tier 1 access', 'No documents required', 'Takes 2 minutes']
+                                        details: ['Quick Starter Account access', 'No documents required', 'Takes 2 minutes']
                                     },
                                     {
                                         step: '02',
                                         icon: <Wallet size={40} strokeWidth={1.5} />,
                                         title: 'Start Saving',
-                                        desc: 'Deposit funds and use youth-centered tools',
-                                        details: ['Goal tracking', 'Spending summaries', 'Allowance management']
+                                        desc: 'Add money and use youth-centered tools',
+                                        details: ['Track your goals progress', 'Manage your allowance', 'Earn rewards as you save']
                                     },
                                     {
                                         step: '03',
                                         icon: <GraduationCap size={40} strokeWidth={1.5} />,
                                         title: 'Grow Up',
-                                        desc: 'Upgrade to full banking with ID verification',
-                                        details: ['Higher limits', 'Cash-out access', 'Adult features at 18+']
+                                        desc: 'Upgrade to Builder or Achiever accounts',
+                                        details: ['Balance limits up to ₱100,000', 'Cash-out access', 'Adult features at 18+']
                                     }
                                 ].map((step, idx) => (
                                     <div key={idx} className="flex flex-col p-8 bg-slate-50 rounded-[2rem] border border-slate-100 relative">

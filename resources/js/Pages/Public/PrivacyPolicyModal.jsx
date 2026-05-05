@@ -63,7 +63,7 @@ export default function PrivacyPolicyModal({ isOpen, onClose }) {
                                     <div className="hover-card border border-slate-100">
                                         <div className="flex items-center gap-2 mb-1">
                                             <Smartphone size={18} className="text-blue-500" />
-                                            <h3 className="font-semibold text-gray-800 text-sm">Tier 1 Accounts (Basic)</h3>
+                                            <h3 className="font-semibold text-gray-800 text-sm">Tier 1: Starter Accounts</h3>
                                         </div>
                                         <ul className="list-disc list-inside text-gray-700 space-y-1 ml-6 text-xs">
                                             <li>Phone number or Google account credentials</li>
@@ -74,7 +74,7 @@ export default function PrivacyPolicyModal({ isOpen, onClose }) {
                                     <div className="hover-card border border-slate-100">
                                         <div className="flex items-center gap-2 mb-1">
                                             <GraduationCap size={18} className="text-indigo-500" />
-                                            <h3 className="font-semibold text-gray-800 text-sm">Tier 2 & 3 (Verified)</h3>
+                                            <h3 className="font-semibold text-gray-800 text-sm">Tier 2 (Builder) & Tier 3 (Achiever) Accounts</h3>
                                         </div>
                                         <ul className="list-disc list-inside text-gray-700 space-y-1 ml-6 text-xs">
                                             <li>Simulated ID verification data</li>

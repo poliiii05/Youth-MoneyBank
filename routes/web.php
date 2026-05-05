@@ -72,32 +72,56 @@ Route::post('/signup', function (Request $request) {
 // Lahat ng nasa loob nito ay kailangan NAKA-LOGIN bago mapasok
 Route::middleware(['auth'])->group(function () {
     
-    // DASHBOARD
+    // DASHBOARD ROUTE  
     Route::get('/dashboard', function () {
         $user = auth()->user();
+        $wallet = $user->wallet;
 
-        // 1. Kunin ang Unallocated Balance mula sa Wallet
-        // Gumamit tayo ng ternary operator (if-else shorthand) in case wala pang wallet record yung bagong user
-        $unallocatedBalance = $user->wallet ? $user->wallet->balance : 0.00;
+        $mainBalance = $wallet ? $wallet->balance : 0.00; // 1. Total Balance (Main Wallet)
+        $unallocatedSavings = $wallet ? $wallet->savings_balance : 0.00; // 2. Total Savings 
+        $allocatedGoals = $user->savingsGoals()->sum('current_amount');
+        $totalSavings = $unallocatedSavings + $allocatedGoals;
 
-        // 2. Kunin ang Allocated Balance (I-su-sum natin lahat ng laman ng Savings Goals niya)
-        $allocatedBalance = $user->savingsGoals()->sum('current_amount');
+        // NEW: Alamin ang limit base sa Account Tier
+        $tier = $user->kyc_tier ?? 1;
+        $maxLimit = 5000.00; // Starter Account
+        if ($tier == 2) $maxLimit = 20000.00; // Builder Account
+        if ($tier == 3) $maxLimit = 100000.00; // Achiever Account
+       
+        // NEW: Kunin ang pinaka-unang active goal ng user
+        $activeGoal = $user->savingsGoals()->where('current_amount', '<', \DB::raw('target_amount'))->first();
 
-        // 3. Ipasa lahat ito papunta sa React Component
-        return Inertia::render('User/Dashboard', [
+       return Inertia::render('User/Dashboard', [  // 3. Ipasa lahat ito papunta sa React Component
             'auth' => ['user' => $user],
             'finances' => [
-                'unallocated' => (float) $unallocatedBalance,
-                'allocated' => (float) $allocatedBalance,
+                'main_balance' => (float) $mainBalance,
+                'total_savings' => (float) $totalSavings,
+                'max_limit' => (float) $maxLimit, // Ipapasa natin sa React
             ],
-            'kyc_tier' => $user->kyc_tier,
+            'active_goal' => $activeGoal, // Ipapasa sa React
+            'kyc_tier' => $tier,
         ]);
     })->name('dashboard');
 
-    // SAVINGS GOALS
+   // SAVINGS GOALS ROUTE
     Route::get('/goals', function () {
+        $user = auth()->user();
+        $wallet = $user->wallet;
+
+        $unallocatedSavings = $wallet ? $wallet->savings_balance : 0.00;
+        $allocatedGoals = $user->savingsGoals()->sum('current_amount');
+        $totalSavings = $unallocatedSavings + $allocatedGoals;
+
+        $goals = $user->savingsGoals()->orderBy('created_at', 'asc')->get();
+
         return Inertia::render('User/SavingsGoals', [
-            'auth' => ['user' => auth()->user()]
+            'auth' => ['user' => $user],
+            'finances' => [
+                'total_savings' => (float) $totalSavings,
+                'allocated' => (float) $allocatedGoals,
+                'unallocated' => (float) $unallocatedSavings,
+            ],
+            'goals' => $goals
         ]);
     })->name('goals');
 

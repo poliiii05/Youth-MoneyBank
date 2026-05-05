@@ -80,7 +80,7 @@ export default function TermsAndConditionsModal({ isOpen, onClose }) {
                                             <Smartphone size={20} />
                                         </div>
                                         <div>
-                                            <p className="font-bold text-gray-800 text-sm mb-0.5">Tier 1: Basic</p>
+                                            <p className="font-bold text-gray-800 text-sm mb-0.5">Tier 1: Starter Account (Basic)</p>
                                             <p className="text-gray-600 text-xs">Simulated Max: <span className="font-semibold text-blue-700">₱5,000</span></p>
                                         </div>
                                     </div>
@@ -89,7 +89,7 @@ export default function TermsAndConditionsModal({ isOpen, onClose }) {
                                             <GraduationCap size={20} />
                                         </div>
                                         <div>
-                                            <p className="font-bold text-gray-800 text-sm mb-0.5">Tier 2: Student</p>
+                                            <p className="font-bold text-gray-800 text-sm mb-0.5">Tier 2: Builder Account (Verified Student)</p>
                                             <p className="text-gray-600 text-xs">Simulated Max: <span className="font-semibold text-indigo-700">₱20,000</span></p>
                                         </div>
                                     </div>
@@ -98,7 +98,7 @@ export default function TermsAndConditionsModal({ isOpen, onClose }) {
                                             <Building2 size={20} />
                                         </div>
                                         <div>
-                                            <p className="font-bold text-gray-800 text-sm mb-0.5">Tier 3: Verified (18+)</p>
+                                            <p className="font-bold text-gray-800 text-sm mb-0.5">Tier 3: Achiever Account (Verified 18+)</p>
                                             <p className="text-gray-600 text-xs">Simulated Max: <span className="font-semibold text-purple-700">₱100,000</span></p>
                                         </div>
                                     </div>

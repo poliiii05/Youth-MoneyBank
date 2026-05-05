@@ -111,7 +111,7 @@ export default function UserLayout({ user, header, children }) {
                                 
                                 {/* HORIZONTAL TIER BADGE SA ILALIM NG UID */}
                                 <span className={`px-2 py-0.5 rounded border text-[9px] font-black tracking-widest uppercase ${userTier.badgeCss}`}>
-                                    {userTier.name} TIER
+                                    {userTier.name} TIER    
                                 </span>
                             </div>
                         </div>

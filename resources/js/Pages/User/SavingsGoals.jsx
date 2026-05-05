@@ -1,144 +1,146 @@
 // resources/js/Pages/User/SavingsGoals.jsx
 import { Head } from '@inertiajs/react';
+import { useState } from 'react';
 import UserLayout from '../../Layouts/UserLayout';
-import { Plus, Smartphone, Zap, AlertTriangle, ChevronRight } from 'lucide-react';
+import { Wallet, Target, Plus, ShieldAlert, Smartphone, ShoppingBag, MoreVertical, Edit2, Trash2 } from 'lucide-react';
 
-export default function SavingsGoals({ auth }) {
+export default function SavingsGoals({ auth, finances, goals }) {
     const user = auth?.user;
+    const [activeMenu, setActiveMenu] = useState(null);
 
-    // Dummy data base sa image reference mo
-    const finances = {
-        totalSavings: 6000.00,
-        allocated: 4500.00,
-        unallocated: 1500.00
+    const renderIcon = (iconName, className) => {
+        switch(iconName) {
+            case 'ShieldAlert': return <ShieldAlert className={className} />;
+            case 'Smartphone': return <Smartphone className={className} />;
+            case 'ShoppingBag': return <ShoppingBag className={className} />;
+            default: return <Target className={className} />;
+        }
     };
 
-    const goals = [
-        {
-            id: 1,
-            title: "Dream Phone",
-            icon: <Smartphone className="text-blue-500" size={24} />,
-            currentAmount: 3500,
-            targetAmount: 10000,
-            subtitle: "Saving Up for a New Smartphone",
-            color: "bg-emerald-500" // Green progress
-        },
-        {
-            id: 2,
-            title: "New Sneakers",
-            icon: <Zap className="text-indigo-500" size={24} />,
-            currentAmount: 800,
-            targetAmount: 2000,
-            subtitle: "Almost Halfway There!",
-            color: "bg-amber-500" // Yellow progress
-        },
-        {
-            id: 3,
-            title: "Emergency Fund",
-            icon: <AlertTriangle className="text-red-500" size={24} />,
-            currentAmount: 200,
-            targetAmount: 3000,
-            subtitle: "For Unexpected Expenses",
-            color: "bg-red-500" // Red progress
-        }
-    ];
+    const toggleMenu = (goalId) => {
+        setActiveMenu(activeMenu === goalId ? null : goalId);
+    };
 
     return (
-        <UserLayout user={user} header="Savings Goals">
+        <UserLayout user={user} header="Savings Module">
             <Head title="Savings Goals | Youth MoneyBank" />
 
-            {/* TOP SUMMARY BANNER (Base sa image) */}
-            <div className="bg-blue-600 rounded-2xl p-6 md:p-8 text-white shadow-lg shadow-blue-200 mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            {/* 1. TOTAL SAVINGS HEADER & ADD GOAL BUTTON */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
                 
-                <div className="flex flex-col md:flex-row gap-4 md:gap-12 w-full">
-                    {/* Total Savings Big Text */}
+                {/* Upper Row: Total Amount & Button */}
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                     <div>
-                        <p className="text-blue-100 font-medium mb-1">Total Savings</p>
-                        <h2 className="text-4xl md:text-5xl font-bold tracking-tight">
-                            ₱{finances.totalSavings.toLocaleString('en-PH', { minimumFractionDigits: 2 })}
+                        <p className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-1">Total Savings</p>
+                        <h2 className="text-4xl font-black text-gray-900 tracking-tight">
+                            ₱{(finances?.total_savings || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 })}
                         </h2>
                     </div>
-
-                    {/* Breakdown */}
-                    <div className="flex flex-col justify-center space-y-1 mt-2 md:mt-0 border-l-0 md:border-l border-blue-400 md:pl-8">
-                        <p className="text-sm font-medium">
-                            <span className="text-blue-200">Allocated to Goals:</span> ₱{finances.allocated.toLocaleString('en-PH', { minimumFractionDigits: 2 })}
+                    
+                    <button 
+                        onClick={() => alert('Create New Goal modal coming soon!')}
+                        className="px-6 py-2.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-200 cursor-pointer transition-all flex items-center gap-2"
+                    >
+                        <Plus size={20} strokeWidth={2.5} /> Add New Goal
+                    </button>
+                </div>
+                
+                {/* Lower Row: Breakdown */}
+                <div className="flex flex-col sm:flex-row gap-6 pt-5 border-t border-gray-100">
+                    <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-emerald-500 shadow-sm"></div>
+                        <p className="text-sm text-gray-600 font-medium">
+                            Allocated to Goals: <span className="font-bold text-gray-900">₱{(finances?.allocated || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</span>
                         </p>
-                        <p className="text-sm font-medium">
-                            <span className="text-blue-200">Unallocated Balance:</span> ₱{finances.unallocated.toLocaleString('en-PH', { minimumFractionDigits: 2 })}
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-blue-500 shadow-sm"></div>
+                        <p className="text-sm text-gray-600 font-medium">
+                            Unallocated Savings: <span className="font-bold text-gray-900">₱{(finances?.unallocated || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</span>
                         </p>
                     </div>
                 </div>
-
-                {/* Add Goal Button */}
-                <button className="whitespace-nowrap px-6 py-3 bg-white text-blue-600 font-bold rounded-xl hover:bg-blue-50 transition-colors shadow-sm flex items-center gap-2 cursor-pointer w-full md:w-auto justify-center">
-                    Add Goal <Plus size={20} />
-                </button>
             </div>
 
-            {/* MY GOALS LIST */}
-            <div>
-                <h3 className="text-xl font-bold text-gray-900 mb-4">My Goals</h3>
+            {/* 2. GOAL CARDS GRID */}
+            <div className="mb-4">
+                <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm font-bold text-gray-900 uppercase tracking-tight">Your Active Goals</h3>
+                </div>
                 
-                <div className="flex flex-col gap-4">
-                    {goals.map((goal) => {
-                        // Compute progress percentage
-                        const progress = Math.min((goal.currentAmount / goal.targetAmount) * 100, 100);
-                        
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    
+                    {/* DYNAMIC GOAL CARDS FROM DATABASE */}
+                    {goals?.map((goal) => {
+                        const percentage = goal.target_amount > 0 
+                            ? (goal.current_amount / goal.target_amount) * 100 
+                            : 0;
+
                         return (
-                            <div key={goal.id} className="bg-white p-5 md:p-6 rounded-2xl border border-gray-200 shadow-sm hover:border-blue-300 transition-colors group">
+                            <div key={goal.id} className="h-[220px] bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col justify-between relative group hover:border-blue-200 transition-colors">
                                 
-                                {/* Top Row: Icon & Title */}
-                                <div className="flex items-center justify-between mb-2">
+                                <div className="flex justify-between items-start relative">
                                     <div className="flex items-center gap-3">
-                                        <div className="p-2 bg-gray-50 rounded-lg">
-                                            {goal.icon}
+                                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-sm ${goal.color_theme}`}>
+                                            {renderIcon(goal.icon_name, "w-6 h-6")}
                                         </div>
-                                        <h4 className="font-bold text-gray-900 text-lg">{goal.title}</h4>
+                                        <div>
+                                            <h3 className="font-bold text-gray-900 leading-tight">{goal.title}</h3>
+                                            <p className="text-[11px] text-gray-500 font-medium">{goal.subtitle}</p>
+                                        </div>
                                     </div>
-                                    
-                                    {/* Desktop Add Savings Button */}
-                                    <button className="hidden md:flex px-4 py-2 bg-blue-50 text-blue-600 font-semibold rounded-lg hover:bg-blue-600 hover:text-white transition-all items-center gap-1 cursor-pointer border border-blue-100">
-                                        Add Savings
-                                    </button>
+
+                                    {/* 3-DOT ACTION MENU */}
+                                    <div className="relative">
+                                        <button 
+                                            onClick={() => toggleMenu(goal.id)}
+                                            className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
+                                        >
+                                            <MoreVertical size={18} />
+                                        </button>
+
+                                        {activeMenu === goal.id && (
+                                            <div className="absolute right-0 mt-1 w-36 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-10 overflow-hidden">
+                                                <button className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-slate-50 transition-colors cursor-pointer">
+                                                    <Edit2 size={14} /> Edit Label
+                                                </button>
+                                                <button className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors cursor-pointer">
+                                                    <Trash2 size={14} /> Delete Goal
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
 
-                                {/* Middle Row: Amounts */}
-                                <div className="flex items-end gap-2 mb-3">
-                                    <span className="font-bold text-gray-900">
-                                        ₱{goal.currentAmount.toLocaleString()}
-                                    </span>
-                                    <span className="text-gray-400 font-medium text-sm mb-0.5">
-                                        / ₱{goal.targetAmount.toLocaleString()}
-                                    </span>
-                                </div>
+                                <div>
+                                    <div className="flex justify-between items-end mb-2">
+                                        <div>
+                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Saved</p>
+                                            <p className="text-xl font-black text-gray-900 tracking-tight">
+                                                ₱{Number(goal.current_amount).toLocaleString('en-PH', { minimumFractionDigits: 2 })}
+                                            </p>
+                                        </div>
+                                        <p className="text-xs font-bold text-gray-500">
+                                            / ₱{Number(goal.target_amount).toLocaleString('en-PH')}
+                                        </p>
+                                    </div>
 
-                                {/* Progress Bar */}
-                                <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden mb-3">
-                                    <div 
-                                        className={`h-full rounded-full transition-all duration-500 ${goal.color}`} 
-                                        style={{ width: `${progress}%` }}
-                                    ></div>
-                                </div>
-
-                                {/* Bottom Row: Subtitle & Mobile Button */}
-                                <div className="flex items-center justify-between mt-1">
-                                    <p className="text-sm text-gray-500 font-medium">
-                                        {goal.subtitle}
+                                    <div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
+                                        <div 
+                                            className={`h-2.5 rounded-full ${goal.color_theme} transition-all duration-1000 ease-out`} 
+                                            style={{ width: `${Math.min(percentage, 100)}%` }}
+                                        ></div>
+                                    </div>
+                                    <p className="text-[10px] font-bold text-gray-500 mt-2 text-right">
+                                        {percentage.toFixed(1)}% Completed
                                     </p>
-                                    
-                                    {/* Mobile Add Savings Button (Icon Only) */}
-                                    <button className="md:hidden p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors cursor-pointer">
-                                        <Plus size={18} />
-                                    </button>
                                 </div>
-
                             </div>
                         );
                     })}
+
                 </div>
             </div>
-
         </UserLayout>
     );
 }
