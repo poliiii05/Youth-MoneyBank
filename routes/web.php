@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\Api\CaptchaController; // sa ano ito, uhm sa parang im not a robot part
 use App\Http\Controllers\Auth\GoogleAuthController;  // integration naman ito sa google sign in hehe
+use App\Http\Controllers\SavingsGoalController; // para mahanap nya yung file nato, need pala!
 
 //---------------------------------------------//
 //   sa part ito ng parang verified captcha    // -------importanteng part na mauna kasi nageeror haha--------
@@ -101,29 +102,12 @@ Route::middleware(['auth'])->group(function () {
             'active_goal' => $activeGoal, // Ipapasa sa React
             'kyc_tier' => $tier,
         ]);
+
     })->name('dashboard');
 
-   // SAVINGS GOALS ROUTE
-    Route::get('/goals', function () {
-        $user = auth()->user();
-        $wallet = $user->wallet;
-
-        $unallocatedSavings = $wallet ? $wallet->savings_balance : 0.00;
-        $allocatedGoals = $user->savingsGoals()->sum('current_amount');
-        $totalSavings = $unallocatedSavings + $allocatedGoals;
-
-        $goals = $user->savingsGoals()->orderBy('created_at', 'asc')->get();
-
-        return Inertia::render('User/SavingsGoals', [
-            'auth' => ['user' => $user],
-            'finances' => [
-                'total_savings' => (float) $totalSavings,
-                'allocated' => (float) $allocatedGoals,
-                'unallocated' => (float) $unallocatedSavings,
-            ],
-            'goals' => $goals
-        ]);
-    })->name('goals');
+    // SAVINGS GOALS ROUTE
+    Route::get('/goals', [SavingsGoalController::class, 'index'])->name('goals.index');
+    Route::post('/goals', [SavingsGoalController::class, 'store'])->name('goals.store');
 
     // TRANSACTIONS (Placeholder muna para di mag-error pag kinlick)
     Route::get('/transactions', function () {

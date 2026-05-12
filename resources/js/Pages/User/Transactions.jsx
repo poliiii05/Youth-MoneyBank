@@ -2,82 +2,162 @@
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 import UserLayout from '../../Layouts/UserLayout';
-import { ArrowDownCircle, ArrowUpCircle, Send, Download, Search, Filter } from 'lucide-react';
+import { Search, ArrowDownRight, ArrowUpRight, Receipt, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
 
-export default function Transactions({ auth }) {
-    const [filter, setFilter] = useState('All');
+export default function Transactions({ auth, transactions }) {
+    const user = auth?.user;
+    
+    // UI States
+    const [searchQuery, setSearchQuery] = useState('');
+    const [activeFilter, setActiveFilter] = useState('all');
+    
+    // CUSTOM DATE RANGE STATES (Maya/GCash Style)
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
 
-    // Dummy data para may makita tayong listahan
-    const transactions = [
-        { id: 1, type: 'cash-in', title: 'Cash-In via PayPal', date: 'May 4, 2026', time: '10:30 AM', amount: 1500.00, isPositive: true },
-        { id: 2, type: 'transfer', title: 'Transfer to Alex', date: 'May 3, 2026', time: '02:15 PM', amount: 500.00, isPositive: false },
-        { id: 3, type: 'goal', title: 'Added to Dream Phone Goal', date: 'May 1, 2026', time: '09:00 AM', amount: 1000.00, isPositive: false },
-        { id: 4, type: 'request', title: 'Allowance from Mom', date: 'April 30, 2026', time: '06:00 PM', amount: 2000.00, isPositive: true },
-        { id: 5, type: 'cash-out', title: 'Withdrawal', date: 'April 28, 2026', time: '11:20 AM', amount: 1000.00, isPositive: false },
-    ];
+    const displayData = transactions || []; 
 
-    const getIcon = (type) => {
-        switch(type) {
-            case 'cash-in': return <ArrowDownCircle className="text-emerald-500" />;
-            case 'cash-out': return <ArrowUpCircle className="text-orange-500" />;
-            case 'transfer': return <Send className="text-blue-500" />;
-            case 'request': return <Download className="text-purple-500" />;
-            default: return <ArrowDownCircle className="text-gray-500" />;
-        }
-    };
+    // Frontend Filtering Logic
+    const filteredData = displayData.filter(item => {
+        const matchesSearch = item.title?.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesFilter = activeFilter === 'all' || item.type === activeFilter;
+        return matchesSearch && matchesFilter;
+    });
 
     return (
-        <UserLayout user={auth?.user} header="Transaction History">
+        <UserLayout user={user} header="Transactions">
             <Head title="Transactions | Youth MoneyBank" />
 
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                
-                {/* Search & Filter Header */}
-                <div className="p-6 border-b border-gray-100 bg-slate-50 flex flex-col md:flex-row justify-between items-center gap-4">
-                    <div className="relative w-full md:w-auto flex-1 max-w-md">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                        <input 
-                            type="text" 
-                            placeholder="Search transactions..." 
-                            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm"
-                        />
+            <div className="max-w-4xl mx-auto">
+                {/* 1. HEADER, SEARCH & FILTERS SECTION */}
+                <div className="bg-white rounded-[1.5rem] shadow-sm border border-slate-100 p-5 sm:p-6 mb-6">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                        <div>
+                            <h2 className="text-xl font-black text-slate-900 tracking-tight">Recent Transactions</h2>
+                            <p className="text-xs text-slate-500 font-medium mt-0.5">Track your money in and out.</p>
+                        </div>
+
+                        {/* Search Input */}
+                        <div className="relative w-full md:w-64">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <Search size={16} className="text-slate-400" />
+                            </div>
+                            <input
+                                type="text"
+                                placeholder="Search transactions..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-slate-400"
+                            />
+                        </div>
                     </div>
-                    <div className="flex gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
-                        {['All', 'Cash-In', 'Transfers', 'Goals'].map((f) => (
+
+                    {/* Filter Pills & Custom Date Range */}
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                        
+                        {/* Transaction Type Filters */}
+                        <div className="flex items-center gap-2 overflow-x-auto pb-2 lg:pb-0 scrollbar-hide shrink-0">
                             <button 
-                                key={f}
-                                onClick={() => setFilter(f)}
-                                className={`px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-colors ${filter === f ? 'bg-blue-600 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+                                onClick={() => setActiveFilter('all')}
+                                className={`px-4 py-1.5 rounded-lg text-[11px] uppercase tracking-wide font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${activeFilter === 'all' ? 'bg-slate-800 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
                             >
-                                {f}
+                                <Filter size={12} /> All
                             </button>
-                        ))}
+                            <button 
+                                onClick={() => setActiveFilter('in')}
+                                className={`px-4 py-1.5 rounded-lg text-[11px] uppercase tracking-wide font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${activeFilter === 'in' ? 'bg-emerald-500 text-white shadow-md shadow-emerald-200' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'}`}
+                            >
+                                <ArrowDownRight size={14} strokeWidth={2.5} /> In
+                            </button>
+                            <button 
+                                onClick={() => setActiveFilter('out')}
+                                className={`px-4 py-1.5 rounded-lg text-[11px] uppercase tracking-wide font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${activeFilter === 'out' ? 'bg-orange-500 text-white shadow-md shadow-orange-200' : 'bg-orange-50 text-orange-700 hover:bg-orange-100'}`}
+                            >
+                                <ArrowUpRight size={14} strokeWidth={2.5} /> Out
+                            </button>
+                        </div>
+
+                        {/* GCash/Maya Style Custom Date Range */}
+                        <div className="flex items-center gap-2">
+                            <input 
+                                type="date" 
+                                value={startDate}
+                                onChange={(e) => setStartDate(e.target.value)}
+                                className="w-full sm:w-auto px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+                            />
+                            <span className="text-xs font-bold text-slate-400">to</span>
+                            <input 
+                                type="date" 
+                                value={endDate}
+                                onChange={(e) => setEndDate(e.target.value)}
+                                className="w-full sm:w-auto px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+                            />
+                        </div>
                     </div>
                 </div>
 
-                {/* Transactions List */}
-                <div className="divide-y divide-gray-50">
-                    {transactions.map((tx) => (
-                        <div key={tx.id} className="flex items-center justify-between p-6 hover:bg-slate-50 transition-colors cursor-pointer group">
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-2xl bg-white border border-gray-100 flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
-                                    {getIcon(tx.type)}
-                                </div>
-                                <div>
-                                    <p className="font-bold text-gray-900 text-sm md:text-base">{tx.title}</p>
-                                    <p className="text-xs text-gray-500 font-medium mt-0.5">{tx.date} • {tx.time}</p>
-                                </div>
+                {/* 2. TRANSACTIONS LIST WITH PAGINATION FOOTER */}
+                <div className="bg-white rounded-[1.5rem] shadow-sm border border-slate-100 overflow-hidden flex flex-col">
+                    {filteredData.length > 0 ? (
+                        <>
+                            <div className="divide-y divide-slate-100 flex-1">
+                                {filteredData.map((transaction) => (
+                                    <div key={transaction.id} className="p-4 sm:p-5 hover:bg-slate-50 transition-colors flex items-center justify-between group cursor-pointer">
+                                        <div className="flex items-center gap-4">
+                                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                                                transaction.type === 'in' 
+                                                    ? 'bg-emerald-50 text-emerald-600' 
+                                                    : 'bg-orange-50 text-orange-600'
+                                            }`}>
+                                                {transaction.type === 'in' ? <ArrowDownRight size={24} strokeWidth={2} /> : <ArrowUpRight size={24} strokeWidth={2} />}
+                                            </div>
+                                            
+                                            <div>
+                                                <h4 className="text-sm font-bold text-slate-900">{transaction.title}</h4>
+                                                <p className="text-[11px] text-slate-500 font-medium mt-0.5">{transaction.date}</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="text-right">
+                                            <p className={`text-sm font-black tracking-tight ${transaction.type === 'in' ? 'text-emerald-600' : 'text-slate-900'}`}>
+                                                {transaction.type === 'in' ? '+' : '-'}₱{Number(transaction.amount).toLocaleString('en-PH', { minimumFractionDigits: 2 })}
+                                            </p>
+                                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{transaction.status}</p>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
-                            <div className="text-right">
-                                <p className={`font-black ${tx.isPositive ? 'text-emerald-600' : 'text-gray-900'}`}>
-                                    {tx.isPositive ? '+' : '-'}₱{tx.amount.toLocaleString('en-PH', { minimumFractionDigits: 2 })}
+                            
+                            {/* Pagination Footer */}
+                            <div className="p-4 border-t border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row items-center justify-between gap-4">
+                                <p className="text-xs text-slate-500 font-medium">
+                                    Showing <span className="font-bold text-slate-700">1</span> to <span className="font-bold text-slate-700">{filteredData.length}</span> of <span className="font-bold text-slate-700">{filteredData.length}</span> transactions
                                 </p>
-                                <p className="text-[10px] font-bold text-gray-400 uppercase mt-1">Completed</p>
+                                <div className="flex items-center gap-2">
+                                    <button disabled className="p-1.5 rounded-lg border border-slate-200 text-slate-400 bg-slate-100/50 cursor-not-allowed">
+                                        <ChevronLeft size={16} />
+                                    </button>
+                                    <button disabled className="p-1.5 rounded-lg border border-slate-200 text-slate-400 bg-slate-100/50 cursor-not-allowed">
+                                        <ChevronRight size={16} />
+                                    </button>
+                                </div>
                             </div>
+                        </>
+                    ) : (
+                        /* EMPTY STATE */
+                        <div className="p-16 flex flex-col items-center justify-center text-center">
+                            <div className="w-16 h-16 bg-slate-50 text-slate-400 rounded-full flex items-center justify-center mb-4 border border-slate-100">
+                                <Receipt size={32} strokeWidth={1.5} />
+                            </div>
+                            <p className="text-slate-900 font-bold text-lg">No transactions found.</p>
+                            <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto leading-relaxed font-medium">
+                                Select a different date range or clear your search filters.
+                            </p>
                         </div>
-                    ))}
+                    )}
                 </div>
             </div>
+
         </UserLayout>
     );
 }
