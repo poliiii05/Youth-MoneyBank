@@ -1,7 +1,7 @@
 // resources/js/Pages/User/Goals.jsx
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
-import UserLayout from '../../Layouts/UserLayout';
+import UserLayout from '../../Components/Layouts/UserLayout';
 import CreateGoalModal from '../../Components/Modals/CreateGoalModal'; // <-- IMPORT NATIN YUNG MODAL
 import { Target, Plus, ShieldAlert, Smartphone, ShoppingBag, MoreVertical, Edit2, Trash2, PiggyBank, Landmark, Umbrella, GraduationCap, Gamepad2, Plane } from 'lucide-react';
 

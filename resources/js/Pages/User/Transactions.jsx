@@ -1,10 +1,10 @@
 // resources/js/Pages/User/Transactions.jsx
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
-import UserLayout from '../../Layouts/UserLayout';
+import UserLayout from '../../Components/Layouts/UserLayout';
 import { Search, ArrowDownRight, ArrowUpRight, Receipt, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
 
-export default function Transactions({ auth, transactions }) {
+export default function Transactions({ auth, transactions = [] }) {
     const user = auth?.user;
     
     // UI States
@@ -15,13 +15,29 @@ export default function Transactions({ auth, transactions }) {
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
 
-    const displayData = transactions || []; 
+    const displayData = transactions; 
 
-    // Frontend Filtering Logic
+    // Frontend Filtering Logic (Updated to match DB structure)
     const filteredData = displayData.filter(item => {
         const matchesSearch = item.title?.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesFilter = activeFilter === 'all' || item.type === activeFilter;
-        return matchesSearch && matchesFilter;
+        
+        let matchesFilter = true;
+        if (activeFilter === 'in') {
+            matchesFilter = item.is_positive == 1;
+        } else if (activeFilter === 'out') {
+            matchesFilter = item.is_positive == 0;
+        }
+
+        // Add date range filtering if dates are selected
+        let matchesDate = true;
+        if (startDate && endDate) {
+            const itemDate = new Date(item.created_at).getTime();
+            const start = new Date(startDate).getTime();
+            const end = new Date(endDate).getTime() + 86400000; // Add 1 day to include end date fully
+            matchesDate = itemDate >= start && itemDate <= end;
+        }
+
+        return matchesSearch && matchesFilter && matchesDate;
     });
 
     return (
@@ -101,37 +117,40 @@ export default function Transactions({ auth, transactions }) {
                     {filteredData.length > 0 ? (
                         <>
                             <div className="divide-y divide-slate-100 flex-1">
-                                {filteredData.map((transaction) => (
-                                    <div key={transaction.id} className="p-4 sm:p-5 hover:bg-slate-50 transition-colors flex items-center justify-between group cursor-pointer">
-                                        <div className="flex items-center gap-4">
-                                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
-                                                transaction.type === 'in' 
-                                                    ? 'bg-emerald-50 text-emerald-600' 
-                                                    : 'bg-orange-50 text-orange-600'
-                                            }`}>
-                                                {transaction.type === 'in' ? <ArrowDownRight size={24} strokeWidth={2} /> : <ArrowUpRight size={24} strokeWidth={2} />}
+                                {filteredData.map((transaction) => {
+                                    const isIncome = transaction.is_positive == 1;
+                                    const formattedDate = new Date(transaction.created_at).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+                                    return (
+                                        <div key={transaction.id} className="p-4 sm:p-5 hover:bg-slate-50 transition-colors flex items-center justify-between group cursor-pointer">
+                                            <div className="flex items-center gap-4">
+                                                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                                                    isIncome ? 'bg-emerald-50 text-emerald-600' : 'bg-orange-50 text-orange-600'
+                                                }`}>
+                                                    {isIncome ? <ArrowDownRight size={24} strokeWidth={2} /> : <ArrowUpRight size={24} strokeWidth={2} />}
+                                                </div>
+                                                
+                                                <div>
+                                                    <h4 className="text-sm font-bold text-slate-900">{transaction.title}</h4>
+                                                    <p className="text-[11px] text-slate-500 font-medium mt-0.5">{formattedDate}</p>
+                                                </div>
                                             </div>
                                             
-                                            <div>
-                                                <h4 className="text-sm font-bold text-slate-900">{transaction.title}</h4>
-                                                <p className="text-[11px] text-slate-500 font-medium mt-0.5">{transaction.date}</p>
+                                            <div className="text-right">
+                                                <p className={`text-sm font-black tracking-tight ${isIncome ? 'text-emerald-600' : 'text-slate-900'}`}>
+                                                    {isIncome ? '+' : '-'}₱{Number(transaction.amount).toLocaleString('en-PH', { minimumFractionDigits: 2 })}
+                                                </p>
+                                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{transaction.status}</p>
                                             </div>
                                         </div>
-                                        
-                                        <div className="text-right">
-                                            <p className={`text-sm font-black tracking-tight ${transaction.type === 'in' ? 'text-emerald-600' : 'text-slate-900'}`}>
-                                                {transaction.type === 'in' ? '+' : '-'}₱{Number(transaction.amount).toLocaleString('en-PH', { minimumFractionDigits: 2 })}
-                                            </p>
-                                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{transaction.status}</p>
-                                        </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                             
                             {/* Pagination Footer */}
                             <div className="p-4 border-t border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row items-center justify-between gap-4">
                                 <p className="text-xs text-slate-500 font-medium">
-                                    Showing <span className="font-bold text-slate-700">1</span> to <span className="font-bold text-slate-700">{filteredData.length}</span> of <span className="font-bold text-slate-700">{filteredData.length}</span> transactions
+                                    Showing <span className="font-bold text-slate-700">{filteredData.length > 0 ? 1 : 0}</span> to <span className="font-bold text-slate-700">{filteredData.length}</span> of <span className="font-bold text-slate-700">{filteredData.length}</span> transactions
                                 </p>
                                 <div className="flex items-center gap-2">
                                     <button disabled className="p-1.5 rounded-lg border border-slate-200 text-slate-400 bg-slate-100/50 cursor-not-allowed">

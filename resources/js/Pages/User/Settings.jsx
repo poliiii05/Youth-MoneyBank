@@ -1,6 +1,6 @@
 // resources/js/Pages/User/Settings.jsx
 import { Head } from '@inertiajs/react';
-import UserLayout from '../../Layouts/UserLayout';
+import UserLayout from '../../Components/Layouts/UserLayout';
 import { User, ShieldCheck, CreditCard, ChevronRight, Upload, AlertCircle } from 'lucide-react';
 
 export default function Settings({ auth }) {

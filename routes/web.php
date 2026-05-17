@@ -5,6 +5,7 @@ use Inertia\Inertia;
 use App\Http\Controllers\Api\CaptchaController; // sa ano ito, uhm sa parang im not a robot part
 use App\Http\Controllers\Auth\GoogleAuthController;  // integration naman ito sa google sign in hehe
 use App\Http\Controllers\SavingsGoalController; // para mahanap nya yung file nato, need pala!
+use App\Http\Controllers\User\WalletController;
 
 //---------------------------------------------//
 //   sa part ito ng parang verified captcha    // -------importanteng part na mauna kasi nageeror haha--------
@@ -70,6 +71,7 @@ Route::post('/signup', function (Request $request) {
 //    Middleware, procted and user route       //
 //---------------------------------------------//
 
+
 // Lahat ng nasa loob nito ay kailangan NAKA-LOGIN bago mapasok
 Route::middleware(['auth'])->group(function () {
     
@@ -97,10 +99,13 @@ Route::middleware(['auth'])->group(function () {
             'finances' => [
                 'main_balance' => (float) $mainBalance,
                 'total_savings' => (float) $totalSavings,
-                'max_limit' => (float) $maxLimit, // Ipapasa natin sa React
+                'max_limit' => (float) $maxLimit, 
             ],
-            'active_goal' => $activeGoal, // Ipapasa sa React
+            'active_goal' => $activeGoal,
             'kyc_tier' => $tier,
+            
+            // INILABAS NATIN ITO SA FINANCES ARRAY PARA MABASA NG REACT!
+            'recent_transactions' => $user->transactions()->latest()->take(3)->get(), 
         ]);
 
     })->name('dashboard');
@@ -109,10 +114,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/goals', [SavingsGoalController::class, 'index'])->name('goals.index');
     Route::post('/goals', [SavingsGoalController::class, 'store'])->name('goals.store');
 
-    // TRANSACTIONS (Placeholder muna para di mag-error pag kinlick)
+    // TRANSACTIONS 
     Route::get('/transactions', function () {
-        return Inertia::render('User/Transactions', [
-            'auth' => ['user' => auth()->user()]
+        $user = auth()->user(); // <-- ITO NA YUNG NAG-AYOS NG ERROR 500 MO!
+
+       return inertia('User/Transactions', [
+            'transactions' => $user->transactions()->latest()->get(),
         ]);
     })->name('transactions');
 
@@ -121,7 +128,7 @@ Route::middleware(['auth'])->group(function () {
         return Inertia::render('User/Settings', [
             'auth' => ['user' => auth()->user()]
         ]);
-    })->name('transactions');
+    })->name('Settings');
     
     // logout session
     Route::post('/logout', function (Request $request) {
@@ -131,5 +138,8 @@ Route::middleware(['auth'])->group(function () {
  
         return redirect('/login');
     })->name('logout');
+    
+    // Add money transactions
+    Route::post('/wallet/add-money', [WalletController::class, 'addMoney'])->name('wallet.add-money');
 
 });

@@ -15,6 +15,9 @@ return new class extends Migration
             $table->string('title'); 
             $table->decimal('amount', 12, 2);
             $table->boolean('is_positive'); 
+            $table->string('reference_id')->nullable(); // <-- IDAGDAG ITO
+            $table->string('status')->default('completed'); // <-- IDAGDAG ITO
+            $table->string('description')->nullable(); // <-- IDAGDAG ITO
             $table->timestamps();
         });
     }

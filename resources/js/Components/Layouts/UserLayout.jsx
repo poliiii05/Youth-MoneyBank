@@ -1,4 +1,3 @@
-// resources/js/Layouts/UserLayout.jsx
 import { useState } from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
 import { Target, CreditCard, PieChart, Settings, LogOut, Menu, Home, Bell, ArrowRight } from 'lucide-react';
