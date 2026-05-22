@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { router, usePage } from '@inertiajs/react';
 import {
     X, ChevronLeft, Building2, Smartphone, Store,
-    CheckCircle2, Loader2, ArrowRight
+    CheckCircle2, Loader2, ArrowRight, AlertCircle, Sparkles
 } from 'lucide-react';
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 
@@ -15,26 +15,6 @@ const STEP_TITLES = {
     3: 'Transfer complete',
 };
 
-// ── Step indicator ──────────────────────────────────────────────────────────
-function StepIndicator({ current, total = 3 }) {
-    return (
-        <div className="flex items-center gap-1.5 mb-6">
-            {Array.from({ length: total }).map((_, i) => (
-                <div
-                    key={i}
-                    className={`h-1.5 rounded-full transition-all duration-300 ${
-                        i + 1 === current
-                            ? 'w-6 bg-blue-600'
-                            : i + 1 < current
-                            ? 'w-4 bg-blue-200'
-                            : 'w-4 bg-slate-200'
-                    }`}
-                />
-            ))}
-        </div>
-    );
-}
-
 // ── Method option card ──────────────────────────────────────────────────────
 function MethodCard({ icon, label, sublabel, badge, badgeVariant = 'available', onClick, disabled }) {
     const badgeStyles = {
@@ -45,26 +25,26 @@ function MethodCard({ icon, label, sublabel, badge, badgeVariant = 'available', 
     return (
         <div
             onClick={!disabled ? onClick : undefined}
-            className={`flex items-center gap-3 p-3.5 rounded-2xl border transition-all duration-150
+            className={`flex items-center gap-3 p-3 rounded-2xl border transition-all duration-150
                 ${disabled
                     ? 'border-slate-100 bg-slate-50 opacity-50 cursor-not-allowed'
                     : 'border-slate-200 bg-white hover:border-blue-400 hover:shadow-sm hover:shadow-blue-100 cursor-pointer group'
                 }`}
         >
-            <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center flex-shrink-0 group-hover:bg-blue-50 transition-colors">
+            <div className="w-9 h-9 rounded-xl bg-slate-50 flex items-center justify-center flex-shrink-0 group-hover:bg-blue-50 transition-colors">
                 {icon}
             </div>
             <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-slate-800 group-hover:text-blue-700 transition-colors leading-tight">{label}</p>
-                <p className="text-xs text-slate-400 mt-0.5 truncate">{sublabel}</p>
+                <p className="text-xs font-semibold text-slate-800 group-hover:text-blue-700 transition-colors leading-tight">{label}</p>
+                <p className="text-[10px] text-slate-400 mt-0.5 truncate">{sublabel}</p>
             </div>
             {badge && (
-                <span className={`text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-lg flex-shrink-0 ${badgeStyles[badgeVariant]}`}>
+                <span className={`text-[8px] font-bold uppercase tracking-wide px-2 py-1 rounded-md flex-shrink-0 ${badgeStyles[badgeVariant]}`}>
                     {badge}
                 </span>
             )}
             {!disabled && (
-                <ArrowRight size={15} className="text-slate-300 group-hover:text-blue-400 transition-colors flex-shrink-0" />
+                <ArrowRight size={14} className="text-slate-300 group-hover:text-blue-400 transition-colors flex-shrink-0" />
             )}
         </div>
     );
@@ -72,18 +52,28 @@ function MethodCard({ icon, label, sublabel, badge, badgeVariant = 'available', 
 
 // ── Main modal ──────────────────────────────────────────────────────────────
 export default function AddMoneyModal({ isOpen, onClose }) {
-    const { auth } = usePage().props;
+    const { auth, finances, kyc_tier } = usePage().props;
     const user = auth?.user;
 
+    // --- COMPUTE TIER LIMITS ---
+    const currentTier = kyc_tier || user?.kyc_tier || 1;
+    const maxLimit = finances?.max_limit || (currentTier === 3 ? 100000 : currentTier === 2 ? 20000 : 5000);
+    const mainBalance = finances?.main_balance || 0;
+    const remainingLimit = maxLimit - mainBalance;
+    
+    // Kapag less than 50 na ang natitira, hindi na pwede mag-cash in
+    const isLimitReached = remainingLimit < 50;
+
     const [step, setStep] = useState(1);
-    const [amount, setAmount] = useState('');
+    const [amount, setAmount] = useState(''); 
     const [remarks, setRemarks] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
+    const [errorMsg, setErrorMsg] = useState('');
 
     if (!isOpen) return null;
 
-    const numericAmount = Number(amount);
-    const isAmountValid = numericAmount >= 100;
+    const numericAmount = Number(amount.replace(/,/g, ''));
+    const isAmountValid = numericAmount >= 50 && numericAmount <= remainingLimit;
 
     const initialOptions = {
         "client-id": import.meta.env.VITE_PAYPAL_CLIENT_ID,
@@ -96,52 +86,86 @@ export default function AddMoneyModal({ isOpen, onClose }) {
         setAmount('');
         setRemarks('');
         setIsProcessing(false);
+        setErrorMsg('');
         onClose();
     };
 
-    const handlePreset = (val) => {
-        setAmount(String(val));
+    const handleAmountChange = (e) => {
+        if (isLimitReached) return;
+
+        const rawValue = e.target.value.replace(/[^0-9]/g, '');
+
+        if (!rawValue) {
+            setAmount('');
+            setErrorMsg('');
+            return;
+        }
+
+        const numValue = Number(rawValue);
+
+        // Kapag sumobra sa limit ang tinatype, i-block ang pag-type at magpakita ng red error
+        if (numValue > remainingLimit) {
+            setErrorMsg(`Maximum allowed for your tier is ₱${remainingLimit.toLocaleString('en-US')}.`);
+            return; 
+        }
+
+        setErrorMsg('');
+        setAmount(numValue.toLocaleString('en-US'));
     };
+
+    const handlePreset = (val) => {
+        if (isLimitReached) return;
+        
+        if (val > remainingLimit) {
+            setErrorMsg(`Maximum allowed for your tier is ₱${remainingLimit.toLocaleString('en-US')}.`);
+            return;
+        }
+        setErrorMsg('');
+        setAmount(val.toLocaleString('en-US'));
+    };
+
+    // Shortcut variable para malaman kung ire-red ang input box
+    const hasErrorUI = errorMsg !== '' || isLimitReached;
 
     return (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-slate-900/60 backdrop-blur-sm">
             
-            {/* Modal Container */}
-            <div className="bg-white w-full sm:max-w-md sm:rounded-3xl rounded-t-3xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200 relative">
+            {/* Pinaliit ang width: sm:max-w-sm na lang para hindi masyadong malapad */}
+            <div className="bg-white w-full sm:max-w-sm sm:rounded-3xl rounded-t-3xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200 relative">
 
                 {/* ── CENTER LOADING OVERLAY ── */}
                 {isProcessing && (
                     <div className="absolute inset-0 z-50 bg-white/90 backdrop-blur-sm flex flex-col items-center justify-center animate-in fade-in duration-300">
-                        <Loader2 className="w-12 h-12 text-blue-600 animate-spin mb-4" strokeWidth={2.5} />
-                        <h3 className="text-lg font-black text-slate-900 tracking-tight mb-1">Processing Payment</h3>
-                        <p className="text-xs font-medium text-slate-500 text-center px-8">
-                            Please wait while we securely process your transaction. Do not close this window.
+                        <Loader2 className="w-8 h-8 text-blue-600 animate-spin mb-3" strokeWidth={2.5} />
+                        <h3 className="text-sm font-bold text-slate-900 tracking-tight mb-1">Processing Payment</h3>
+                        <p className="text-[10px] font-medium text-slate-500 text-center px-6">
+                            Please wait while we securely process your transaction.
                         </p>
                     </div>
                 )}
 
                 {/* ── Header ── */}
-                <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+                <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100">
                     {step === 2 ? (
                         <button
                             onClick={() => setStep(1)}
-                            className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 transition-colors cursor-pointer"
+                            className="w-7 h-7 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 transition-colors cursor-pointer"
                         >
-                            <ChevronLeft size={16} />
+                            <ChevronLeft size={14} />
                         </button>
                     ) : (
-                        <div className="w-8 h-8" />
+                        <div className="w-7 h-7" />
                     )}
 
-                    <h2 className="text-sm font-bold text-slate-900 tracking-tight">
+                    <h2 className="text-[13px] font-bold text-slate-900 tracking-tight">
                         {STEP_TITLES[step]}
                     </h2>
 
                     <button
                         onClick={handleClose}
-                        className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 transition-colors cursor-pointer"
+                        className="w-7 h-7 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 transition-colors cursor-pointer"
                     >
-                        <X size={16} />
+                        <X size={14} />
                     </button>
                 </div>
 
@@ -150,15 +174,15 @@ export default function AddMoneyModal({ isOpen, onClose }) {
 
                     {/* ════ STEP 1: SELECT METHOD ════ */}
                     {step === 1 && (
-                        <div className="px-5 py-5">
-                            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-4">
+                        <div className="px-5 py-4">
+                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-3">
                                 Funding source
                             </p>
 
-                            <div className="space-y-2.5">
+                            <div className="space-y-2">
                                 <MethodCard
                                     icon={
-                                        <span className="font-black text-[#003087] italic text-base leading-none">
+                                        <span className="font-black text-[#003087] italic text-xs leading-none">
                                             P<span className="text-[#009cde]">P</span>
                                         </span>
                                     }
@@ -168,103 +192,146 @@ export default function AddMoneyModal({ isOpen, onClose }) {
                                     badgeVariant="available"
                                     onClick={() => setStep(2)}
                                 />
-                                <MethodCard icon={<Smartphone size={18} className="text-slate-400" />} label="E-wallets" sublabel="GCash, Maya, GrabPay" badge="Soon" badgeVariant="soon" disabled />
-                                <MethodCard icon={<Building2 size={18} className="text-slate-400" />} label="Linked bank" sublabel="InstaPay / PESONet" badge="Soon" badgeVariant="soon" disabled />
-                                <MethodCard icon={<Store size={18} className="text-slate-400" />} label="Over-the-counter" sublabel="7-Eleven, Cebuana, SM" badge="Soon" badgeVariant="soon" disabled />
+                                <MethodCard icon={<Smartphone size={14} className="text-slate-400" />} label="E-wallets" sublabel="GCash, Maya, GrabPay" badge="Soon" badgeVariant="soon" disabled />
+                                <MethodCard icon={<Building2 size={14} className="text-slate-400" />} label="Linked bank" sublabel="InstaPay / PESONet" badge="Soon" badgeVariant="soon" disabled />
+                                <MethodCard icon={<Store size={14} className="text-slate-400" />} label="Over-the-counter" sublabel="7-Eleven, Cebuana, SM" badge="Soon" badgeVariant="soon" disabled />
                             </div>
                         </div>
                     )}
 
                     {/* ════ STEP 2: AMOUNT + PAYPAL ════ */}
                     {step === 2 && (
-                        <div className="px-5 py-6">
-                            <StepIndicator current={2} />
+                        <div className="px-5 py-5">
 
                             {/* Account holder */}
-                            <div className="mb-5">
-                                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">
+                            <div className="mb-4">
+                                <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">
                                     Account holder
                                 </label>
                                 <input
                                     type="text"
                                     disabled
                                     value={user?.name ?? 'Loading…'}
-                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-500 cursor-not-allowed"
+                                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-500 cursor-not-allowed outline-none"
                                 />
                             </div>
 
                             {/* Amount input */}
-                            <div className="mb-3">
-                                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">
-                                    Amount
-                                </label>
+                            <div className="mb-2">
+                                <div className="flex items-center justify-between mb-1.5">
+                                    <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                                        Amount
+                                    </label>
+                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                                        Remaining Limit: <span className={`${hasErrorUI ? 'text-red-500' : 'text-blue-600'}`}>₱{remainingLimit.toLocaleString('en-US')}</span>
+                                    </span>
+                                </div>
                                 <div className="relative">
-                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-semibold text-lg pointer-events-none select-none">
+                                    <span className={`absolute left-3 top-1/2 -translate-y-1/2 font-semibold text-sm pointer-events-none select-none ${hasErrorUI ? 'text-red-400' : 'text-slate-400'}`}>
                                         ₱
                                     </span>
+                                    {/* Pinaliit ang font size mula text-2xl font-black papuntang text-base font-semibold */}
                                     <input
-                                        type="number"
-                                        min="50"
+                                        type="text"
+                                        inputMode="numeric"
                                         value={amount}
-                                        onChange={(e) => setAmount(e.target.value)}
-                                        placeholder="Min. 50"
-                                        className="w-full pl-9 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-2xl font-black text-slate-900 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                        onChange={handleAmountChange}
+                                        disabled={isLimitReached}
+                                        placeholder={isLimitReached ? "0" : "Min. 50"}
+                                        className={`w-full pl-7 pr-3 py-2 border rounded-xl text-base font-semibold outline-none transition-all
+                                            ${hasErrorUI 
+                                                ? 'bg-red-50/20 border-red-400 focus:ring-4 focus:ring-red-50 text-red-900' 
+                                                : 'bg-white border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-50 text-slate-900'
+                                            }
+                                            ${isLimitReached ? 'cursor-not-allowed bg-red-50 border-red-300 placeholder:text-red-400' : ''}
+                                        `}
                                     />
+                                </div>
+                                
+                                {/* Error Message Display */}
+                                <div className={`min-h-[16px] mt-1.5 transition-all duration-300 ${hasErrorUI ? 'opacity-100' : 'opacity-0'}`}>
+                                    {hasErrorUI && (
+                                        <p className="text-[10px] font-semibold text-red-500 flex items-center gap-1">
+                                            <AlertCircle size={10} /> 
+                                            {isLimitReached ? "You've reached your maximum wallet limit." : errorMsg}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
 
                             {/* Preset chips */}
-                            <div className="grid grid-cols-4 gap-2 mb-5">
-                                {PRESET_AMOUNTS.map((preset) => (
-                                    <button
-                                        key={preset}
-                                        type="button"
-                                        onClick={() => handlePreset(preset)}
-                                        className={`py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
-                                            numericAmount === preset
-                                                ? 'bg-slate-900 text-white border-slate-900 shadow-md scale-[1.02]'
-                                                : 'bg-white text-slate-600 border-slate-200 hover:border-slate-400'
-                                        }`}
-                                    >
-                                        ₱{preset.toLocaleString()}
-                                    </button>
-                                ))}
+                            <div className="grid grid-cols-4 gap-2 mb-4">
+                                {PRESET_AMOUNTS.map((preset) => {
+                                    const isDisabled = isLimitReached || preset > remainingLimit;
+                                    return (
+                                        <button
+                                            key={preset}
+                                            type="button"
+                                            onClick={() => handlePreset(preset)}
+                                            disabled={isDisabled}
+                                            className={`py-1.5 rounded-lg text-[10px] font-bold border transition-all ${
+                                                isDisabled
+                                                    ? 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed'
+                                                    : numericAmount === preset
+                                                        ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
+                                                        : 'bg-white text-slate-600 border-slate-200 hover:border-slate-400'
+                                            }`}
+                                        >
+                                            ₱{preset.toLocaleString()}
+                                        </button>
+                                    )
+                                })}
                             </div>
 
                             {/* Remarks */}
-                            <div className="mb-6">
-                                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">
+                            <div className="mb-5">
+                                <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">
                                     Remarks <span className="normal-case font-normal text-slate-400">(optional)</span>
                                 </label>
                                 <input
                                     type="text"
                                     value={remarks}
                                     onChange={(e) => setRemarks(e.target.value)}
+                                    disabled={isLimitReached}
                                     placeholder="e.g. Allowance, savings…"
-                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 placeholder-slate-300 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all"
+                                    className={`w-full px-3 py-2 border rounded-lg text-xs transition-all outline-none 
+                                        ${isLimitReached 
+                                            ? 'bg-slate-50 border-slate-100 text-slate-400 cursor-not-allowed placeholder:text-slate-300' 
+                                            : 'bg-white border-slate-200 text-slate-700 placeholder-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-50'
+                                        }`}
                                 />
                             </div>
 
-                            {/* PayPal Integration (Mas malinis na spacing) */}
+                            {/* PayPal Integration or Subtle Upgrade Prompt */}
                             <div className="pt-2">
-                                {isAmountValid ? (
+                                {isLimitReached ? (
+                                    <button 
+                                        onClick={() => {
+                                            onClose();
+                                            router.get('/settings');
+                                        }}
+                                        className="w-full py-2 bg-white border border-purple-200 text-purple-600 text-[10px] uppercase tracking-widest font-bold rounded-lg hover:bg-purple-50 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                                    >
+                                        <Sparkles size={12} /> Upgrade Account Tier
+                                    </button>
+                                ) : isAmountValid ? (
                                     <div className="animate-in fade-in duration-500">
                                         <PayPalScriptProvider options={initialOptions}>
                                             <PayPalButtons
-                                                style={{ layout: "vertical", shape: "rect", color: "blue", label: "pay" }}
+                                                style={{ layout: "vertical", shape: "rect", color: "blue", label: "pay", height: 35 }}
                                                 createOrder={(data, actions) => {
                                                     return actions.order.create({
                                                         purchase_units: [{
-                                                            amount: { value: amount },
+                                                            amount: { value: numericAmount.toString() },
                                                             description: remarks || "Youth MoneyBank Wallet Top-up",
                                                         }],
                                                     });
                                                 }}
                                                 onApprove={(data, actions) => {
-                                                    setIsProcessing(true); // TATAWAGIN ANG LOADING SCREEN SA GITNA
+                                                    setIsProcessing(true);
                                                     return actions.order.capture().then((details) => {
                                                         router.post('/wallet/add-money', {
-                                                            amount,
+                                                            amount: numericAmount,
                                                             remarks,
                                                             transaction_id: details.id,
                                                             status: details.status,
@@ -285,8 +352,8 @@ export default function AddMoneyModal({ isOpen, onClose }) {
                                         </PayPalScriptProvider>
                                     </div>
                                 ) : (
-                                    <p className="text-center text-xs font-semibold text-slate-400 mt-2">
-                                        Enter at least ₱100 to enable PayPal checkout.
+                                    <p className="text-center text-[10px] font-medium text-slate-400 mt-2">
+                                        Enter an amount from ₱50 up to your limit to proceed.
                                     </p>
                                 )}
                             </div>
@@ -295,44 +362,43 @@ export default function AddMoneyModal({ isOpen, onClose }) {
 
                     {/* ════ STEP 3: SUCCESS ════ */}
                     {step === 3 && (
-                        <div className="px-5 py-8 flex flex-col items-center text-center">
-                            <StepIndicator current={3} />
+                        <div className="px-5 py-6 flex flex-col items-center text-center">
 
-                            <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mb-4">
-                                <CheckCircle2 size={32} className="text-emerald-500" strokeWidth={1.5} />
+                            <div className="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center mb-3">
+                                <CheckCircle2 size={24} className="text-emerald-500" strokeWidth={2} />
                             </div>
 
-                            <h3 className="text-xl font-black text-slate-900 mb-1.5 tracking-tight">
+                            <h3 className="text-base font-bold text-slate-900 mb-1 tracking-tight">
                                 Cash in successful!
                             </h3>
-                            <p className="text-sm text-slate-500 mb-6">
-                                <span className="font-bold text-slate-800">₱{Number(amount).toLocaleString()}</span> has been added to your wallet.
+                            <p className="text-[11px] text-slate-500 mb-4">
+                                <span className="font-bold text-slate-800">₱{numericAmount.toLocaleString('en-US')}</span> has been added to your wallet.
                             </p>
 
-                            <div className="w-full bg-slate-50 rounded-2xl border border-slate-100 divide-y divide-slate-100 text-left mb-6">
-                                <div className="flex justify-between items-center px-4 py-3">
-                                    <span className="text-xs text-slate-500 font-medium">Method</span>
-                                    <span className="text-xs font-bold text-slate-800">PayPal Express</span>
+                            <div className="w-full bg-slate-50 rounded-xl border border-slate-100 divide-y divide-slate-100 text-left mb-5">
+                                <div className="flex justify-between items-center px-4 py-2">
+                                    <span className="text-[10px] text-slate-500 font-medium">Method</span>
+                                    <span className="text-[10px] font-bold text-slate-800">PayPal Express</span>
                                 </div>
-                                <div className="flex justify-between items-center px-4 py-3">
-                                    <span className="text-xs text-slate-500 font-medium">Account</span>
-                                    <span className="text-xs font-bold text-slate-800">{user?.name}</span>
+                                <div className="flex justify-between items-center px-4 py-2">
+                                    <span className="text-[10px] text-slate-500 font-medium">Account</span>
+                                    <span className="text-[10px] font-bold text-slate-800">{user?.name}</span>
                                 </div>
-                                <div className="flex justify-between items-center px-4 py-3">
-                                    <span className="text-xs text-slate-500 font-medium">Amount</span>
-                                    <span className="text-xs font-bold text-emerald-600">+₱{Number(amount).toLocaleString()}</span>
+                                <div className="flex justify-between items-center px-4 py-2">
+                                    <span className="text-[10px] text-slate-500 font-medium">Amount</span>
+                                    <span className="text-[10px] font-bold text-emerald-600">+₱{numericAmount.toLocaleString('en-US')}</span>
                                 </div>
                                 {remarks && (
-                                    <div className="flex justify-between items-center px-4 py-3">
-                                        <span className="text-xs text-slate-500 font-medium">Remarks</span>
-                                        <span className="text-xs font-bold text-slate-800">{remarks}</span>
+                                    <div className="flex justify-between items-center px-4 py-2">
+                                        <span className="text-[10px] text-slate-500 font-medium">Remarks</span>
+                                        <span className="text-[10px] font-bold text-slate-800">{remarks}</span>
                                     </div>
                                 )}
                             </div>
 
                             <button
                                 onClick={handleClose}
-                                className="w-full py-3.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-bold rounded-2xl transition-colors cursor-pointer"
+                                className="w-full py-2 bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-bold rounded-lg transition-colors cursor-pointer"
                             >
                                 Back to dashboard
                             </button>
