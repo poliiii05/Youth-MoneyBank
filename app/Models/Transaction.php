@@ -9,20 +9,33 @@ class Transaction extends Model
 {
     use HasFactory;
 
-    // Idinagdag natin dito lahat ng kailangan nating i-save!
     protected $fillable = [
         'user_id',
         'title',
         'type',
-        'amount',
+        'amount_cents',
         'reference_id',
         'status',
         'description',
-        'is_positive', // kumbaga nakikita parin yung transactions na na add or something
+        'is_positive',
+    ];
+
+    protected $casts = [
+        'amount_cents' => 'integer',
+        'is_positive' => 'boolean',
     ];
 
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Convenience accessor — amount in pesos for display.
+     * Usage: $transaction->amount_pesos → 100.50
+     */
+    public function getAmountPesosAttribute(): float
+    {
+        return $this->amount_cents / 100;
     }
 }

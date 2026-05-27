@@ -37,7 +37,11 @@ class GoogleAuthController extends Controller
             $user = $existingUser;
      } else {
             // 3. Kung BAGONG user, pure 10-digit number generator
-            $accountNum = '00' . date('Y') . str_pad(random_int(0, 99999), 5, '0', STR_PAD_LEFT);
+           // $accountNum = '00' . date('Y') . str_pad(random_int(0, 99999), 5, '0', STR_PAD_LEFT);
+
+             do {
+             $accountNum = '00' . date('Y') . str_pad(random_int(0, 99999), 5, '0', STR_PAD_LEFT);
+            } while (User::where('account_number', $accountNum)->exists());
             
             $user = User::create([
                 'account_number' => $accountNum,

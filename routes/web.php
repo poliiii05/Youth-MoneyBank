@@ -76,40 +76,60 @@ Route::post('/signup', function (Request $request) {
 Route::middleware(['auth'])->group(function () {
     
     // DASHBOARD ROUTE  
-    Route::get('/dashboard', function () {
-        $user = auth()->user();
-        $wallet = $user->wallet;
+        Route::get('/dashboard', function () {
+            $user = auth()->user();
+            $wallet = $user->wallet;
 
-        $mainBalance = $wallet ? $wallet->balance : 0.00; // 1. Total Balance (Main Wallet)
-        $unallocatedSavings = $wallet ? $wallet->savings_balance : 0.00; // 2. Total Savings 
-        $allocatedGoals = $user->savingsGoals()->sum('current_amount');
-        $totalSavings = $unallocatedSavings + $allocatedGoals;
+            $mainBalanceCents = $wallet ? $wallet->balance_cents : 0;
+            $unallocatedSavingsCents = $wallet ? $wallet->savings_balance_cents : 0;
+            $allocatedGoalsCents = $user->savingsGoals()->sum('current_amount_cents');
+            $totalSavingsCents = $unallocatedSavingsCents + $allocatedGoalsCents;
 
-        // NEW: Alamin ang limit base sa Account Tier
-        $tier = $user->kyc_tier ?? 1;
-        $maxLimit = 5000.00; // Starter Account
-        if ($tier == 2) $maxLimit = 20000.00; // Builder Account
-        if ($tier == 3) $maxLimit = 100000.00; // Achiever Account
-       
-        // NEW: Kunin ang pinaka-unang active goal ng user
-        $activeGoal = $user->savingsGoals()->where('current_amount', '<', \DB::raw('target_amount'))->first();
+            $tier = (int) ($user->kyc_tier ?? 1);
+            $maxLimitCents = \App\Services\TierLimitService::getMaxBalanceCents($tier);
+        
+            $activeGoal = $user->savingsGoals()
+                ->whereColumn('current_amount_cents', '<', 'target_amount_cents')
+                ->first();
 
-       return Inertia::render('User/Dashboard', [  // 3. Ipasa lahat ito papunta sa React Component
-            'auth' => ['user' => $user],
-            'finances' => [
-                'main_balance' => (float) $mainBalance,
-                'total_savings' => (float) $totalSavings,
-                'max_limit' => (float) $maxLimit, 
-            ],
-            'active_goal' => $activeGoal,
-            'kyc_tier' => $tier,
-            
-            // INILABAS NATIN ITO SA FINANCES ARRAY PARA MABASA NG REACT!
-            'recent_transactions' => $user->transactions()->latest()->take(3)->get(), 
-        ]);
+            return Inertia::render('User/Dashboard', [
+                'auth' => ['user' => $user],
+                'finances' => [
+                    // Frontend expects pesos (float) for display
+                    'main_balance' => (float) ($mainBalanceCents / 100),
+                    'total_savings' => (float) ($totalSavingsCents / 100),
+                    'max_limit' => (float) ($maxLimitCents / 100),
+                    // Also expose cents for precision-sensitive operations
+                    'main_balance_cents' => $mainBalanceCents,
+                    'max_limit_cents' => $maxLimitCents,
+                ],
+                'active_goal' => $activeGoal ? [
+                    'id' => $activeGoal->id,
+                    'title' => $activeGoal->title,
+                    'icon_name' => $activeGoal->icon_name,
+                    'current_amount' => (float) $activeGoal->current_amount_pesos,
+                    'target_amount' => (float) $activeGoal->target_amount_pesos,
+                ] : null,
+                'kyc_tier' => $tier,
+                'recent_transactions' => $user->transactions()
+                    ->latest()
+                    ->take(3)
+                    ->get()
+                    ->map(function ($t) {
+                        return [
+                            'id' => $t->id,
+                            'title' => $t->title,
+                            'type' => $t->type,
+                            'amount' => (float) $t->amount_pesos,
+                            'is_positive' => $t->is_positive,
+                            'status' => $t->status,
+                            'created_at' => $t->created_at,
+                        ];
+                    }),
+            ]);
+        })->name('dashboard');
 
-    })->name('dashboard');
-
+        
     // SAVINGS GOALS ROUTE
     Route::get('/goals', [SavingsGoalController::class, 'index'])->name('goals.index');
     Route::post('/goals', [SavingsGoalController::class, 'store'])->name('goals.store');
