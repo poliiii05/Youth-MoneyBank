@@ -18,11 +18,13 @@ class Transaction extends Model
         'status',
         'description',
         'is_positive',
+        'ledger_posted', 
     ];
 
     protected $casts = [
         'amount_cents' => 'integer',
         'is_positive' => 'boolean',
+         'ledger_posted' => 'boolean',
     ];
 
     public function user()

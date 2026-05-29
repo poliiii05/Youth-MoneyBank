@@ -2,13 +2,26 @@
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 import UserLayout from '../../Components/Layouts/UserLayout';
-import CreateGoalModal from '../../Components/Modals/CreateGoalModal'; // <-- IMPORT NATIN YUNG MODAL
-import { Target, Plus, ShieldAlert, Smartphone, ShoppingBag, MoreVertical, Edit2, Trash2, PiggyBank, Landmark, Umbrella, GraduationCap, Gamepad2, Plane } from 'lucide-react';
-
-export default function Goals({ auth, finances, goals }) {
+import CreateGoalModal from '../../Components/Modals/CreateGoalModal';
+import AllocateFundsModal from '../../Components/Modals/AllocateFundsModal';
+import TransferToSavingsModal from '../../Components/Modals/TransferToSavingsModal';
+import WithdrawFromSavingsModal from '../../Components/Modals/WithdrawFromSavingsModal';
+import { Target, Plus, ShieldAlert, Smartphone, ShoppingBag, MoreVertical, Edit2, Trash2, PlusCircle, PiggyBank, Wallet, ArrowUpRight, ArrowDownLeft, Landmark, Umbrella, GraduationCap, Gamepad2, Plane } from 'lucide-react';export default function Goals({ auth, finances, goals }) {
     const user = auth?.user;
     const [activeMenu, setActiveMenu] = useState(null);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false); // <-- STATE PARA SA MODAL
+    const [allocatingGoal, setAllocatingGoal] = useState(null);  // ← BAGO
+    const [isTransferModalOpen, setIsTransferModalOpen] = useState(false); // dagdag din
+    const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
+
+        const openAllocateModal = (goal) => {
+            setActiveMenu(null);  // Close the dropdown
+            setAllocatingGoal(goal);
+        };
+
+        const closeAllocateModal = () => {
+            setAllocatingGoal(null);
+        };
 
     // Pinagsama natin yung mga dati mong icons at yung mga bagong icons!
     const renderIcon = (iconName, className) => {
@@ -35,10 +48,10 @@ export default function Goals({ auth, finances, goals }) {
             <Head title="Savings Goals | Youth MoneyBank" />
 
             <div className="max-w-6xl mx-auto">
-                {/* 1. TOTAL SAVINGS HEADER & ADD GOAL BUTTON (Yung paborito mong design!) */}
+                {/* 1. SAVINGS OVERVIEW with Add/Withdraw actions */}
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
                     
-                    {/* Upper Row: Total Amount & Button */}
+                    {/* Top Row: Total Savings + Add Goal Button */}
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                         <div>
                             <p className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-1">Total Savings</p>
@@ -48,29 +61,50 @@ export default function Goals({ auth, finances, goals }) {
                         </div>
                         
                         <button 
-                            onClick={() => setIsCreateModalOpen(true)} // <-- TATAWAGIN NA NITO YUNG MODAL
+                            onClick={() => setIsCreateModalOpen(true)}
                             className="px-6 py-2.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-200 cursor-pointer transition-all flex items-center gap-2"
                         >
                             <Plus size={20} strokeWidth={2.5} /> Add New Goal
                         </button>
                     </div>
-                    
-                    {/* Lower Row: Breakdown */}
-                    <div className="flex flex-col sm:flex-row gap-6 pt-5 border-t border-gray-100">
-                        <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full bg-emerald-500 shadow-sm"></div>
-                            <p className="text-sm text-gray-600 font-medium">
-                                Allocated to Goals: <span className="font-bold text-gray-900">₱{(finances?.allocated || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</span>
-                            </p>
+
+                        {/* Middle Row: Breakdown */}
+                        <div className="flex flex-col sm:flex-row gap-6 pt-5 border-t border-gray-100 mb-5">
+                            <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 rounded-full bg-emerald-500 shadow-sm"></div>
+                                <p className="text-sm text-gray-600 font-medium">
+                                    Allocated to Goals: <span className="font-bold text-gray-900">₱{(finances?.allocated || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</span>
+                                </p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 rounded-full bg-blue-500 shadow-sm"></div>
+                                <p className="text-sm text-gray-600 font-medium">
+                                    Unallocated Savings: <span className="font-bold text-gray-900">₱{(finances?.unallocated || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</span>
+                                </p>
+                            </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full bg-blue-500 shadow-sm"></div>
-                            <p className="text-sm text-gray-600 font-medium">
-                                Unallocated Savings: <span className="font-bold text-gray-900">₱{(finances?.unallocated || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</span>
-                            </p>
+
+                        {/* Bottom Row: Savings Pool Quick Actions */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-5 border-t border-gray-100">
+                            <button
+                                onClick={() => setIsTransferModalOpen(true)}
+                                className="flex items-center justify-center gap-2 py-3 px-4 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold rounded-xl transition-colors cursor-pointer border border-emerald-100"
+                            >
+                                <ArrowDownLeft size={16} strokeWidth={2.5} /> Add to Savings
+                            </button>
+                            <button
+                                onClick={() => setIsWithdrawModalOpen(true)}
+                                disabled={(finances?.unallocated || 0) <= 0}
+                                className={`flex items-center justify-center gap-2 py-3 px-4 font-bold rounded-xl transition-colors border ${
+                                    (finances?.unallocated || 0) > 0
+                                        ? 'bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-100 cursor-pointer'
+                                        : 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed'
+                                }`}
+                            >
+                                <ArrowUpRight size={16} strokeWidth={2.5} /> Withdraw to Wallet
+                            </button>
                         </div>
                     </div>
-                </div>
 
                 {/* 2. GOAL CARDS GRID */}
                 <div className="mb-4">
@@ -82,26 +116,28 @@ export default function Goals({ auth, finances, goals }) {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             
                             {/* DYNAMIC GOAL CARDS FROM DATABASE */}
-                            {goals.map((goal) => {
+                           {goals.map((goal) => {
                                 const percentage = goal.target_amount > 0 
                                     ? (goal.current_amount / goal.target_amount) * 100 
                                     : 0;
+                                const isGoalFull = goal.current_amount >= goal.target_amount;
 
                                 return (
-                                    <div key={goal.id} className="h-[220px] bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col justify-between relative group hover:border-blue-200 transition-colors">
+                                    <div key={goal.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex flex-col gap-4 relative group hover:border-blue-200 transition-colors">
                                         
+                                        {/* HEADER: Icon + Title + 3-dot menu */}
                                         <div className="flex justify-between items-start relative">
                                             <div className="flex items-center gap-3">
                                                 <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-sm ${goal.color_theme}`}>
                                                     {renderIcon(goal.icon_name, "w-6 h-6")}
                                                 </div>
-                                                <div>
+                                                <div className="min-w-0">
                                                     <h3 className="font-bold text-gray-900 leading-tight truncate max-w-[150px]">{goal.title}</h3>
                                                     <p className="text-[11px] text-gray-500 font-medium truncate max-w-[150px]">{goal.subtitle}</p>
                                                 </div>
                                             </div>
 
-                                            {/* 3-DOT ACTION MENU */}
+                                            {/* 3-DOT ACTION MENU (Edit + Delete only now) */}
                                             <div className="relative">
                                                 <button 
                                                     onClick={() => toggleMenu(goal.id)}
@@ -123,6 +159,7 @@ export default function Goals({ auth, finances, goals }) {
                                             </div>
                                         </div>
 
+                                        {/* PROGRESS SECTION */}
                                         <div>
                                             <div className="flex justify-between items-end mb-2">
                                                 <div>
@@ -145,6 +182,32 @@ export default function Goals({ auth, finances, goals }) {
                                             <p className="text-[10px] font-bold text-gray-500 mt-2 text-right">
                                                 {percentage.toFixed(1)}% Completed
                                             </p>
+                                        </div>
+
+                                        {/* ACTION BUTTONS */}
+                                        <div className="flex gap-2 mt-auto">
+                                            <button
+                                                onClick={() => openAllocateModal(goal)}
+                                                disabled={isGoalFull}
+                                                className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                                                    isGoalFull
+                                                        ? 'bg-emerald-50 text-emerald-600 cursor-not-allowed'
+                                                        : 'bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-200/50'
+                                                }`}
+                                            >
+                                                {isGoalFull ? (
+                                                    <>🎉 Goal Reached!</>
+                                                ) : (
+                                                    <>
+                                                        <PlusCircle size={14} strokeWidth={2.5} /> Add Funds
+                                                    </>
+                                                )}
+                                            </button>
+                                            <button
+                                                className="px-4 py-2.5 text-xs font-bold text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 rounded-xl transition-colors cursor-pointer"
+                                            >
+                                                View
+                                            </button>
                                         </div>
                                     </div>
                                 );
@@ -173,9 +236,28 @@ export default function Goals({ auth, finances, goals }) {
             </div>
 
             {/* TATAWAGIN DITO YUNG MODAL */}
-            <CreateGoalModal 
+           <CreateGoalModal 
                 isOpen={isCreateModalOpen} 
                 onClose={() => setIsCreateModalOpen(false)} 
+            />
+
+            <AllocateFundsModal
+                isOpen={allocatingGoal !== null}
+                onClose={closeAllocateModal}
+                goal={allocatingGoal}
+                savingsPoolBalance={finances?.unallocated || 0}
+            />
+
+            <TransferToSavingsModal
+                isOpen={isTransferModalOpen}
+                onClose={() => setIsTransferModalOpen(false)}
+                mainBalance={finances?.main_balance || 0}
+            />
+
+            <WithdrawFromSavingsModal
+                isOpen={isWithdrawModalOpen}
+                onClose={() => setIsWithdrawModalOpen(false)}
+                savingsPoolBalance={finances?.unallocated || 0}
             />
         </UserLayout>
     );

@@ -2,37 +2,51 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\Money;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
-
 class SavingsGoalController extends Controller
+{
+   public function index()
+{
+    $user = auth()->user();
+    $wallet = $user->wallet;
 
-    {
-        public function index()
-    {
-        $user = auth()->user();
-        $wallet = $user->wallet;
+    // Lahat ng computation sa CENTS, then convert to pesos for display
+    $mainBalanceCents = $wallet ? $wallet->balance_cents : 0;
+    $unallocatedSavingsCents = $wallet ? $wallet->savings_balance_cents : 0;
+    $allocatedGoalsCents = $user->savingsGoals()->sum('current_amount_cents');
+    $totalSavingsCents = $unallocatedSavingsCents + $allocatedGoalsCents;
 
-        // Computations para sa taas na part (Finances Summary)
-        $unallocatedSavings = $wallet ? $wallet->savings_balance : 0.00;
-        $allocatedGoals = $user->savingsGoals()->sum('current_amount');
-        $totalSavings = $unallocatedSavings + $allocatedGoals;
+    $goals = $user->savingsGoals()
+        ->orderBy('created_at', 'desc')
+        ->get()
+        ->map(function ($goal) {
+            return [
+                'id' => $goal->id,
+                'title' => $goal->title,
+                'subtitle' => $goal->subtitle,
+                'current_amount' => (float) $goal->current_amount_pesos,
+                'target_amount' => (float) $goal->target_amount_pesos,
+                'icon_name' => $goal->icon_name,
+                'color_theme' => $goal->color_theme,
+                'status' => $goal->status,
+            ];
+        });
 
-        // Kunin yung mga active goals
-        $goals = $user->savingsGoals()->orderBy('created_at', 'desc')->get();
-        
-        // I-render natin yung main Goals page kasama yung finances data!
-        return Inertia::render('User/Goals', [
-            'goals' => $goals,
-            'finances' => [
-                'total_savings' => (float) $totalSavings,
-                'allocated' => (float) $allocatedGoals,
-                'unallocated' => (float) $unallocatedSavings,
-            ]
-        ]);
-    }
-
+    return Inertia::render('User/Goals', [
+                'auth' => ['user' => $user],
+                'goals' => $goals,
+                'finances' => [
+                    'total_savings' => (float) ($totalSavingsCents / 100),
+                    'allocated' => (float) ($allocatedGoalsCents / 100),
+                    'unallocated' => (float) ($unallocatedSavingsCents / 100),
+                    'main_balance' => (float) ($mainBalanceCents / 100),
+                    'savings_pool_balance' => (float) ($unallocatedSavingsCents / 100),  // ← BAGO ITO (alias for clarity)
+                ]
+            ]);
+}
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -43,9 +57,16 @@ class SavingsGoalController extends Controller
             'color_theme' => 'required|string',
         ]);
 
-        auth()->user()->savingsGoals()->create($validated);
+        // Convert peso input to cents for storage
+        auth()->user()->savingsGoals()->create([
+            'title' => $validated['title'],
+            'subtitle' => $validated['subtitle'] ?? null,
+            'target_amount_cents' => Money::pesosToCents($validated['target_amount']),
+            'current_amount_cents' => 0,
+            'icon_name' => $validated['icon_name'],
+            'color_theme' => $validated['color_theme'],
+        ]);
 
-        // Imbes na redirect, 'back()' lang para hindi mag-refresh yung page habang sumasara yung modal
         return back()->with('success', 'Goal created successfully!');
     }
-    }
+}

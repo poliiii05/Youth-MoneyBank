@@ -103,25 +103,29 @@ export default function AddMoneyModal({ isOpen, onClose }) {
 
         const numValue = Number(rawValue);
 
-        // Kapag sumobra sa limit ang tinatype, i-block ang pag-type at magpakita ng red error
+        // ALWAYS update the amount — let them type freely
+        setAmount(numValue.toLocaleString('en-US'));
+
+        // THEN show validation as a visual cue (without blocking input)
         if (numValue > remainingLimit) {
             setErrorMsg(`Maximum allowed for your tier is ₱${remainingLimit.toLocaleString('en-US')}.`);
-            return; 
+        } else {
+            setErrorMsg('');
         }
-
-        setErrorMsg('');
-        setAmount(numValue.toLocaleString('en-US'));
     };
 
     const handlePreset = (val) => {
         if (isLimitReached) return;
-        
+
+        // Always set the value
+        setAmount(val.toLocaleString('en-US'));
+
+        // Show validation if over limit (without blocking)
         if (val > remainingLimit) {
             setErrorMsg(`Maximum allowed for your tier is ₱${remainingLimit.toLocaleString('en-US')}.`);
-            return;
+        } else {
+            setErrorMsg('');
         }
-        setErrorMsg('');
-        setAmount(val.toLocaleString('en-US'));
     };
 
     // Shortcut variable para malaman kung ire-red ang input box
@@ -131,8 +135,7 @@ export default function AddMoneyModal({ isOpen, onClose }) {
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-slate-900/60 backdrop-blur-sm">
             
             {/* Pinaliit ang width: sm:max-w-sm na lang para hindi masyadong malapad */}
-            <div className="bg-white w-full sm:max-w-sm sm:rounded-3xl rounded-t-3xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200 relative">
-
+     <div className="bg-white w-full sm:max-w-md sm:rounded-3xl rounded-t-3xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200 relative">
                 {/* ── CENTER LOADING OVERLAY ── */}
                 {isProcessing && (
                     <div className="absolute inset-0 z-50 bg-white/90 backdrop-blur-sm flex flex-col items-center justify-center animate-in fade-in duration-300">
@@ -238,6 +241,7 @@ export default function AddMoneyModal({ isOpen, onClose }) {
                                         onChange={handleAmountChange}
                                         disabled={isLimitReached}
                                         placeholder={isLimitReached ? "0" : "Min. 50"}
+                                        autoFocus
                                         className={`w-full pl-7 pr-3 py-2 border rounded-xl text-base font-semibold outline-none transition-all
                                             ${hasErrorUI 
                                                 ? 'bg-red-50/20 border-red-400 focus:ring-4 focus:ring-red-50 text-red-900' 

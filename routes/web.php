@@ -135,13 +135,27 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/goals', [SavingsGoalController::class, 'store'])->name('goals.store');
 
     // TRANSACTIONS 
-    Route::get('/transactions', function () {
-        $user = auth()->user(); // <-- ITO NA YUNG NAG-AYOS NG ERROR 500 MO!
+        Route::get('/transactions', function () {
+            $user = auth()->user();
 
-       return inertia('User/Transactions', [
-            'transactions' => $user->transactions()->latest()->get(),
-        ]);
-    })->name('transactions');
+            return inertia('User/Transactions', [
+                'auth' => ['user' => $user],
+                'transactions' => $user->transactions()
+                    ->latest()
+                    ->get()
+                    ->map(function ($t) {
+                        return [
+                            'id' => $t->id,
+                            'title' => $t->title,
+                            'type' => $t->type,
+                            'amount' => (float) $t->amount_pesos,
+                            'is_positive' => $t->is_positive,
+                            'status' => $t->status,
+                            'created_at' => $t->created_at,
+                        ];
+                    }),
+            ]);
+        })->name('transactions');
 
     //Settings
     Route::get('/Settings', function () {
@@ -162,4 +176,14 @@ Route::middleware(['auth'])->group(function () {
     // Add money transactions
     Route::post('/wallet/add-money', [WalletController::class, 'addMoney'])->name('wallet.add-money');
 
-});
+    // Goal allocation (wallet → goal)
+    Route::post('/goals/{goal}/allocate', [\App\Http\Controllers\User\GoalAllocationController::class, 'allocate'])
+        ->name('goals.allocate');
+
+    // Savings transfers (Main Wallet ↔ Savings Pool)
+    Route::post('/savings/add', [\App\Http\Controllers\User\SavingsTransferController::class, 'addToSavings'])
+        ->name('savings.add');
+
+    Route::post('/savings/withdraw', [\App\Http\Controllers\User\SavingsTransferController::class, 'withdrawFromSavings'])
+        ->name('savings.withdraw');
+    });
