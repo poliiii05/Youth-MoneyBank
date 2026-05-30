@@ -82,13 +82,16 @@ class WalletController extends Controller
                 // ====================================================
                 // 4. ENFORCE TIER LIMIT (BACKEND - cannot be bypassed)
                 // ====================================================
-                if (TierLimitService::wouldExceedLimit($user, $wallet->balance_cents, $amountCents)) {
+                if (TierLimitService::wouldExceedLimit($user, $amountCents)) {
                     $tier = (int) ($user->kyc_tier ?? 1);
                     $maxPesos = TierLimitService::getMaxBalancePesos($tier);
                     $tierName = TierLimitService::getTierName($tier);
+                    $remainingPesos = TierLimitService::getRemainingCapacityCents($user) / 100;
                     
                     throw ValidationException::withMessages([
-                        'amount' => "This amount would exceed your {$tierName} tier limit of ₱" . number_format($maxPesos, 2) . ".",
+                        'amount' => "This amount would exceed your {$tierName} tier limit of ₱" . 
+                            number_format($maxPesos, 2) . 
+                            ". You can add up to ₱" . number_format($remainingPesos, 2) . " more.",
                     ]);
                 }
 

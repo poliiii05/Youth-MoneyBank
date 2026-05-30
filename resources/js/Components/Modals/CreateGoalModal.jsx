@@ -1,8 +1,35 @@
 // resources/js/Components/Modals/CreateGoalModal.jsx
 import { useForm } from '@inertiajs/react';
+import { useEffect } from 'react';
 import { Target, Smartphone, Gamepad2, Plane, ShoppingBag, PiggyBank, Landmark, Umbrella, GraduationCap, X, Loader2 } from 'lucide-react';
+import { useModalEnterKey } from '../../hooks/useModalEnterKey';
 
-export default function CreateGoalModal({ isOpen, onClose }) {
+// Template presets para sa Dashboard quick-start
+const TEMPLATE_PRESETS = {
+    'Emergency': {
+        title: 'Emergency Fund',
+        subtitle: 'For unexpected expenses',
+        target_amount: '5000',
+        icon_name: 'ShieldAlert',
+        color_theme: 'bg-red-500',
+    },
+    'Phone': {
+        title: 'New Phone',
+        subtitle: 'Saving for an upgrade',
+        target_amount: '15000',
+        icon_name: 'Smartphone',
+        color_theme: 'bg-blue-500',
+    },
+    'Travel': {
+        title: 'Travel Fund',
+        subtitle: 'Adventure awaits',
+        target_amount: '10000',
+        icon_name: 'Plane',
+        color_theme: 'bg-purple-500',
+    },
+};
+
+export default function CreateGoalModal({ isOpen, onClose, template = null }) {
     const { data, setData, post, processing, errors, reset, clearErrors } = useForm({
         title: '',
         subtitle: '',
@@ -10,23 +37,45 @@ export default function CreateGoalModal({ isOpen, onClose }) {
         icon_name: 'PiggyBank',
         color_theme: 'bg-emerald-500',
     });
+    
+    // Apply template when modal opens with a template
+    useEffect(() => {
+        if (isOpen && template && TEMPLATE_PRESETS[template]) {
+            const preset = TEMPLATE_PRESETS[template];
+            setData({
+                title: preset.title,
+                subtitle: preset.subtitle,
+                target_amount: preset.target_amount,
+                icon_name: preset.icon_name,
+                color_theme: preset.color_theme,
+            });
+        }
+    }, [isOpen, template]);
 
-    if (!isOpen) return null;
+    const isFormValid = data.title.trim().length > 0 && Number(data.target_amount) >= 50;
 
     const submit = (e) => {
-        e.preventDefault();
-        // Clear muna ang lumang errors bago mag-submit ulit
-        clearErrors(); 
-        
+        if (e) e.preventDefault();
+        clearErrors();
         post('/goals', {
             preserveScroll: true,
             onSuccess: () => {
-                reset(); // Clear form kapag successful
-                onClose(); // Isara ang modal
+                reset();
+                onClose();
             },
-            // Kapag may error galing backend, hindi magsasara ang modal
         });
     };
+
+    useModalEnterKey({
+        isOpen,
+        isSuccess: false,
+        canSubmit: isFormValid,
+        isProcessing: processing,
+        onSuccess: onClose,
+        onSubmit: () => submit(null),
+    });
+
+    if (!isOpen) return null;
 
     const icons = [
         { name: 'PiggyBank', component: <PiggyBank size={24} /> },
@@ -55,159 +104,102 @@ export default function CreateGoalModal({ isOpen, onClose }) {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-            
             <div className="bg-slate-50 rounded-[2rem] w-full max-w-5xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] relative animate-in fade-in zoom-in-95 duration-200">
-                
-                <button 
-                    onClick={() => { reset(); clearErrors(); onClose(); }}
-                    className="absolute top-4 right-4 p-2 bg-white text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-colors z-10 cursor-pointer shadow-sm"
-                >
+                <button onClick={() => { reset(); clearErrors(); onClose(); }}
+                    className="absolute top-4 right-4 p-2 bg-white text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-colors z-10 cursor-pointer shadow-sm">
                     <X size={20} />
                 </button>
-
                 <div className="flex flex-col lg:flex-row overflow-y-auto">
-                    
-                    {/* LEFT COLUMN: THE FORM */}
                     <div className="flex-1 bg-white p-6 sm:p-8 lg:p-10">
                         <div>
                             <h2 className="text-2xl font-black text-slate-900 tracking-tight">Set a New Goal 🚀</h2>
                             <p className="text-sm text-slate-500 font-medium mt-1 mb-8">What are you saving up for? Define it to achieve it.</p>
                         </div>
-
                         <form onSubmit={submit} className="space-y-6">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                
-                                {/* Title (NILAGYAN NG REQUIRED) */}
                                 <div className="sm:col-span-2">
-                                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">
-                                        Goal Name <span className="text-red-500">*</span>
-                                    </label>
-                                    <input
-                                        type="text"
-                                        required
-                                        placeholder="e.g. iPhone 15 Pro, Emergency Fund"
-                                        value={data.title}
-                                        onChange={e => setData('title', e.target.value)}
-                                        className={`w-full px-4 py-3 bg-slate-50 border rounded-xl text-sm font-semibold focus:bg-white focus:ring-2 outline-none transition-all ${errors.title ? 'border-red-500 focus:ring-red-500/20' : 'border-slate-200 focus:ring-blue-500/20 focus:border-blue-500'}`}
-                                    />
+                                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">Goal Name <span className="text-red-500">*</span></label>
+                                    <input type="text" required placeholder="e.g. iPhone 15 Pro, Emergency Fund" value={data.title} onChange={e => setData('title', e.target.value)}
+                                        className={`w-full px-4 py-3 bg-slate-50 border rounded-xl text-sm font-semibold focus:bg-white focus:ring-2 outline-none transition-all ${errors.title ? 'border-red-500 focus:ring-red-500/20' : 'border-slate-200 focus:ring-blue-500/20 focus:border-blue-500'}`} />
                                     {errors.title && <p className="text-xs text-red-500 mt-1.5 font-semibold flex items-center gap-1">⚠️ {errors.title}</p>}
                                 </div>
-
-                                {/* Subtitle (OPTIONAL KAYA WALANG REQUIRED) */}
                                 <div>
                                     <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">Short Description</label>
-                                    <input
-                                        type="text"
-                                        placeholder="e.g. By December 2026"
-                                        value={data.subtitle}
-                                        onChange={e => setData('subtitle', e.target.value)}
-                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                                    />
+                                    <input type="text" placeholder="e.g. By December 2026" value={data.subtitle} onChange={e => setData('subtitle', e.target.value)}
+                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all" />
                                 </div>
-
-                                {/* Target Amount (NILAGYAN NG REQUIRED at MIN=50) */}
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">
-                                        Target Amount (₱) <span className="text-red-500">*</span>
-                                    </label>
-                                    <input
-                                        type="number"
-                                        required
-                                        min="50"
-                                        placeholder="5000"
-                                        value={data.target_amount}
-                                        onChange={e => setData('target_amount', e.target.value)}
-                                        className={`w-full px-4 py-3 bg-slate-50 border rounded-xl text-sm font-black focus:bg-white focus:ring-2 outline-none transition-all ${errors.target_amount ? 'border-red-500 focus:ring-red-500/20' : 'border-slate-200 focus:ring-blue-500/20 focus:border-blue-500'}`}
-                                    />
-                                    {errors.target_amount && <p className="text-xs text-red-500 mt-1.5 font-semibold flex items-center gap-1">⚠️ {errors.target_amount}</p>}
+                                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">Target Amount (₱) <span className="text-red-500">*</span></label>
+                                   <div className="relative">
+                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-sm text-slate-400 pointer-events-none">₱</span>
+                                        <input 
+                                            type="text" 
+                                            inputMode="numeric"
+                                            required 
+                                            placeholder="5,000" 
+                                            value={data.target_amount ? Number(data.target_amount).toLocaleString('en-US') : ''}
+                                            onChange={e => {
+                                                const raw = e.target.value.replace(/[^0-9]/g, '');
+                                                setData('target_amount', raw);
+                                            }}
+                                            className={`w-full pl-8 pr-4 py-3 bg-slate-50 border rounded-xl text-sm font-black focus:bg-white focus:ring-2 outline-none transition-all ${errors.target_amount ? 'border-red-500 focus:ring-red-500/20' : 'border-slate-200 focus:ring-blue-500/20 focus:border-blue-500'}`} 
+                                        />
+                                    </div>
+                                {errors.target_amount && <p className="text-xs text-red-500 mt-1.5 font-semibold flex items-center gap-1">⚠️ {errors.target_amount}</p>}
                                 </div>
                             </div>
-
-                            {/* Icon Picker */}
                             <div>
                                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-2">Choose an Icon</label>
                                 <div className="flex flex-wrap gap-3">
                                     {icons.map((icon) => (
-                                        <button
-                                            type="button"
-                                            key={icon.name}
-                                            onClick={() => setData('icon_name', icon.name)}
-                                            className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all cursor-pointer ${data.icon_name === icon.name ? 'bg-slate-800 text-white shadow-md scale-105' : 'bg-slate-50 text-slate-500 border border-slate-200 hover:bg-slate-100'}`}
-                                        >
+                                        <button type="button" key={icon.name} onClick={() => setData('icon_name', icon.name)}
+                                            className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all cursor-pointer ${data.icon_name === icon.name ? 'bg-slate-800 text-white shadow-md scale-105' : 'bg-slate-50 text-slate-500 border border-slate-200 hover:bg-slate-100'}`}>
                                             {icon.component}
                                         </button>
                                     ))}
                                 </div>
                             </div>
-
-                            {/* Color Theme Picker */}
                             <div>
                                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-2">Color Theme</label>
                                 <div className="flex flex-wrap gap-3">
                                     {colors.map((color) => (
-                                        <button
-                                            type="button"
-                                            key={color.value}
-                                            onClick={() => setData('color_theme', color.value)}
-                                            className={`w-10 h-10 rounded-full ${color.display} flex items-center justify-center transition-all border-4 cursor-pointer ${data.color_theme === color.value ? 'border-slate-800 scale-110 shadow-md' : 'border-transparent hover:scale-105'}`}
-                                        ></button>
+                                        <button type="button" key={color.value} onClick={() => setData('color_theme', color.value)}
+                                            className={`w-10 h-10 rounded-full ${color.display} flex items-center justify-center transition-all border-4 cursor-pointer ${data.color_theme === color.value ? 'border-slate-800 scale-110 shadow-md' : 'border-transparent hover:scale-105'}`}></button>
                                     ))}
                                 </div>
                             </div>
-
                             <div className="pt-4 flex items-center gap-3">
-                                <button 
-                                    type="button"
-                                    onClick={() => { reset(); clearErrors(); onClose(); }}
-                                    className="px-6 py-3.5 text-slate-500 font-bold hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
-                                >
-                                    Cancel
-                                </button>
-                                <button 
-                                    type="submit"
-                                    disabled={processing} 
-                                    className="flex-1 py-3.5 bg-blue-600 text-white font-bold rounded-xl shadow-md shadow-blue-200 hover:bg-blue-700 transition-all focus:ring-4 focus:ring-blue-100 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
-                                >
+                                <button type="button" onClick={() => { reset(); clearErrors(); onClose(); }}
+                                    className="px-6 py-3.5 text-slate-500 font-bold hover:bg-slate-100 rounded-xl transition-colors cursor-pointer">Cancel</button>
+                                <button type="submit" disabled={processing}
+                                    className="flex-1 py-3.5 bg-blue-600 text-white font-bold rounded-xl shadow-md shadow-blue-200 hover:bg-blue-700 transition-all focus:ring-4 focus:ring-blue-100 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2">
                                     {processing ? <Loader2 size={18} className="animate-spin" /> : 'Create Savings Goal'}
                                 </button>
                             </div>
                         </form>
                     </div>
-
-                    {/* RIGHT COLUMN: LIVE PREVIEW CARD */}
                     <div className="w-full lg:w-96 bg-slate-50 p-6 sm:p-8 lg:p-10 shrink-0 border-l border-slate-100 flex flex-col justify-center">
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 text-center lg:text-left">Live Card Preview</p>
-                        
                         <div className="bg-white rounded-[1.5rem] p-6 shadow-xl border border-slate-100 relative overflow-hidden w-full">
                             <div className="flex justify-between items-start mb-6">
-                                <div className={`p-4 rounded-2xl ${data.color_theme.replace('bg-', 'bg-').replace('500', '50')} ${data.color_theme.replace('bg-', 'text-')}`}>
+                                <div className={`p-4 rounded-2xl ${data.color_theme.replace('500', '50')} ${data.color_theme.replace('bg-', 'text-')}`}>
                                     {renderActiveIcon()}
                                 </div>
-                                <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md bg-slate-100 text-slate-500">
-                                    0%
-                                </span>
+                                <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md bg-slate-100 text-slate-500">0%</span>
                             </div>
-
                             <div>
-                                <h3 className="font-black text-slate-900 text-xl tracking-tight mb-1 truncate">
-                                    {data.title || "Your Goal Name"}
-                                </h3>
-                                <p className="text-xs text-slate-500 font-medium mb-6 truncate">
-                                    {data.subtitle || "Short description"}
-                                </p>
-                                
+                                <h3 className="font-black text-slate-900 text-xl tracking-tight mb-1 truncate">{data.title || "Your Goal Name"}</h3>
+                                <p className="text-xs text-slate-500 font-medium mb-6 truncate">{data.subtitle || "Short description"}</p>
                                 <div className="flex justify-between items-end mb-2">
                                     <p className="text-3xl font-black text-slate-900 tracking-tight">₱0</p>
                                 </div>
-
                                 <div className="w-full bg-slate-100 rounded-full h-2 mb-2 overflow-hidden"></div>
-                                <p className={`text-[10px] font-bold text-right uppercase tracking-wider text-slate-400`}>
+                                <p className="text-[10px] font-bold text-right uppercase tracking-wider text-slate-400">
                                     Target: ₱{data.target_amount ? Number(data.target_amount).toLocaleString() : '0'}
                                 </p>
                             </div>
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>

@@ -56,11 +56,15 @@ export default function AddMoneyModal({ isOpen, onClose }) {
     const user = auth?.user;
 
     // --- COMPUTE TIER LIMITS ---
+    // Uses total_holdings (wallet + pool + goals) from backend
+    // This prevents the "savings loophole" — users cannot bypass tier limits
+    // by spreading funds across sub-accounts.
     const currentTier = kyc_tier || user?.kyc_tier || 1;
     const maxLimit = finances?.max_limit || (currentTier === 3 ? 100000 : currentTier === 2 ? 20000 : 5000);
     const mainBalance = finances?.main_balance || 0;
-    const remainingLimit = maxLimit - mainBalance;
-    
+    const totalHoldings = finances?.total_holdings ?? mainBalance;  // Fallback to mainBalance for safety
+    const remainingLimit = finances?.remaining_capacity ?? (maxLimit - totalHoldings);
+
     // Kapag less than 50 na ang natitira, hindi na pwede mag-cash in
     const isLimitReached = remainingLimit < 50;
 
@@ -108,7 +112,7 @@ export default function AddMoneyModal({ isOpen, onClose }) {
 
         // THEN show validation as a visual cue (without blocking input)
         if (numValue > remainingLimit) {
-            setErrorMsg(`Maximum allowed for your tier is ₱${remainingLimit.toLocaleString('en-US')}.`);
+            setErrorMsg(`Exceeds your tier limit. You can add up to ₱${remainingLimit.toLocaleString('en-US')} more.`);
         } else {
             setErrorMsg('');
         }
@@ -122,9 +126,9 @@ export default function AddMoneyModal({ isOpen, onClose }) {
 
         // Show validation if over limit (without blocking)
         if (val > remainingLimit) {
-            setErrorMsg(`Maximum allowed for your tier is ₱${remainingLimit.toLocaleString('en-US')}.`);
-        } else {
-            setErrorMsg('');
+            setErrorMsg(`Exceeds your tier limit. You can add up to ₱${remainingLimit.toLocaleString('en-US')} more.`);
+        }else {
+                    setErrorMsg('');
         }
     };
 
@@ -226,7 +230,7 @@ export default function AddMoneyModal({ isOpen, onClose }) {
                                         Amount
                                     </label>
                                     <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                                        Remaining Limit: <span className={`${hasErrorUI ? 'text-red-500' : 'text-blue-600'}`}>₱{remainingLimit.toLocaleString('en-US')}</span>
+                                        Tier Remaining: <span className={`${hasErrorUI ? 'text-red-500' : 'text-blue-600'}`}>₱{remainingLimit.toLocaleString('en-US')}</span>
                                     </span>
                                 </div>
                                 <div className="relative">
@@ -257,8 +261,8 @@ export default function AddMoneyModal({ isOpen, onClose }) {
                                     {hasErrorUI && (
                                         <p className="text-[10px] font-semibold text-red-500 flex items-center gap-1">
                                             <AlertCircle size={10} /> 
-                                            {isLimitReached ? "You've reached your maximum wallet limit." : errorMsg}
-                                        </p>
+                                            {isLimitReached ? "You've reached your tier limit (including savings). Upgrade tier to add more." : errorMsg} 
+                                             </p>
                                     )}
                                 </div>
                             </div>

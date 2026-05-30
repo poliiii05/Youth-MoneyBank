@@ -77,32 +77,53 @@ Route::middleware(['auth'])->group(function () {
     
     // DASHBOARD ROUTE  
         Route::get('/dashboard', function () {
-            $user = auth()->user();
+           $user = auth()->user();
             $wallet = $user->wallet;
 
             $mainBalanceCents = $wallet ? $wallet->balance_cents : 0;
             $unallocatedSavingsCents = $wallet ? $wallet->savings_balance_cents : 0;
-            $allocatedGoalsCents = $user->savingsGoals()->sum('current_amount_cents');
+            $allocatedGoalsCents = $user->savingsGoals()
+                ->where('status', '!=', 'deleted')
+                ->sum('current_amount_cents');
             $totalSavingsCents = $unallocatedSavingsCents + $allocatedGoalsCents;
 
             $tier = (int) ($user->kyc_tier ?? 1);
             $maxLimitCents = \App\Services\TierLimitService::getMaxBalanceCents($tier);
-        
+            $totalHoldingsCents = \App\Services\TierLimitService::getTotalHoldingsCents($user);
+            $remainingCapacityCents = \App\Services\TierLimitService::getRemainingCapacityCents($user);
+            
+            // Active goal logic — Option C: Most funds first, fallback chain
+            // 1. Goal with most current allocation
+            // 2. If all empty, goal with smallest target (most achievable)
+            // 3. Null if no goals
             $activeGoal = $user->savingsGoals()
-                ->whereColumn('current_amount_cents', '<', 'target_amount_cents')
+                ->where('status', '!=', 'deleted')
+                ->where('current_amount_cents', '>', 0)
+                ->orderBy('current_amount_cents', 'desc')
                 ->first();
+
+            if (!$activeGoal) {
+                // Fallback: no goals have funds yet, pick the smallest target (most achievable)
+                $activeGoal = $user->savingsGoals()
+                    ->where('status', '!=', 'deleted')
+                    ->orderBy('target_amount_cents', 'asc')
+                    ->first();
+}
 
             return Inertia::render('User/Dashboard', [
                 'auth' => ['user' => $user],
                 'finances' => [
-                    // Frontend expects pesos (float) for display
-                    'main_balance' => (float) ($mainBalanceCents / 100),
-                    'total_savings' => (float) ($totalSavingsCents / 100),
-                    'max_limit' => (float) ($maxLimitCents / 100),
-                    // Also expose cents for precision-sensitive operations
-                    'main_balance_cents' => $mainBalanceCents,
-                    'max_limit_cents' => $maxLimitCents,
-                ],
+                'main_balance' => (float) ($mainBalanceCents / 100),
+                'total_savings' => (float) ($totalSavingsCents / 100),
+                'max_limit' => (float) ($maxLimitCents / 100),
+                'main_balance_cents' => $mainBalanceCents,
+                'max_limit_cents' => $maxLimitCents,
+                // Bagong breakdown fields
+                'unallocated_savings' => (float) ($unallocatedSavingsCents / 100),
+                'allocated_to_goals' => (float) ($allocatedGoalsCents / 100),
+                'total_holdings' => (float) ($totalHoldingsCents / 100),
+                'remaining_capacity' => (float) ($remainingCapacityCents / 100),
+            ],
                 'active_goal' => $activeGoal ? [
                     'id' => $activeGoal->id,
                     'title' => $activeGoal->title,
@@ -176,9 +197,15 @@ Route::middleware(['auth'])->group(function () {
     // Add money transactions
     Route::post('/wallet/add-money', [WalletController::class, 'addMoney'])->name('wallet.add-money');
 
-    // Goal allocation (wallet → goal)
+    // Goal allocation, deallocate (wallet → goal)
     Route::post('/goals/{goal}/allocate', [\App\Http\Controllers\User\GoalAllocationController::class, 'allocate'])
         ->name('goals.allocate');
+
+    Route::post('/goals/{goal}/deallocate', [\App\Http\Controllers\User\GoalAllocationController::class, 'deallocate'])
+    ->name('goals.deallocate');   
+
+    Route::post('/goals/{goal}/update', [\App\Http\Controllers\SavingsGoalController::class, 'update'])
+    ->name('goals.update');
 
     // Savings transfers (Main Wallet ↔ Savings Pool)
     Route::post('/savings/add', [\App\Http\Controllers\User\SavingsTransferController::class, 'addToSavings'])
@@ -186,4 +213,10 @@ Route::middleware(['auth'])->group(function () {
 
     Route::post('/savings/withdraw', [\App\Http\Controllers\User\SavingsTransferController::class, 'withdrawFromSavings'])
         ->name('savings.withdraw');
+    
+    Route::post('/goals/{goal}/delete', [\App\Http\Controllers\SavingsGoalController::class, 'destroy'])
+    ->name('goals.destroy');
+
+    Route::get('/goals/{goal}/details', [\App\Http\Controllers\SavingsGoalController::class, 'showDetails'])
+    ->name('goals.details');
     });

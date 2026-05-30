@@ -55,35 +55,11 @@ class GoogleAuthController extends Controller
 
            // Gawan agad ng Wallet na 0 ang balance (in cents)
             $user->wallet()->create(['balance_cents' => 0, 'savings_balance_cents' => 0]);
-
-            // NEW: I-insert ang 3 Default Savings Goals
-          // I-insert ang 3 Default Savings Goals (amounts in cents)
-            $user->savingsGoals()->createMany([
-                [
-                    'title' => 'Emergency Fund',
-                    'subtitle' => 'For unexpected expenses',
-                    'target_amount_cents' => 500000,  // ₱5,000
-                    'current_amount_cents' => 0,
-                    'icon_name' => 'ShieldAlert',
-                    'color_theme' => 'bg-red-500',
-                ],
-                [
-                    'title' => 'New Sneakers',
-                    'subtitle' => 'Reward for myself',
-                    'target_amount_cents' => 450000,  // ₱4,500
-                    'current_amount_cents' => 0,
-                    'icon_name' => 'ShoppingBag',
-                    'color_theme' => 'bg-emerald-500',
-                ],
-                [
-                    'title' => 'Dream Phone',
-                    'subtitle' => 'Saving up for an upgrade',
-                    'target_amount_cents' => 1500000,  // ₱15,000
-                    'current_amount_cents' => 0,
-                    'icon_name' => 'Smartphone',
-                    'color_theme' => 'bg-blue-500',
-                ]
-            ]);
+  
+        // Default goals removed in favor of template-based onboarding.
+        // New users now see template suggestions sa empty state (Dashboard at Goals page).
+        // This gives users explicit choice instead of pre-populating their dashboard
+        // with goals they may not want.
         }
 
         // I-login ang user

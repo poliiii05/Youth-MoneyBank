@@ -39,6 +39,9 @@ class TierLimitService
     /**
      * Get the maximum balance in CENTS for a given tier.
      */
+    /**
+     * Get the maximum balance in CENTS for a given tier.
+     */
     public static function getMaxBalanceCents(int $tier): int
     {
         return self::TIER_LIMITS_CENTS[$tier] ?? self::TIER_LIMITS_CENTS[1];
@@ -61,30 +64,63 @@ class TierLimitService
     }
 
     /**
-     * Check if a transaction would exceed the user's tier limit.
+     * Calculate user's TOTAL HOLDINGS across all accounts.
+     * Total = Main Wallet + Savings Pool + Sum of all active Savings Goals
      * 
-     * @param User $user The user making the transaction
-     * @param int $currentBalanceCents Current wallet balance
-     * @param int $additionalCents The amount being added
-     * @return bool True if the resulting balance would EXCEED the tier limit
+     * This is the source of truth for tier limit enforcement —
+     * users cannot bypass tier limits by spreading funds across sub-accounts.
+     * 
+     * Returns the total in CENTS.
      */
-    public static function wouldExceedLimit(User $user, int $currentBalanceCents, int $additionalCents): bool
+    public static function getTotalHoldingsCents(User $user): int
     {
-        $tier = (int) ($user->kyc_tier ?? 1);
-        $maxCents = self::getMaxBalanceCents($tier);
-        $newBalance = $currentBalanceCents + $additionalCents;
+        $wallet = $user->wallet;
         
-        return $newBalance > $maxCents;
+        if (!$wallet) {
+            return 0;
+        }
+
+        $mainWallet = (int) $wallet->balance_cents;
+        $savingsPool = (int) $wallet->savings_balance_cents;
+        
+        $goalAllocations = (int) $user->savingsGoals()
+            ->where('status', '!=', 'deleted')
+            ->sum('current_amount_cents');
+
+        return $mainWallet + $savingsPool + $goalAllocations;
     }
 
     /**
-     * Get the remaining balance capacity in CENTS for a user.
+     * Check if a transaction would exceed the user's tier limit.
+     * Checks against TOTAL HOLDINGS, not just main wallet.
+     * 
+     * @param User $user The user making the transaction
+     * @param int $additionalCents The amount being added (in cents)
+     * @return bool True if the resulting total holdings would EXCEED the tier limit
      */
-    public static function getRemainingCapacityCents(User $user, int $currentBalanceCents): int
+    public static function wouldExceedLimit(User $user, int $additionalCents): bool
     {
         $tier = (int) ($user->kyc_tier ?? 1);
         $maxCents = self::getMaxBalanceCents($tier);
         
-        return max(0, $maxCents - $currentBalanceCents);
+        $currentTotal = self::getTotalHoldingsCents($user);
+        $projectedTotal = $currentTotal + $additionalCents;
+        
+        return $projectedTotal > $maxCents;
     }
+
+    /**
+     * Get the remaining capacity in CENTS for a user.
+     * Returns how much more they can cash-in before hitting tier limit.
+     */
+    public static function getRemainingCapacityCents(User $user): int
+    {
+        $tier = (int) ($user->kyc_tier ?? 1);
+        $maxCents = self::getMaxBalanceCents($tier);
+        
+        $currentTotal = self::getTotalHoldingsCents($user);
+        
+        return max(0, $maxCents - $currentTotal);
+    }
+    
 }

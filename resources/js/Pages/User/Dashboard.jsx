@@ -14,8 +14,11 @@ export default function Dashboard({ auth, finances, active_goal, kyc_tier, recen
     // --- COMPUTATIONS ---
     const mainBalance = finances?.main_balance || 0;
     const maxLimit = finances?.max_limit || 5000;
-    const remainingLimit = maxLimit - mainBalance;
-    const limitPercentage = maxLimit > 0 ? (mainBalance / maxLimit) * 100 : 0;
+    const totalHoldings = finances?.total_holdings ?? mainBalance;
+    const remainingCapacity = finances?.remaining_capacity ?? (maxLimit - totalHoldings);
+    const tierUsagePercentage = maxLimit > 0 ? (totalHoldings / maxLimit) * 100 : 0;
+    const allocatedToGoals = finances?.allocated_to_goals ?? 0;
+    const unallocatedSavings = finances?.unallocated_savings ?? 0;
 
     const getTierName = (tier) => {
         if (Number(tier) === 3) return 'Achiever';
@@ -95,30 +98,42 @@ export default function Dashboard({ auth, finances, active_goal, kyc_tier, recen
                         </div>
                     </div>
 
-                    <div className="relative z-10 mt-auto bg-white/5 backdrop-blur-md border border-white/10 rounded-xl py-2 px-3">
-                        <div className="flex justify-between items-end mb-1.5">
-                            <div>
-                                <p className="text-[9px] font-semibold text-blue-200/60 uppercase tracking-wider mb-0.5">
-                                    <span className="text-blue-100">{getTierName(kyc_tier)}</span> Limit
-                                </p>
-                                <p className="text-[10px] font-medium text-blue-100/90">
-                                    Remaining: <span className="font-semibold text-white">₱{remainingLimit.toLocaleString('en-PH')}</span>
-                                </p>
-                            </div>
-                            <div className="text-right">
-                                <p className="text-[10px] font-semibold text-blue-100/80">
-                                    ₱{mainBalance.toLocaleString('en-PH')} <span className="text-blue-200/50">/ ₱{maxLimit.toLocaleString('en-PH')}</span>
-                                </p>
-                                <p className="text-[8px] text-blue-200/50 font-medium mt-0.5 uppercase tracking-wider">Used {limitPercentage.toFixed(0)}%</p>
-                            </div>
+                   <div className="relative z-10 mt-auto bg-white/5 backdrop-blur-md border border-white/10 rounded-xl py-2.5 px-3 space-y-2">
+                        {/* Top row: balance ratio + tier ceiling */}
+                        <div className="flex justify-between items-center">
+                            <p className="text-[10px] font-semibold text-blue-100/90">
+                                <span className="text-blue-200/60 uppercase tracking-wider text-[9px]">Wallet:</span> 
+                                <span className="font-bold text-white ml-1">₱{mainBalance.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</span>
+                            </p>
+                            <p className="text-[8px] text-blue-200/50 font-medium uppercase tracking-wider">
+                                <span className="text-blue-100">{getTierName(kyc_tier)}</span> Tier
+                            </p>
                         </div>
-                        <div className="w-full bg-black/20 rounded-full h-1 overflow-hidden">
-                            <div 
-                                className={`h-1 rounded-full transition-all duration-1000 ${limitPercentage >= 90 ? 'bg-red-400' : 'bg-cyan-400/80'}`} 
-                                style={{ width: `${Math.min(limitPercentage, 100)}%` }}
-                            ></div>
+
+                        {/* Tier capacity row */}
+                        <div>
+                            <div className="flex justify-between items-center mb-1">
+                                <p className="text-[9px] font-semibold text-blue-200/70 uppercase tracking-wider">
+                                    Tier Capacity
+                                </p>
+                                <p className="text-[9px] font-medium text-blue-100/90">
+                                    <span className={`font-bold ${remainingCapacity < 500 ? 'text-amber-300' : 'text-white'}`}>
+                                        ₱{remainingCapacity.toLocaleString('en-PH')}
+                                    </span> remaining
+                                </p>
+                            </div>
+                            <div className="w-full bg-black/20 rounded-full h-1.5 overflow-hidden">
+                                <div 
+                                    className={`h-1.5 rounded-full transition-all duration-1000 ${tierUsagePercentage >= 90 ? 'bg-red-400' : tierUsagePercentage >= 70 ? 'bg-amber-400' : 'bg-cyan-400/80'}`} 
+                                    style={{ width: `${Math.min(tierUsagePercentage, 100)}%` }}
+                                ></div>
+                            </div>
+                            <p className="text-[8px] text-blue-200/50 font-medium mt-1 text-right uppercase tracking-wider">
+                                ₱{totalHoldings.toLocaleString('en-PH')} of ₱{maxLimit.toLocaleString('en-PH')} ({tierUsagePercentage.toFixed(0)}% used)
+                            </p>
                         </div>
                     </div>
+    
                 </div>
 
                 {/* SAVINGS TEASER */}
@@ -139,6 +154,22 @@ export default function Dashboard({ auth, finances, active_goal, kyc_tier, recen
                         ) : (
                             <div className="mb-2">
                                 <p className="text-2xl font-black text-gray-900 tracking-tight">₱{(finances?.total_savings || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</p>
+                                
+                                {/* Breakdown */}
+                                <div className="flex justify-between items-center mt-2 pt-2 border-t border-slate-100">
+                                    <div className="flex items-center gap-1.5">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+                                        <p className="text-[9px] text-slate-500 font-medium">
+                                            Allocated: <span className="font-bold text-slate-700">₱{allocatedToGoals.toLocaleString('en-PH')}</span>
+                                        </p>
+                                    </div>
+                                    <div className="flex items-center gap-1.5">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
+                                        <p className="text-[9px] text-slate-500 font-medium">
+                                            Unassigned: <span className="font-bold text-slate-700">₱{unallocatedSavings.toLocaleString('en-PH')}</span>
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
                         )}
 
@@ -157,17 +188,26 @@ export default function Dashboard({ auth, finances, active_goal, kyc_tier, recen
                                     ₱{Number(active_goal.current_amount).toLocaleString()} / ₱{Number(active_goal.target_amount).toLocaleString()}
                                 </p>
                             </div>
-                        ) : (
-                            <div className="bg-slate-50 rounded-xl p-3 border border-dashed border-slate-200 mt-1 flex items-center justify-between">
-                                <span className="text-[10px] font-medium text-gray-400">No active goals</span>
-                                <Link href="/goals" className="text-[10px] font-semibold text-emerald-600 hover:text-emerald-700 bg-emerald-50 px-2 py-1 rounded transition-colors">Create Goal</Link>
+                   ) : (
+                            <div className="mt-3 flex flex-col items-center gap-2 bg-gradient-to-br from-emerald-50/40 to-blue-50/30 rounded-xl p-4 border border-dashed border-slate-200">
+                                <span className="text-[11px] font-medium text-slate-600 text-center">
+                                    What are you saving for?
+                                </span>
+                                <Link 
+                                    href="/goals" 
+                                    className="w-full text-center py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-[11px] font-bold rounded-lg transition-all shadow-md shadow-emerald-200/40 cursor-pointer flex items-center justify-center gap-1.5"
+                                >
+                                    <span className="text-sm">+</span> Set Your First Goal
+                                </Link>
                             </div>
                         )}
                     </div>
 
-                    <Link href="/goals" className="mt-2 w-full py-2 bg-emerald-50/50 text-emerald-600 text-[11px] font-semibold rounded-xl hover:bg-emerald-50 transition-colors flex items-center justify-center gap-1.5 border border-emerald-100/50">
-                        Grow your savings <ArrowRight size={12} />
-                    </Link>
+                    {(active_goal || (finances?.total_savings > 0)) && (
+                            <Link href="/goals" className="mt-2 w-full py-2 bg-emerald-50/50 text-emerald-600 text-[11px] font-semibold rounded-xl hover:bg-emerald-50 transition-colors flex items-center justify-center gap-1.5 border border-emerald-100/50">
+                                Grow your savings <ArrowRight size={12} />
+                            </Link>
+                        )}
                 </div>
             </div>
 
