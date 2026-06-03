@@ -116,22 +116,23 @@ import { Target, Plus, ShieldAlert, Smartphone, ShoppingBag, MoreVertical, Edit2
                 {/* 1. SAVINGS OVERVIEW with Add/Withdraw actions */}
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
                     
-                    {/* Top Row: Total Savings + Add Goal Button */}
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-                        <div>
-                            <p className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-1">Total Savings</p>
-                            <h2 className="text-4xl font-black text-gray-900 tracking-tight">
-                                ₱{(finances?.total_savings || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 })}
-                            </h2>
+                   {/* Top Row: Savings Balance + Add Goal Button */}
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                            <div>
+                                <p className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-1">Savings Balance</p>
+                                <h2 className="text-4xl font-black text-gray-900 tracking-tight">
+                                    ₱{(finances?.total_savings || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 })}
+                                </h2>
+                                <p className="text-[11px] text-slate-400 font-medium mt-0.5">Includes funds in active goals</p>
+                            </div>
+                            
+                            <button 
+                                onClick={() => setIsCreateModalOpen(true)}
+                                className="px-6 py-2.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-200 cursor-pointer transition-all flex items-center gap-2"
+                            >
+                                <Plus size={20} strokeWidth={2.5} /> Add New Goal
+                            </button>
                         </div>
-                        
-                        <button 
-                            onClick={() => setIsCreateModalOpen(true)}
-                            className="px-6 py-2.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-200 cursor-pointer transition-all flex items-center gap-2"
-                        >
-                            <Plus size={20} strokeWidth={2.5} /> Add New Goal
-                        </button>
-                    </div>
 
                         {/* Middle Row: Breakdown */}
                         <div className="flex flex-col sm:flex-row gap-6 pt-5 border-t border-gray-100 mb-5">

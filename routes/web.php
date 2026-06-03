@@ -178,12 +178,12 @@ Route::middleware(['auth'])->group(function () {
             ]);
         })->name('transactions');
 
-    //Settings
-    Route::get('/Settings', function () {
-        return Inertia::render('User/Settings', [
-            'auth' => ['user' => auth()->user()]
-        ]);
-    })->name('Settings');
+    // Settings routes
+    Route::get('/settings', [\App\Http\Controllers\User\SettingsController::class, 'index'])
+        ->name('settings');
+
+    Route::patch('/settings/profile', [\App\Http\Controllers\User\SettingsController::class, 'updateProfile'])
+        ->name('settings.profile.update');
     
     // logout session
     Route::post('/logout', function (Request $request) {

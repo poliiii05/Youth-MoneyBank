@@ -139,39 +139,40 @@ export default function Dashboard({ auth, finances, active_goal, kyc_tier, recen
                 {/* SAVINGS TEASER */}
                 <div className="bg-white rounded-[1.5rem] p-5 shadow-sm border border-gray-100 flex flex-col justify-between min-h-[180px]">
                     <div>
-                        <div className="flex items-center gap-2 mb-2">
+                       <div className="flex items-center gap-2 mb-2">
                             <div className="p-1.5 bg-emerald-50 rounded-lg">
-                                <Target size={16} className="text-emerald-500" />
+                                    <Target size={16} className="text-emerald-500" />
+                                </div>
+                                <h3 className="text-[11px] font-semibold text-gray-500 uppercase tracking-widest">Savings Balance</h3>
                             </div>
-                            <h3 className="text-[11px] font-semibold text-gray-500 uppercase tracking-widest">My Savings</h3>
-                        </div>
                         
                         {finances?.total_savings === 0 ? (
                             <div className="mb-2">
                                 <p className="text-2xl font-black text-gray-900 tracking-tight">₱0.00</p>
                                 <p className="text-[10px] text-gray-400 font-medium mt-0.5">No savings yet. Start with ₱50 🌱</p>
                             </div>
-                        ) : (
-                            <div className="mb-2">
-                                <p className="text-2xl font-black text-gray-900 tracking-tight">₱{(finances?.total_savings || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</p>
-                                
-                                {/* Breakdown */}
-                                <div className="flex justify-between items-center mt-2 pt-2 border-t border-slate-100">
-                                    <div className="flex items-center gap-1.5">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
-                                        <p className="text-[9px] text-slate-500 font-medium">
-                                            Allocated: <span className="font-bold text-slate-700">₱{allocatedToGoals.toLocaleString('en-PH')}</span>
-                                        </p>
-                                    </div>
-                                    <div className="flex items-center gap-1.5">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
-                                        <p className="text-[9px] text-slate-500 font-medium">
-                                            Unassigned: <span className="font-bold text-slate-700">₱{unallocatedSavings.toLocaleString('en-PH')}</span>
-                                        </p>
+                       ) : (
+                                <div className="mb-2">
+                                    <p className="text-2xl font-black text-gray-900 tracking-tight">₱{(finances?.total_savings || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</p>
+                                    <p className="text-[9px] text-slate-400 font-medium mt-0.5">Includes funds in active goals</p>
+                                    
+                                    {/* Breakdown */}
+                                    <div className="flex justify-between items-center mt-2 pt-2 border-t border-slate-100">
+                                        <div className="flex items-center gap-1.5">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+                                            <p className="text-[9px] text-slate-500 font-medium">
+                                                Allocated: <span className="font-bold text-slate-700">₱{allocatedToGoals.toLocaleString('en-PH')}</span>
+                                            </p>
+                                        </div>
+                                        <div className="flex items-center gap-1.5">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
+                                            <p className="text-[9px] text-slate-500 font-medium">
+                                                Unallocated: <span className="font-bold text-slate-700">₱{unallocatedSavings.toLocaleString('en-PH')}</span>
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        )}
+                            )}
 
                         {active_goal ? (
                             <div className="bg-slate-50/80 rounded-xl p-2.5 border border-slate-100 hover:border-emerald-200 transition-colors cursor-pointer group mt-1">

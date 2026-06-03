@@ -177,24 +177,43 @@ export default function ViewDetailsModal({ isOpen, onClose, goalId, onAddFunds, 
                                     </p>
                                 </div>
 
-                                {/* Milestones */}
-                                <div className="flex justify-between items-center pt-3 border-t border-white/60">
-                                    {milestones.map((milestone) => {
-                                        const reached = progress >= milestone;
-                                        return (
-                                            <div key={milestone} className="flex flex-col items-center gap-0.5">
-                                                {reached ? (
-                                                    <CheckCircle2 size={14} className="text-emerald-500" strokeWidth={2.5} />
-                                                ) : (
-                                                    <Circle size={14} className="text-slate-300" strokeWidth={2} />
-                                                )}
-                                                <span className={`text-[9px] font-bold ${reached ? 'text-emerald-700' : 'text-slate-400'}`}>
-                                                    {milestone === 100 ? '🏆' : `${milestone}%`}
-                                                </span>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
+                                    {/* Achievement message — dynamic based on progress */}
+                                        <div className="pt-3 border-t border-white/60">
+                                            {(() => {
+                                                let message, emoji, color;
+                                                if (progress >= 100) {
+                                                    emoji = '🏆';
+                                                    message = 'Goal completed! Amazing work.';
+                                                    color = 'text-emerald-700';
+                                                } else if (progress >= 75) {
+                                                    emoji = '🔥';
+                                                    message = 'Almost there — just a little more!';
+                                                    color = 'text-orange-700';
+                                                } else if (progress >= 50) {
+                                                    emoji = '💪';
+                                                    message = 'Halfway there — keep going!';
+                                                    color = 'text-blue-700';
+                                                } else if (progress >= 25) {
+                                                    emoji = '🌱';
+                                                    message = "You're on your way. Stay consistent!";
+                                                    color = 'text-emerald-700';
+                                                } else if (progress > 0) {
+                                                    emoji = '🎯';
+                                                    message = 'Great start! Every peso counts.';
+                                                    color = 'text-slate-700';
+                                                } else {
+                                                    emoji = '✨';
+                                                    message = 'Ready to start? Add your first allocation.';
+                                                    color = 'text-slate-500';
+                                                }
+                                                return (
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-lg">{emoji}</span>
+                                                        <p className={`text-[11px] font-bold ${color}`}>{message}</p>
+                                                    </div>
+                                                );
+                                            })()}
+                                        </div>
                             </div>
 
                             {/* STATS CARDS */}
@@ -233,32 +252,34 @@ export default function ViewDetailsModal({ isOpen, onClose, goalId, onAddFunds, 
                                 <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
                                     Transaction History
                                 </h4>
-                                {history.length > 0 ? (
-                                    <div className="bg-white border border-slate-100 rounded-xl divide-y divide-slate-50 max-h-60 overflow-y-auto">
-                                        {history.map((entry) => (
-                                            <div key={entry.id} className="px-3 py-2.5 flex items-center justify-between hover:bg-slate-50/50 transition-colors">
-                                                <div className="flex items-center gap-2.5 min-w-0">
-                                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${entry.is_inflow ? 'bg-emerald-50 text-emerald-600' : 'bg-orange-50 text-orange-600'}`}>
-                                                        {entry.is_inflow ? <ArrowDownLeft size={14} strokeWidth={2.5} /> : <ArrowUpRight size={14} strokeWidth={2.5} />}
-                                                    </div>
-                                                    <div className="min-w-0">
-                                                        <p className="text-[11px] font-bold text-slate-900 truncate">{entry.title}</p>
-                                                        <p className="text-[9px] text-slate-500 font-medium">{entry.created_at_human}</p>
-                                                    </div>
+                                {history.map((entry) => {
+                                    // Determine action label based on entry type and direction
+                                    let actionLabel = entry.title;
+                                    if (entry.type === 'allocate' || (entry.is_inflow && entry.type !== 'goal_deletion_return')) {
+                                        actionLabel = `Added to goal`;
+                                    } else if (entry.type === 'deallocate' || (!entry.is_inflow && entry.type !== 'goal_deletion_return')) {
+                                        actionLabel = `Removed from goal`;
+                                    } else if (entry.type === 'goal_deletion_return') {
+                                        actionLabel = `Goal deletion return`;
+                                    }
+                                    
+                                    return (
+                                        <div key={entry.id} className="px-3 py-2.5 flex items-center justify-between hover:bg-slate-50/50 transition-colors">
+                                            <div className="flex items-center gap-2.5 min-w-0">
+                                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${entry.is_inflow ? 'bg-emerald-50 text-emerald-600' : 'bg-orange-50 text-orange-600'}`}>
+                                                    {entry.is_inflow ? <ArrowDownLeft size={14} strokeWidth={2.5} /> : <ArrowUpRight size={14} strokeWidth={2.5} />}
                                                 </div>
-                                                <p className={`text-[11px] font-black shrink-0 ml-2 ${entry.is_inflow ? 'text-emerald-600' : 'text-orange-600'}`}>
-                                                    {entry.is_inflow ? '+' : '-'}₱{entry.amount.toLocaleString('en-PH', { minimumFractionDigits: 2 })}
-                                                </p>
+                                                <div className="min-w-0">
+                                                    <p className="text-[11px] font-bold text-slate-900 truncate">{actionLabel}</p>
+                                                    <p className="text-[9px] text-slate-500 font-medium">{entry.created_at_human}</p>
+                                                </div>
                                             </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <div className="bg-slate-50 border border-dashed border-slate-200 rounded-xl px-3 py-4 flex flex-col items-center text-center">
-                                        <Sparkles size={20} className="text-slate-400 mb-1.5" />
-                                        <p className="text-[11px] font-bold text-slate-600">No activity yet</p>
-                                        <p className="text-[10px] text-slate-400 font-medium">Allocate some funds to start tracking</p>
-                                    </div>
-                                )}
+                                            <p className={`text-[11px] font-black shrink-0 ml-2 ${entry.is_inflow ? 'text-emerald-600' : 'text-orange-600'}`}>
+                                                {entry.is_inflow ? '+' : '-'}₱{entry.amount.toLocaleString('en-PH', { minimumFractionDigits: 2 })}
+                                            </p>
+                                        </div>
+                                    );
+                                })}
                             </div>
 
                             {/* QUICK ACTIONS */}
