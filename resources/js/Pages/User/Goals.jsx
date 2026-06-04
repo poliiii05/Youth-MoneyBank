@@ -109,7 +109,7 @@ import { Target, Plus, ShieldAlert, Smartphone, ShoppingBag, MoreVertical, Edit2
     };
 
     return (
-        <UserLayout user={user} header="Savings Module">
+        <UserLayout user={user} header="Savings">
             <Head title="Savings Goals | Youth MoneyBank" />
 
             <div className="max-w-6xl mx-auto">
@@ -119,11 +119,11 @@ import { Target, Plus, ShieldAlert, Smartphone, ShoppingBag, MoreVertical, Edit2
                    {/* Top Row: Savings Balance + Add Goal Button */}
                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                             <div>
-                                <p className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-1">Savings Balance</p>
+                               <p className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-1">Total Savings</p> 
                                 <h2 className="text-4xl font-black text-gray-900 tracking-tight">
                                     ₱{(finances?.total_savings || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 })}
                                 </h2>
-                                <p className="text-[11px] text-slate-400 font-medium mt-0.5">Includes funds in active goals</p>
+                                <p className="text-[11px] text-slate-400 font-medium mt-0.5">Includes funds in your goals</p>
                             </div>
                             
                             <button 
@@ -139,13 +139,13 @@ import { Target, Plus, ShieldAlert, Smartphone, ShoppingBag, MoreVertical, Edit2
                             <div className="flex items-center gap-2">
                                 <div className="w-3 h-3 rounded-full bg-emerald-500 shadow-sm"></div>
                                 <p className="text-sm text-gray-600 font-medium">
-                                    Allocated to Goals: <span className="font-bold text-gray-900">₱{(finances?.allocated || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</span>
+                                    In Goals: <span className="font-bold text-gray-900">₱{(finances?.allocated || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</span>
                                 </p>
                             </div>
                             <div className="flex items-center gap-2">
                                 <div className="w-3 h-3 rounded-full bg-blue-500 shadow-sm"></div>
                                 <p className="text-sm text-gray-600 font-medium">
-                                    Unallocated Savings: <span className="font-bold text-gray-900">₱{(finances?.unallocated || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</span>
+                                    Available: <span className="font-bold text-gray-900">₱{(finances?.unallocated || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</span>
                                 </p>
                             </div>
                         </div>
@@ -156,7 +156,7 @@ import { Target, Plus, ShieldAlert, Smartphone, ShoppingBag, MoreVertical, Edit2
                                 onClick={() => setIsTransferModalOpen(true)}
                                 className="flex items-center justify-center gap-2 py-3 px-4 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold rounded-xl transition-colors cursor-pointer border border-emerald-100"
                             >
-                                <ArrowDownLeft size={16} strokeWidth={2.5} /> Add to Savings
+                                <ArrowDownLeft size={16} strokeWidth={2.5} /> Transfer to Savings
                             </button>
                             <button
                                 onClick={() => setIsWithdrawModalOpen(true)}
@@ -167,7 +167,7 @@ import { Target, Plus, ShieldAlert, Smartphone, ShoppingBag, MoreVertical, Edit2
                                         : 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed'
                                 }`}
                             >
-                                <ArrowUpRight size={16} strokeWidth={2.5} /> Withdraw to Wallet
+                                <ArrowUpRight size={16} strokeWidth={2.5} /> Withdraw
                             </button>
                         </div>
                     </div>

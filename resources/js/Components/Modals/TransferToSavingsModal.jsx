@@ -84,9 +84,9 @@ export default function TransferToSavingsModal({ isOpen, onClose, mainBalance = 
                 {isProcessing && (
                     <div className="absolute inset-0 z-50 bg-white/90 backdrop-blur-sm flex flex-col items-center justify-center animate-in fade-in duration-300">
                         <Loader2 className="w-8 h-8 text-emerald-600 animate-spin mb-3" strokeWidth={2.5} />
-                        <h3 className="text-sm font-bold text-slate-900 tracking-tight mb-1">Adding to Savings</h3>
+                        <h3 className="text-sm font-bold text-slate-900 tracking-tight mb-1">Transferring to Savings</h3>
                         <p className="text-[10px] font-medium text-slate-500 text-center px-6">
-                            Moving money to your savings pool.
+                            Moving money to your savings.
                         </p>
                     </div>
                 )}
@@ -94,7 +94,7 @@ export default function TransferToSavingsModal({ isOpen, onClose, mainBalance = 
                 <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100">
                     <div className="w-7 h-7" />
                     <h2 className="text-[13px] font-bold text-slate-900 tracking-tight">
-                        {isSuccess ? 'Transfer complete' : 'Add to Savings'}
+                        {isSuccess ? 'Transfer complete' : 'Transfer to Savings'}
                     </h2>
                     <button
                         onClick={onClose}
@@ -112,10 +112,10 @@ export default function TransferToSavingsModal({ isOpen, onClose, mainBalance = 
                                 <Sparkles size={24} className="text-emerald-500" strokeWidth={2} />
                             </div>
                             <h3 className="text-base font-bold text-slate-900 mb-1 tracking-tight">
-                                Added to savings!
+                                Transfer complete!
                             </h3>
                             <p className="text-[11px] text-slate-500 mb-4">
-                                <span className="font-bold text-slate-800">₱{numericAmount.toLocaleString('en-US')}</span> moved to your savings pool.
+                                <span className="font-bold text-slate-800">₱{numericAmount.toLocaleString('en-US')}</span> moved to your savings.
                             </p>
                             <button
                                 onClick={onClose}
@@ -140,7 +140,7 @@ export default function TransferToSavingsModal({ isOpen, onClose, mainBalance = 
                                 <div className="flex-1 text-center">
                                     <div className="flex items-center justify-center gap-1.5 mb-1">
                                         <PiggyBank size={12} className="text-emerald-600" />
-                                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Savings Pool</span>
+                                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Savings</span>
                                     </div>
                                     <p className="text-sm font-black text-emerald-700">
                                         +₱{numericAmount > 0 ? numericAmount.toLocaleString('en-US') : '0'}
@@ -219,7 +219,7 @@ export default function TransferToSavingsModal({ isOpen, onClose, mainBalance = 
                                         : 'bg-slate-100 text-slate-400 cursor-not-allowed'
                                 }`}
                             >
-                                {isAmountValid ? `Add ₱${numericAmount.toLocaleString('en-US')} to Savings` : 'Enter an amount'}
+                                {isAmountValid ? `Transfer ₱${numericAmount.toLocaleString('en-US')} to Savings` : 'Enter an amount'}
                             </button>
                         </div>
                     )}

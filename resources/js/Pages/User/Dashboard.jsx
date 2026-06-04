@@ -143,7 +143,7 @@ export default function Dashboard({ auth, finances, active_goal, kyc_tier, recen
                             <div className="p-1.5 bg-emerald-50 rounded-lg">
                                     <Target size={16} className="text-emerald-500" />
                                 </div>
-                                <h3 className="text-[11px] font-semibold text-gray-500 uppercase tracking-widest">Savings Balance</h3>
+                             <h3 className="text-[11px] font-semibold text-gray-500 uppercase tracking-widest">Total Savings</h3>
                             </div>
                         
                         {finances?.total_savings === 0 ? (
@@ -160,14 +160,14 @@ export default function Dashboard({ auth, finances, active_goal, kyc_tier, recen
                                     <div className="flex justify-between items-center mt-2 pt-2 border-t border-slate-100">
                                         <div className="flex items-center gap-1.5">
                                             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
-                                            <p className="text-[9px] text-slate-500 font-medium">
-                                                Allocated: <span className="font-bold text-slate-700">₱{allocatedToGoals.toLocaleString('en-PH')}</span>
+                                           <p className="text-[9px] text-slate-500 font-medium">
+                                                In Goals: <span className="font-bold text-slate-700">₱{allocatedToGoals.toLocaleString('en-PH')}</span>
                                             </p>
                                         </div>
                                         <div className="flex items-center gap-1.5">
                                             <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
                                             <p className="text-[9px] text-slate-500 font-medium">
-                                                Unallocated: <span className="font-bold text-slate-700">₱{unallocatedSavings.toLocaleString('en-PH')}</span>
+                                                Available: <span className="font-bold text-slate-700">₱{unallocatedSavings.toLocaleString('en-PH')}</span>
                                             </p>
                                         </div>
                                     </div>

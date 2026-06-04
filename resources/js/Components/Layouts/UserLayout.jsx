@@ -77,7 +77,7 @@ export default function UserLayout({ user, header, children }) {
                         className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all ${isUrlActive('/goals') ? 'bg-blue-50 text-blue-700 font-bold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium'}`}
                     >
                         <Target className="w-4 h-4" strokeWidth={isUrlActive('/goals') ? 2.5 : 2} />
-                        <span className="text-sm">Savings Goals</span>
+                        <span className="text-sm">Savings</span>
                     </Link>
                     <Link 
                         href="/settings" 

@@ -155,28 +155,111 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/goals', [SavingsGoalController::class, 'index'])->name('goals.index');
     Route::post('/goals', [SavingsGoalController::class, 'store'])->name('goals.store');
 
-    // TRANSACTIONS 
-        Route::get('/transactions', function () {
-            $user = auth()->user();
+    // TRANSACTIONS — list (with 30-day default filter + pagination)
+    Route::get('/transactions', function () {
+        $user = auth()->user();
 
-            return inertia('User/Transactions', [
-                'auth' => ['user' => $user],
-                'transactions' => $user->transactions()
-                    ->latest()
-                    ->get()
-                    ->map(function ($t) {
+        $perPage = 10;
+        $page = (int) request('page', 1);
+        $showAll = request('show_all') === '1';
+
+        $query = $user->transactions()
+            ->with(['ledgerEntries.ledgerAccount'])
+            ->latest();
+
+        // Default: filter to last 30 days unless show_all=1
+        if (!$showAll) {
+            $query->where('created_at', '>=', now()->subDays(30));
+        }
+
+        $totalCount = $query->count();
+        $totalPages = max(1, ceil($totalCount / $perPage));
+        
+        $transactions = $query
+            ->skip(($page - 1) * $perPage)
+            ->take($perPage)
+            ->get()
+            ->map(function ($t) {
+                return [
+                    'id' => $t->id,
+                    'title' => $t->title,
+                    'type' => $t->type,
+                    'amount' => (float) $t->amount_pesos,
+                    'is_positive' => $t->is_positive,
+                    'status' => $t->status,
+                    'reference_id' => $t->reference_id,
+                    'public_reference_id' => $t->public_reference_id,
+                    'created_at' => $t->created_at,
+                    'ledger_entries_count' => $t->ledgerEntries->count(),
+                ];
+            });
+
+        // Check if user has older transactions (for "Show older" button)
+        $hasOlderTransactions = $user->transactions()
+            ->where('created_at', '<', now()->subDays(30))
+            ->exists();
+
+        return inertia('User/Transactions', [
+            'auth' => ['user' => $user],
+            'transactions' => $transactions,
+            'pagination' => [
+                'current_page' => $page,
+                'total_pages' => $totalPages,
+                'total_count' => $totalCount,
+                'per_page' => $perPage,
+                'from' => $totalCount > 0 ? ($page - 1) * $perPage + 1 : 0,
+                'to' => min($page * $perPage, $totalCount),
+            ],
+            'filters' => [
+                'show_all' => $showAll,
+                'has_older' => $hasOlderTransactions,
+            ],
+        ]);
+    })->name('transactions');
+
+    // TRANSACTIONS — detail page
+    Route::get('/transactions/{transaction}', function (\App\Models\Transaction $transaction) {
+        $user = auth()->user();
+        
+        // Authorization: only the owner can view
+        if ($transaction->user_id !== $user->id) {
+            abort(403, 'You do not have permission to view this transaction.');
+        }
+        
+        // Load ledger entries with their accounts
+        $transaction->load(['ledgerEntries.ledgerAccount']);
+        
+        return inertia('User/TransactionDetail', [
+            'auth' => ['user' => $user],
+            'transaction' => [
+                'id' => $transaction->id,
+                'title' => $transaction->title,
+                'type' => $transaction->type,
+                'amount' => (float) $transaction->amount_pesos,
+                'is_positive' => $transaction->is_positive,
+                'status' => $transaction->status,
+                'description' => $transaction->description,
+                'reference_id' => $transaction->reference_id,
+                'public_reference_id' => $transaction->public_reference_id,
+                'created_at' => $transaction->created_at,
+                'ledger_entries' => $transaction->ledgerEntries
+                    ->sortBy(function ($entry) {
+                        return $entry->direction === 'debit' ? 0 : 1;
+                    })
+                    ->values()
+                    ->map(function ($entry) {
                         return [
-                            'id' => $t->id,
-                            'title' => $t->title,
-                            'type' => $t->type,
-                            'amount' => (float) $t->amount_pesos,
-                            'is_positive' => $t->is_positive,
-                            'status' => $t->status,
-                            'created_at' => $t->created_at,
+                            'id' => $entry->id,
+                            'direction' => $entry->direction,
+                            'amount' => (float) ($entry->amount_cents / 100),
+                            'account_name' => $entry->ledgerAccount?->name ?? 'Unknown',
+                            'account_type' => $entry->ledgerAccount?->type ?? 'unknown',
+                            'account_code' => $entry->ledgerAccount?->code ?? null,
                         ];
                     }),
-            ]);
-        })->name('transactions');
+            ],
+        ]);
+    })->name('transactions.show');
 
     // Settings routes
     Route::get('/settings', [\App\Http\Controllers\User\SettingsController::class, 'index'])

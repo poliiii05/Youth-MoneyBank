@@ -57,7 +57,7 @@ class LedgerService
             [
                 'type' => 'savings_pool',
                 'user_id' => $user->id,
-                'name' => "Savings Pool of {$user->name}",
+               'name' => "Savings of {$user->name}",
             ]
         );
     }

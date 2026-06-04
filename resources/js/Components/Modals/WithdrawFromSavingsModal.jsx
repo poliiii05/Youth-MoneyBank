@@ -133,7 +133,7 @@ export default function WithdrawFromSavingsModal({ isOpen, onClose, savingsPoolB
                             </div>
                             <p className="text-sm font-bold text-slate-900 mb-1">Nothing to withdraw</p>
                             <p className="text-[10px] text-slate-500 font-medium">
-                                Your savings pool is empty.
+                                Your savings is empty.
                             </p>
                         </div>
                     ) : (
@@ -143,7 +143,7 @@ export default function WithdrawFromSavingsModal({ isOpen, onClose, savingsPoolB
                                 <div className="flex-1 text-center">
                                     <div className="flex items-center justify-center gap-1.5 mb-1">
                                         <PiggyBank size={12} className="text-emerald-600" />
-                                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Savings Pool</span>
+                                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Savings</span>
                                     </div>
                                     <p className="text-sm font-black text-slate-900">₱{savingsPoolBalance.toLocaleString('en-US')}</p>
                                 </div>

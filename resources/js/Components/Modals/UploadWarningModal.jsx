@@ -81,4 +81,4 @@ export default function UploadWarningModal({ isOpen, onClose, onUseSample, onCon
             </div>
         </div>
     );
-} 
+}
