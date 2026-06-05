@@ -134,7 +134,7 @@ Route::middleware(['auth'])->group(function () {
                 'kyc_tier' => $tier,
                 'recent_transactions' => $user->transactions()
                     ->latest()
-                    ->take(3)
+                    ->take(5)
                     ->get()
                     ->map(function ($t) {
                         return [
@@ -144,6 +144,7 @@ Route::middleware(['auth'])->group(function () {
                             'amount' => (float) $t->amount_pesos,
                             'is_positive' => $t->is_positive,
                             'status' => $t->status,
+                            'public_reference_id' => $t->public_reference_id,
                             'created_at' => $t->created_at,
                         ];
                     }),

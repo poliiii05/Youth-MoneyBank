@@ -141,7 +141,7 @@ class SavingsTransferController extends Controller
                 $wallet->save();
 
                 $transaction = $user->transactions()->create([
-                    'title' => 'Withdrew from Savings',
+                    'title' => 'Withdrawn from Savings',
                     'type' => 'savings_withdraw',
                     'amount_cents' => $amountCents,
                     'reference_id' => 'SAV_WD_' . $user->id . '_' . time() . '_' . uniqid(),
@@ -167,7 +167,7 @@ class SavingsTransferController extends Controller
                 ]);
             });
 
-            return back()->with('success', 'Withdrew from savings successfully!');
+            return back()->with('success', 'Withdrawn from savings successfully!');
 
         } catch (ValidationException $e) {
             throw $e;

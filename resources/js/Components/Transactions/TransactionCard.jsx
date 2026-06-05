@@ -39,14 +39,9 @@ export default function TransactionCard({ transaction }) {
                     <div className="min-w-0 flex-1">
                         <h4 className="text-sm font-bold text-slate-900 truncate">{transaction.title}</h4>
                         <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                            <p className="text-[11px] text-slate-500 font-medium">{formattedDate}</p>
-                            {transaction.public_reference_id && (
-                                <>
-                                    <span className="text-[9px] text-slate-300">·</span>
-                                    <p className="text-[10px] text-slate-400 font-mono font-bold">{transaction.public_reference_id}</p>
-                                </>
-                            )}
-                        </div>
+                        <p className="text-[11px] text-slate-500 font-medium">{formattedDate}</p>
+                    </div>
+
                     </div>
                 </div>
                 
@@ -55,9 +50,11 @@ export default function TransactionCard({ transaction }) {
                         <p className={`text-sm font-black tracking-tight ${isIncome ? 'text-emerald-600' : 'text-slate-900'}`}>
                             {isIncome ? '+' : '-'}₱{Number(transaction.amount).toLocaleString('en-PH', { minimumFractionDigits: 2 })}
                         </p>
-                        <span className={`inline-block text-[9px] font-bold uppercase tracking-widest mt-0.5 px-1.5 py-0.5 rounded border ${getStatusStyle(transaction.status)}`}>
-                            {transaction.status}
-                        </span>
+                        {transaction.status !== 'completed' && transaction.status !== 'success' && (
+                            <span className={`inline-block text-[9px] font-bold uppercase tracking-widest mt-0.5 px-1.5 py-0.5 rounded border ${getStatusStyle(transaction.status)}`}>
+                                {transaction.status}
+                            </span>
+                        )}
                     </div>
                     <div className="text-slate-300 group-hover:text-slate-500 transition-colors">
                         <ChevronRight size={18} strokeWidth={2.5} />

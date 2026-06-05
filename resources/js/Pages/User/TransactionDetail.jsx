@@ -2,12 +2,13 @@
 import { Head, Link } from '@inertiajs/react';
 import { useState } from 'react';
 import UserLayout from '../../Components/Layouts/UserLayout';
-import { ArrowLeft, ArrowDownRight, ArrowUpRight, Copy, Check } from 'lucide-react';
+import { ArrowLeft, ArrowDownRight, ArrowUpRight, Copy, Check, ChevronDown } from 'lucide-react';
 
 export default function TransactionDetail({ auth, transaction }) {
     const user = auth?.user;
     const [copied, setCopied] = useState(null);
-    
+    const [showLedger, setShowLedger] = useState(false);
+
     const isIncome = transaction.is_positive == 1;
     const hasLedgerEntries = transaction.ledger_entries?.length > 0;
 
@@ -31,14 +32,28 @@ export default function TransactionDetail({ auth, transaction }) {
 
     const statusInfo = getStatusDot(transaction.status);
 
+    // Map account display name — clean account labels for user view
+    const getAccountDisplayName = (accountName, accountType) => {
+        if (accountType === 'user_wallet') {
+            return 'Main Wallet';
+        }
+        if (accountType === 'savings_pool') {
+            return 'Savings';
+        }
+        if (accountType === 'savings_goal') {
+            // Remove "Goal: " prefix if exists, just show goal name
+            return accountName.replace(/^Goal:\s*/, '');
+        }
+        return accountName;
+    };
     // Type label
-    const getTypeLabel = (type) => {
+        const getTypeLabel = (type) => {
         const labels = {
             cash_in: 'Cash In',
             goal_allocation: 'Goal Allocation',
             goal_deallocation: 'Goal Deallocation',
-            savings_transfer: 'Savings Transfer',
-            savings_withdrawal: 'Savings Withdrawal',
+            savings_deposit: 'Savings Deposit',
+            savings_withdraw: 'Savings Withdrawal',
             goal_deletion_return: 'Goal Deletion Return',
         };
         return labels[type] || type?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
@@ -90,10 +105,10 @@ export default function TransactionDetail({ auth, transaction }) {
                         <DetailRow label="Date & Time" value={formattedDateTime} />
                         
                         {credit && (
-                            <DetailRow label="From" value={credit.account_name} />
+                            <DetailRow label="From" value={getAccountDisplayName(credit.account_name, credit.account_type)} />
                         )}
                         {debit && (
-                            <DetailRow label="To" value={debit.account_name} />
+                            <DetailRow label="To" value={getAccountDisplayName(debit.account_name, debit.account_type)} />
                         )}
 
                         <DetailRow 
@@ -105,27 +120,44 @@ export default function TransactionDetail({ auth, transaction }) {
                         />
                     </div>
 
-                    {/* LEDGER ENTRIES — collapsed if not needed, simple list */}
-                    {hasLedgerEntries && (
-                        <div className="border-t border-slate-100 px-5 py-4 bg-slate-50/50">
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2.5">
-                                Ledger Breakdown
-                            </p>
-                            <div className="space-y-1.5">
-                                {transaction.ledger_entries.map((entry) => (
-                                    <div key={entry.id} className="flex items-center justify-between text-xs">
-                                        <div className="min-w-0 flex-1">
-                                            <p className="font-semibold text-slate-700 truncate">{entry.account_name}</p>
-                                            <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">{entry.direction}</p>
-                                        </div>
-                                        <p className={`font-bold ml-2 shrink-0 ${entry.direction === 'debit' ? 'text-emerald-600' : 'text-orange-600'}`}>
-                                            {entry.direction === 'debit' ? '+' : '-'}₱{entry.amount.toLocaleString('en-PH', { minimumFractionDigits: 2 })}
+                    {/* LEDGER ENTRIES — collapsible (technical details) */}
+                        {hasLedgerEntries && (
+                            <div className="border-t border-slate-100">
+                                <button
+                                    onClick={() => setShowLedger(!showLedger)}
+                                    className="w-full px-5 py-3 flex items-center justify-between text-left hover:bg-slate-50 transition-colors cursor-pointer group"
+                                >
+                                    <div>
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                            {showLedger ? 'Hide technical details' : 'Show technical details'}
                                         </p>
+                                        <p className="text-[9px] text-slate-400 font-medium mt-0.5">Ledger breakdown for audit</p>
                                     </div>
-                                ))}
+                                    <ChevronDown 
+                                        size={14} 
+                                        className={`text-slate-400 transition-transform group-hover:text-slate-600 ${showLedger ? 'rotate-180' : ''}`}
+                                    />
+                                </button>
+
+                                {showLedger && (
+                                    <div className="px-5 py-4 bg-slate-50/50 border-t border-slate-100 animate-in fade-in slide-in-from-top-2 duration-200">
+                                        <div className="space-y-1.5">
+                                            {transaction.ledger_entries.map((entry) => (
+                                                <div key={entry.id} className="flex items-center justify-between text-xs">
+                                                    <div className="min-w-0 flex-1">
+                                                        <p className="font-semibold text-slate-700 truncate">{getAccountDisplayName(entry.account_name, entry.account_type)}</p>
+                                                        <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">{entry.direction}</p>
+                                                    </div>
+                                                    <p className={`font-bold ml-2 shrink-0 ${entry.direction === 'debit' ? 'text-emerald-600' : 'text-orange-600'}`}>
+                                                        {entry.direction === 'debit' ? '+' : '-'}₱{entry.amount.toLocaleString('en-PH', { minimumFractionDigits: 2 })}
+                                                    </p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
-                        </div>
-                    )}
+                        )}
 
                     {/* SYSTEM REF — collapsed at bottom */}
                     {transaction.reference_id && (

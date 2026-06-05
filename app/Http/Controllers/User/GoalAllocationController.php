@@ -80,7 +80,7 @@ class GoalAllocationController extends Controller
                 $lockedGoal->save();
 
                 $transaction = $user->transactions()->create([
-                    'title' => "Allocated to: {$lockedGoal->title}",
+                    'title' => "Allocated to {$lockedGoal->title}",
                     'type' => 'goal_allocation',
                     'amount_cents' => $amountCents,
                     'reference_id' => 'GOAL_ALLOC_' . $lockedGoal->id . '_' . time() . '_' . uniqid(),
@@ -184,7 +184,7 @@ class GoalAllocationController extends Controller
                 // CREATE TRANSACTION RECORD
                 // ====================================================
                 $transaction = $user->transactions()->create([
-                    'title' => "Unallocated from: {$lockedGoal->title}",
+                    'title' => "Unallocated from {$lockedGoal->title}",
                     'type' => 'goal_deallocation',
                     'amount_cents' => $amountCents,
                     'reference_id' => 'GOAL_DEALLOC_' . $lockedGoal->id . '_' . time() . '_' . uniqid(),
@@ -213,7 +213,7 @@ class GoalAllocationController extends Controller
                 ]);
             });
 
-            return back()->with('success', 'Funds moved back to savings pool!');
+            return back()->with('success', 'Funds moved back to savings!');
 
         } catch (ValidationException $e) {
             throw $e;

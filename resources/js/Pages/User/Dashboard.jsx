@@ -2,8 +2,9 @@
 import { Head, Link } from '@inertiajs/react';
 import { useState } from 'react';
 import UserLayout from '../../Components/Layouts/UserLayout';
-import { Wallet, Target, Send, Download, ArrowUpCircle, Gift, Receipt, ArrowRight, Lightbulb, ChevronRight, ArrowDownRight, ArrowUpRight } from 'lucide-react';
+import { Wallet, Target, Send, Download, ArrowUpCircle, Gift, ArrowRight, Lightbulb, ChevronRight } from 'lucide-react';
 import AddMoneyModal from '../../Components/Wallet/AddMoneyModal';
+import RecentTransactionsCard from '../../Components/Transactions/RecentTransactionsCard';
 
 export default function Dashboard({ auth, finances, active_goal, kyc_tier, recent_transactions = [] }) {
     const user = auth?.user;
@@ -243,54 +244,10 @@ export default function Dashboard({ auth, finances, active_goal, kyc_tier, recen
                 </div>
             </div>
 
-            {/* 5. RECENT TRANSACTIONS */}
-            <div className="bg-white rounded-[1.5rem] shadow-sm border border-gray-100 overflow-hidden mb-8">
-                <div className="flex items-center justify-between p-5 border-b border-gray-50 bg-slate-50/30">
-                    <h2 className="text-[11px] font-semibold text-gray-500 uppercase tracking-widest">Transactions</h2>
-                    <Link href="/transactions" className="text-blue-600 font-semibold text-[11px] hover:underline cursor-pointer">View All</Link>
-                </div>
-                
-                {recent_transactions.length > 0 ? (
-                    <div className="divide-y divide-slate-50">
-                        {recent_transactions.map((transaction) => {
-                            const isIncome = transaction.is_positive == 1;
-                            const formattedDate = new Date(transaction.created_at).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-
-                            return (
-                                <div key={transaction.id} className="p-4 sm:p-5 hover:bg-slate-50 transition-colors flex items-center justify-between group">
-                                    <div className="flex items-center gap-4">
-                                        <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 ${
-                                            isIncome ? 'bg-emerald-50 text-emerald-600' : 'bg-orange-50 text-orange-600'
-                                        }`}>
-                                            {isIncome ? <ArrowDownRight size={20} strokeWidth={2} /> : <ArrowUpRight size={20} strokeWidth={2} />}
-                                        </div>
-                                        <div>
-                                            <h4 className="text-sm font-bold text-slate-900">{transaction.title}</h4>
-                                            <p className="text-[11px] text-slate-500 font-medium mt-0.5">{formattedDate}</p>
-                                        </div>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className={`text-sm font-black tracking-tight ${isIncome ? 'text-emerald-600' : 'text-slate-900'}`}>
-                                            {isIncome ? '+' : '-'}₱{Number(transaction.amount).toLocaleString('en-PH', { minimumFractionDigits: 2 })}
-                                        </p>
-                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{transaction.status}</p>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                ) : (
-                    <div className="p-10 flex flex-col items-center justify-center text-center">
-                        <div className="w-12 h-12 bg-blue-50/50 text-blue-400 rounded-full flex items-center justify-center mb-3">
-                            <Receipt size={24} strokeWidth={1.5} />
-                        </div>
-                        <p className="text-gray-800 font-semibold text-sm">You're just getting started! 🚀</p>
-                        <p className="text-xs text-gray-400 mt-1 max-w-xs mx-auto leading-relaxed font-medium">
-                            Add your first ₱50 to begin your financial journey.
-                        </p>
-                    </div>
-                )}
-            </div>
+           {/* 5. RECENT TRANSACTIONS */}
+                <RecentTransactionsCard 
+                    transactions={recent_transactions}
+                />
 
             {/* MODAL */}
             <AddMoneyModal 
