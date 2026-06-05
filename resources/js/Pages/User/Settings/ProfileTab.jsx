@@ -9,7 +9,38 @@ export default function ProfileTab({ profile }) {
     const [isProcessing, setIsProcessing] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
     const [errors, setErrors] = useState({});
+    
+    // Phone validation logic
+    const validatePhone = (phone) => {
+        if (!phone || phone.length === 0) return { error: null, helper: 'Optional · Format: 09XX or +63 9XX' };
+        
+        // Starts with 09 — local format
+        if (phone.startsWith('09')) {
+            if (phone.length < 11) return { error: null, helper: `${11 - phone.length} digit${11 - phone.length === 1 ? '' : 's'} remaining (need 11 total)`, warning: true };
+            if (phone.length === 11) return { error: null, helper: '✓ Valid Philippine mobile format' };
+            return { error: 'Too long — 09 format must be exactly 11 digits', helper: '' };
+        }
+        
+        // Starts with +63 — international format
+        if (phone.startsWith('+63')) {
+            if (phone.length < 13) return { error: null, helper: `${13 - phone.length} digit${13 - phone.length === 1 ? '' : 's'} remaining (need 13 total)`, warning: true };
+            if (phone.length === 13) return { error: null, helper: '✓ Valid Philippine mobile format' };
+            return { error: 'Too long — +63 format must be exactly 13 characters', helper: '' };
+        }
+        
+        // Wrong prefix
+        return { error: 'Must start with 09 or +63', helper: '' };
+    };
 
+    const phoneValidation = validatePhone(phoneNumber);
+    const phoneError = errors.phone_number || phoneValidation.error;
+    const phoneHelperText = phoneError ? '' : phoneValidation.helper;
+    const phoneCounterColor = phoneValidation.warning 
+        ? 'text-amber-600' 
+        : phoneValidation.helper?.startsWith('✓') 
+            ? 'text-emerald-600' 
+            : 'text-slate-400';
+            
     // Check if form has changes
     const hasChanges = 
         name !== (profile.name || '') || 
@@ -72,26 +103,31 @@ export default function ProfileTab({ profile }) {
                             <h3 className="text-sm font-bold text-slate-900 tracking-tight">Personal Information</h3>
                         </div>
 
-                {/* AVATAR DISPLAY */}
-                <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200 mb-5">
-                    {profile.profile_picture ? (
-                        <img 
-                            src={profile.profile_picture} 
-                            alt={profile.name}
-                            className="w-16 h-16 rounded-full shadow-sm border-2 border-white object-cover shrink-0"
-                        />
-                    ) : (
-                        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white font-black text-xl shadow-sm shrink-0">
-                            {userInitial}
+                {/* AVATAR DISPLAY — polished card */}
+                        <div className="flex items-center gap-4 p-5 bg-gradient-to-br from-blue-50/50 via-white to-indigo-50/30 rounded-2xl border border-slate-200 mb-6">
+                            <div className="relative shrink-0">
+                                {profile.profile_picture ? (
+                                    <img 
+                                        src={profile.profile_picture} 
+                                        alt={profile.name}
+                                        className="w-16 h-16 rounded-full shadow-md border-2 border-white object-cover"
+                                    />
+                                ) : (
+                                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-black text-xl shadow-md">
+                                        {userInitial}
+                                    </div>
+                                )}
+                                {/* Subtle ring decoration */}
+                                <div className="absolute -inset-1 rounded-full bg-gradient-to-br from-blue-400/30 to-indigo-400/30 blur-sm -z-10"></div>
+                            </div>
+                            <div className="min-w-0 flex-1">
+                                <p className="text-base font-black text-slate-900 truncate tracking-tight">{profile.name}</p>
+                                <p className="text-[11px] text-slate-500 font-semibold mt-0.5 truncate">{profile.email}</p>
+                                <p className="text-[9px] text-slate-400 font-medium mt-1 uppercase tracking-widest">
+                                    {profile.profile_picture ? '✓ Synced from Google' : 'Default avatar'}
+                                </p>
+                            </div>
                         </div>
-                    )}
-                    <div className="min-w-0 flex-1">
-                        <p className="text-sm font-bold text-slate-900 truncate">{profile.name}</p>
-                        <p className="text-[10px] text-slate-500 font-medium mt-0.5">
-                            {profile.profile_picture ? 'Synced from Google' : 'Default avatar'}
-                        </p>
-                    </div>
-                </div>
 
                 {/* FORM FIELDS */}
                 <div className="space-y-4">
@@ -121,36 +157,56 @@ export default function ProfileTab({ profile }) {
                     </div>
 
                     {/* Phone Number */}
-                    <div>
-                        <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wide mb-1.5">
-                            Phone Number
-                            {profile.phone_verified && (
-                                <span className="ml-2 text-[9px] text-emerald-600 font-bold uppercase">Verified ✓</span>
+                        <div>
+                            <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wide mb-1.5">
+                                Phone Number
+                                {profile.phone_verified && (
+                                    <span className="ml-2 text-[9px] text-emerald-600 font-bold uppercase">Verified ✓</span>
+                                )}
+                            </label>
+                            <div className="relative">
+                                <Phone size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                                <input
+                                    type="tel"
+                                    value={phoneNumber}
+                                    onChange={(e) => {
+                                        let value = e.target.value;
+                                        
+                                        // Allow only digits + leading +
+                                        value = value.replace(/[^\d+]/g, '');
+                                        
+                                        // Strip duplicate + signs
+                                        if (value.startsWith('+')) {
+                                            value = '+' + value.slice(1).replace(/\+/g, '');
+                                        }
+                                        
+                                        // Enforce max length based on format
+                                        const maxLength = value.startsWith('+63') ? 13 : 11;
+                                        if (value.length > maxLength) {
+                                            value = value.slice(0, maxLength);
+                                        }
+                                        
+                                        setPhoneNumber(value);
+                                    }}
+                                    placeholder="09XX XXX XXXX or +639XX..."
+                                    maxLength={13}
+                                    className={`w-full pl-9 pr-3 py-2.5 border rounded-xl text-sm font-medium outline-none transition-all ${
+                                        phoneError 
+                                            ? 'bg-red-50/30 border-red-400 focus:ring-4 focus:ring-red-50 text-red-900' 
+                                            : 'bg-white border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-50 text-slate-900'
+                                    }`}
+                                />
+                            </div>
+                            {phoneError ? (
+                                <p className="text-[11px] font-semibold text-red-500 mt-1 flex items-center gap-1">
+                                    <AlertCircle size={12} /> {phoneError}
+                                </p>
+                            ) : (
+                                <p className={`text-[10px] mt-1 font-medium ${phoneCounterColor}`}>
+                                    {phoneHelperText}
+                                </p>
                             )}
-                        </label>
-                        <div className="relative">
-                            <Phone size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                            <input
-                                type="tel"
-                                value={phoneNumber}
-                                onChange={(e) => setPhoneNumber(e.target.value)}
-                                placeholder="+63 9XX XXX XXXX"
-                                className={`w-full pl-9 pr-3 py-2.5 border rounded-xl text-sm font-medium outline-none transition-all ${
-                                    errors.phone_number 
-                                        ? 'bg-red-50/20 border-red-400 focus:ring-4 focus:ring-red-50 text-red-900' 
-                                        : 'bg-white border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-50 text-slate-900'
-                                }`}
-                            />
                         </div>
-                        {errors.phone_number && (
-                            <p className="text-[11px] font-semibold text-red-500 mt-1 flex items-center gap-1">
-                                <AlertCircle size={12} /> {errors.phone_number}
-                            </p>
-                        )}
-                        <p className="text-[10px] text-slate-400 mt-1">
-                            Format: +639XXXXXXXXX or 09XXXXXXXXX
-                        </p>
-                    </div>
                 </div>
             </div>
 

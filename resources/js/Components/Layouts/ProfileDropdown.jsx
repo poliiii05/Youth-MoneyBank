@@ -1,12 +1,16 @@
 // resources/js/Components/Layouts/ProfileDropdown.jsx
 import { useState, useEffect, useRef } from 'react';
 import { Link, router } from '@inertiajs/react';
-import { ChevronDown, User as UserIcon, Settings, LogOut, Sparkles, Star } from 'lucide-react';
+import { ChevronDown, LogOut } from 'lucide-react';
+import SignOutModal from '../Modals/SignOutModal';
 
 export default function ProfileDropdown({ user }) {
+
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef(null);
-
+    const [signOutOpen, setSignOutOpen] = useState(false);
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
+    
     // Close dropdown when clicking outside
     useEffect(() => {
         const handleClickOutside = (e) => {
@@ -43,14 +47,26 @@ export default function ProfileDropdown({ user }) {
     const userInitial = userName.charAt(0).toUpperCase();
     const profilePic = user?.profile_picture;
 
-    const handleLogout = (e) => {
+    //Logout
+        const openSignOutModal = (e) => {
         e.preventDefault();
         setIsOpen(false);
-        if (!confirm('Sign out of Youth MoneyBank?')) return;
-        router.post('/logout', {}, {
-            onSuccess: () => localStorage.clear()
-        });
+        setSignOutOpen(true);
     };
+
+    const confirmSignOut = () => {
+        setIsLoggingOut(true);
+        router.post('/logout', {}, {
+            onSuccess: () => {
+                localStorage.clear();
+                setIsLoggingOut(false);
+                setSignOutOpen(false);
+            },
+            onError: () => {
+                setIsLoggingOut(false);
+            }
+        });
+    }; // End Logout
 
     return (
         <div className="relative" ref={dropdownRef}>
@@ -118,53 +134,24 @@ export default function ProfileDropdown({ user }) {
                         </div>
                     </div>
 
-                    {/* Menu items */}
-                    <div className="py-1">
-                        <Link 
-                            href="/settings"
-                            onClick={() => setIsOpen(false)}
-                            className="flex items-center gap-3 px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
-                        >
-                            <UserIcon size={14} className="text-slate-400" />
-                            My Profile
-                        </Link>
-                        <Link 
-                            href="/settings"
-                            onClick={() => setIsOpen(false)}
-                            className="flex items-center gap-3 px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
-                        >
-                            <Settings size={14} className="text-slate-400" />
-                            Settings
-                        </Link>
-                        {Number(user?.kyc_tier || 1) < 3 ? (
-                            <Link 
-                                href="/settings?action=upgrade"
-                                onClick={() => setIsOpen(false)}
-                                className="flex items-center gap-3 px-4 py-2.5 text-xs font-semibold text-amber-700 hover:bg-amber-50 transition-colors cursor-pointer"
-                            >
-                                <Sparkles size={14} className="text-amber-500" />
-                                Upgrade Tier
-                            </Link>
-                        ) : (
-                            <div className="flex items-center gap-3 px-4 py-2.5 text-xs font-semibold text-amber-700">
-                                <Star size={14} className="text-amber-500 fill-amber-400" />
-                                <span>Achiever Member ★</span>
-                            </div>
-                        )}
-                    </div>
-
                     {/* Sign out */}
                     <div className="border-t border-slate-100 py-1">
                         <button 
-                            onClick={handleLogout}
+                            onClick={openSignOutModal}
                             className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
                         >
                             <LogOut size={14} />
                             Sign out
                         </button>
-                    </div>
+                    </div> 
                 </div>
             )}
-        </div>
-    );
-}
+                    <SignOutModal
+                    isOpen={signOutOpen}
+                    onClose={() => !isLoggingOut && setSignOutOpen(false)}
+                    onConfirm={confirmSignOut}
+                    isProcessing={isLoggingOut}
+                />
+            </div>
+        );
+    }

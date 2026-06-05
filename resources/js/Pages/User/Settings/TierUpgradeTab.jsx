@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { Sparkles, Shield, Check, AlertTriangle, ImageIcon, Upload, Phone, Trophy, ArrowRight, Lock, Star } from 'lucide-react';
 import UploadWarningModal from '../../../Components/Modals/UploadWarningModal';
+import { showError, showInfo } from '../../../utils/toast';
 
 export default function TierUpgradeTab({ profile }) {
     const currentTier = Number(profile.kyc_tier || 1);
@@ -60,15 +61,15 @@ export default function TierUpgradeTab({ profile }) {
 
         const missing = requiredDocs.filter(key => !documents[key]);
         
-        if (missing.length > 0) {
-            alert(`Please complete all required documents (${missing.length} remaining).`);
+       if (missing.length > 0) {
+            showError(`Please complete all required documents (${missing.length} remaining).`);
             return;
         }
 
         // Phase D will handle the actual submission
         console.log('KYC Application would be submitted:', documents);
-        alert(`KYC submission flow will be implemented in Phase D.\n\nDocuments selected: ${Object.values(documents).filter(Boolean).length}`);
-    };
+        showInfo('This is a demo. Real KYC verification is coming soon.');
+     };
 
     // STATE 3: Tier 3 (max tier)
     if (currentTier === 3) {

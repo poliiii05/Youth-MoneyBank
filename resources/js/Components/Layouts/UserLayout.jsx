@@ -121,22 +121,22 @@ export default function UserLayout({ user, header, children }) {
                             
                           {/* Tier-aware button — Upgrade for Tier 1/2, Achiever badge for Tier 3 */}
                             {Number(user?.kyc_tier || 1) < 3 ? (
-                                // TIER 1 & 2: Clickable upgrade button
-                                <Link 
-                                    href="/settings?action=upgrade"
-                                    className="hidden sm:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 hover:from-amber-400 hover:via-yellow-500 hover:to-amber-600 text-amber-950 text-[11px] font-black rounded-full transition-all shadow-md shadow-amber-300/50 hover:shadow-lg hover:shadow-amber-400/60 hover:scale-105 cursor-pointer group ring-1 ring-amber-400/30"
-                                >
-                                    <Sparkles size={13} className="text-amber-700 group-hover:rotate-12 transition-transform" strokeWidth={2.5} />
-                                    <span className="tracking-tight">Upgrade to Tier {Number(user?.kyc_tier || 1) + 1}</span>
-                                    <span className="text-amber-800 group-hover:translate-x-0.5 transition-transform">→</span>
-                                </Link>
-                            ) : (
-                                // TIER 3: Achievement badge (non-clickable status)
-                                <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-600 text-amber-950 text-[11px] font-black rounded-full shadow-md shadow-amber-400/40 ring-1 ring-amber-500/40 cursor-default">
-                                    <Star size={13} className="text-amber-800 fill-amber-700" strokeWidth={2.5} />
-                                    <span className="tracking-tight">Achiever Member</span>
-                                </div>
-                            )}
+                                    <Link 
+                                        href="/settings?tab=upgrade"
+                                        className="hidden sm:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 hover:from-amber-400 hover:via-yellow-500 hover:to-amber-600 text-amber-950 text-[11px] font-black rounded-full transition-all shadow-md shadow-amber-300/50 hover:shadow-lg hover:shadow-amber-400/60 hover:scale-105 cursor-pointer group ring-1 ring-amber-400/30"
+                                    >
+                                        <Sparkles size={13} className="text-amber-700 group-hover:rotate-12 transition-transform" strokeWidth={2.5} />
+                                        <span className="tracking-tight">Upgrade to Tier {Number(user?.kyc_tier || 1) + 1}</span>
+                                    </Link>
+                               ) : (
+                                    <Link 
+                                        href="/settings?tab=upgrade"
+                                        className="hidden sm:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-600 hover:from-amber-500 hover:via-yellow-600 hover:to-amber-700 text-amber-950 text-[11px] font-black rounded-full shadow-md shadow-amber-400/40 hover:shadow-lg hover:shadow-amber-500/50 ring-1 ring-amber-500/40 transition-all hover:scale-105 cursor-pointer group"
+                                    >
+                                        <Star size={13} className="text-amber-800 fill-amber-700 group-hover:animate-pulse" strokeWidth={2.5} />
+                                        <span className="tracking-tight">Achiever Member</span>
+                                    </Link>
+                                )}
 
                             {/* Notification bell */}
                             <button className="relative p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer">
