@@ -1,37 +1,34 @@
 <?php
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
-use App\Http\Controllers\Api\CaptchaController; // sa ano ito, uhm sa parang im not a robot part
-use App\Http\Controllers\Auth\GoogleAuthController;  // integration naman ito sa google sign in hehe
-use App\Http\Controllers\SavingsGoalController; // para mahanap nya yung file nato, need pala!
+use App\Http\Controllers\Api\CaptchaController;
+use App\Http\Controllers\Auth\GoogleAuthController;
+use App\Http\Controllers\SavingsGoalController;
 use App\Http\Controllers\User\WalletController;
 
 //---------------------------------------------//
-//   sa part ito ng parang verified captcha    // -------importanteng part na mauna kasi nageeror haha--------
+//   Turnstile verification                    //
 //---------------------------------------------//
 
-//Route::post('/verify-turnstile', [CaptchaController::class, 'verify']); 
 Route::post('/verify-turnstile', [CaptchaController::class, 'verify'])
     ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class])
     ->name('verify.turnstile');
 
 //---------------------------------------------//
-//   Google OAuth Routes part ito hmp          //
+//   Google OAuth Routes                       //
 //---------------------------------------------//
 
-// 1. Ito ang tatawagin ng React button mo para pumunta sa Google
 Route::get('/auth/google', [GoogleAuthController::class, 'redirect'])->name('google.redirect');
-
-// 2. Dito ibabato ni Google ang user pabalik kasama ang data nila
 Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->name('google.callback');
 
 //---------------------------------------------//
-//  ito nga ang Public pages routes,uhmki      //
+//   Public Pages                              //
 //---------------------------------------------//
 
 Route::get('/', function () {
-    return Inertia::render('Public/Landing');  
+    return Inertia::render('Public/Landing');
 });
 
 Route::get('/home', function () {
@@ -47,7 +44,7 @@ Route::get('/faq', function () {
 });
 
 //---------------------------------------------//
-//  Auth Routes(Login & SignUp)wag malito okey //
+//   Auth Routes (Login & SignUp)              //
 //---------------------------------------------//
 
 Route::get('/login', function () {
@@ -60,7 +57,6 @@ Route::get('/signup', function () {
 
 Route::post('/login', function (Request $request) {
     // Handle phone + OTP login logic here
-    // You'll need to implement OTP service
 })->name('login.store');
 
 Route::post('/signup', function (Request $request) {
@@ -68,95 +64,93 @@ Route::post('/signup', function (Request $request) {
 })->name('signup.store');
 
 //---------------------------------------------//
-//    Middleware, procted and user route       //
+//   Protected Routes (Authenticated)          //
 //---------------------------------------------//
 
-
-// Lahat ng nasa loob nito ay kailangan NAKA-LOGIN bago mapasok
 Route::middleware(['auth'])->group(function () {
-    
-    // DASHBOARD ROUTE  
-        Route::get('/dashboard', function () {
-           $user = auth()->user();
-            $wallet = $user->wallet;
 
-            $mainBalanceCents = $wallet ? $wallet->balance_cents : 0;
-            $unallocatedSavingsCents = $wallet ? $wallet->savings_balance_cents : 0;
-            $allocatedGoalsCents = $user->savingsGoals()
-                ->where('status', '!=', 'deleted')
-                ->sum('current_amount_cents');
-            $totalSavingsCents = $unallocatedSavingsCents + $allocatedGoalsCents;
+    // ====================================================
+    // DASHBOARD
+    // ====================================================
+    Route::get('/dashboard', function () {
+        $user = auth()->user();
+        $wallet = $user->wallet;
 
-            $tier = (int) ($user->kyc_tier ?? 1);
-            $maxLimitCents = \App\Services\TierLimitService::getMaxBalanceCents($tier);
-            $totalHoldingsCents = \App\Services\TierLimitService::getTotalHoldingsCents($user);
-            $remainingCapacityCents = \App\Services\TierLimitService::getRemainingCapacityCents($user);
-            
-            // Active goal logic — Option C: Most funds first, fallback chain
-            // 1. Goal with most current allocation
-            // 2. If all empty, goal with smallest target (most achievable)
-            // 3. Null if no goals
+        $mainBalanceCents = $wallet ? $wallet->balance_cents : 0;
+        $unallocatedSavingsCents = $wallet ? $wallet->savings_balance_cents : 0;
+        $allocatedGoalsCents = $user->savingsGoals()
+            ->where('status', '!=', 'deleted')
+            ->sum('current_amount_cents');
+        $totalSavingsCents = $unallocatedSavingsCents + $allocatedGoalsCents;
+
+        $tier = (int) ($user->kyc_tier ?? 1);
+        $maxLimitCents = \App\Services\TierLimitService::getMaxBalanceCents($tier);
+        $totalHoldingsCents = \App\Services\TierLimitService::getTotalHoldingsCents($user);
+        $remainingCapacityCents = \App\Services\TierLimitService::getRemainingCapacityCents($user);
+
+        // Active goal logic: most funds first, fallback to smallest target
+        $activeGoal = $user->savingsGoals()
+            ->where('status', '!=', 'deleted')
+            ->where('current_amount_cents', '>', 0)
+            ->orderBy('current_amount_cents', 'desc')
+            ->first();
+
+        if (!$activeGoal) {
             $activeGoal = $user->savingsGoals()
                 ->where('status', '!=', 'deleted')
-                ->where('current_amount_cents', '>', 0)
-                ->orderBy('current_amount_cents', 'desc')
+                ->orderBy('target_amount_cents', 'asc')
                 ->first();
+        }
 
-            if (!$activeGoal) {
-                // Fallback: no goals have funds yet, pick the smallest target (most achievable)
-                $activeGoal = $user->savingsGoals()
-                    ->where('status', '!=', 'deleted')
-                    ->orderBy('target_amount_cents', 'asc')
-                    ->first();
-            }
-
-            return Inertia::render('User/Dashboard', [
-                'auth' => ['user' => $user],
-                'finances' => [
+        return Inertia::render('User/Dashboard', [
+            'auth' => ['user' => $user],
+            'finances' => [
                 'main_balance' => (float) ($mainBalanceCents / 100),
                 'total_savings' => (float) ($totalSavingsCents / 100),
                 'max_limit' => (float) ($maxLimitCents / 100),
                 'main_balance_cents' => $mainBalanceCents,
                 'max_limit_cents' => $maxLimitCents,
-                // Bagong breakdown fields
                 'unallocated_savings' => (float) ($unallocatedSavingsCents / 100),
                 'allocated_to_goals' => (float) ($allocatedGoalsCents / 100),
                 'total_holdings' => (float) ($totalHoldingsCents / 100),
                 'remaining_capacity' => (float) ($remainingCapacityCents / 100),
             ],
-                'active_goal' => $activeGoal ? [
-                    'id' => $activeGoal->id,
-                    'title' => $activeGoal->title,
-                    'icon_name' => $activeGoal->icon_name,
-                    'current_amount' => (float) $activeGoal->current_amount_pesos,
-                    'target_amount' => (float) $activeGoal->target_amount_pesos,
-                ] : null,
-                'kyc_tier' => $tier,
-                'recent_transactions' => $user->transactions()
-                    ->latest()
-                    ->take(5)
-                    ->get()
-                    ->map(function ($t) {
-                        return [
-                            'id' => $t->id,
-                            'title' => $t->title,
-                            'type' => $t->type,
-                            'amount' => (float) $t->amount_pesos,
-                            'is_positive' => $t->is_positive,
-                            'status' => $t->status,
-                            'public_reference_id' => $t->public_reference_id,
-                            'created_at' => $t->created_at,
-                        ];
-                    }),
-            ]);
-        })->name('dashboard');
+            'active_goal' => $activeGoal ? [
+                'id' => $activeGoal->id,
+                'title' => $activeGoal->title,
+                'icon_name' => $activeGoal->icon_name,
+                'current_amount' => (float) $activeGoal->current_amount_pesos,
+                'target_amount' => (float) $activeGoal->target_amount_pesos,
+            ] : null,
+            'kyc_tier' => $tier,
+            'recent_transactions' => $user->transactions()
+                ->latest()
+                ->take(5)
+                ->get()
+                ->map(function ($t) {
+                    return [
+                        'id' => $t->id,
+                        'title' => $t->title,
+                        'type' => $t->type,
+                        'amount' => (float) $t->amount_pesos,
+                        'is_positive' => $t->is_positive,
+                        'status' => $t->status,
+                        'public_reference_id' => $t->public_reference_id,
+                        'created_at' => $t->created_at,
+                    ];
+                }),
+        ]);
+    })->name('dashboard');
 
-        
-    // SAVINGS GOALS ROUTE
+    // ====================================================
+    // SAVINGS GOALS
+    // ====================================================
     Route::get('/goals', [SavingsGoalController::class, 'index'])->name('goals.index');
     Route::post('/goals', [SavingsGoalController::class, 'store'])->name('goals.store');
 
-    // TRANSACTIONS — list (with 30-day default filter + pagination)
+    // ====================================================
+    // TRANSACTIONS — list with 30-day filter + pagination
+    // ====================================================
     Route::get('/transactions', function () {
         $user = auth()->user();
 
@@ -168,14 +162,13 @@ Route::middleware(['auth'])->group(function () {
             ->with(['ledgerEntries.ledgerAccount'])
             ->latest();
 
-        // Default: filter to last 30 days unless show_all=1
         if (!$showAll) {
             $query->where('created_at', '>=', now()->subDays(30));
         }
 
         $totalCount = $query->count();
         $totalPages = max(1, ceil($totalCount / $perPage));
-        
+
         $transactions = $query
             ->skip(($page - 1) * $perPage)
             ->take($perPage)
@@ -195,7 +188,6 @@ Route::middleware(['auth'])->group(function () {
                 ];
             });
 
-        // Check if user has older transactions (for "Show older" button)
         $hasOlderTransactions = $user->transactions()
             ->where('created_at', '<', now()->subDays(30))
             ->exists();
@@ -218,18 +210,18 @@ Route::middleware(['auth'])->group(function () {
         ]);
     })->name('transactions');
 
-    // TRANSACTIONS — detail page
+    // ====================================================
+    // TRANSACTION DETAIL
+    // ====================================================
     Route::get('/transactions/{transaction}', function (\App\Models\Transaction $transaction) {
         $user = auth()->user();
-        
-        // Authorization: only the owner can view
+
         if ($transaction->user_id !== $user->id) {
             abort(403, 'You do not have permission to view this transaction.');
         }
-        
-        // Load ledger entries with their accounts
+
         $transaction->load(['ledgerEntries.ledgerAccount']);
-        
+
         return inertia('User/TransactionDetail', [
             'auth' => ['user' => $user],
             'transaction' => [
@@ -262,50 +254,86 @@ Route::middleware(['auth'])->group(function () {
         ]);
     })->name('transactions.show');
 
-    // Settings routes
+    // ====================================================
+    // SETTINGS
+    // ====================================================
     Route::get('/settings', [\App\Http\Controllers\User\SettingsController::class, 'index'])
         ->name('settings');
 
     Route::patch('/settings/profile', [\App\Http\Controllers\User\SettingsController::class, 'updateProfile'])
         ->name('settings.profile.update');
-    
-    // Add money transactions
+
+    // ====================================================
+    // WALLET
+    // ====================================================
     Route::post('/wallet/add-money', [WalletController::class, 'addMoney'])->name('wallet.add-money');
 
-    // Goal allocation, deallocate (wallet → goal)
+    // ====================================================
+    // GOAL ALLOCATIONS
+    // ====================================================
     Route::post('/goals/{goal}/allocate', [\App\Http\Controllers\User\GoalAllocationController::class, 'allocate'])
         ->name('goals.allocate');
 
     Route::post('/goals/{goal}/deallocate', [\App\Http\Controllers\User\GoalAllocationController::class, 'deallocate'])
-    ->name('goals.deallocate');   
+        ->name('goals.deallocate');
 
     Route::post('/goals/{goal}/update', [\App\Http\Controllers\SavingsGoalController::class, 'update'])
-    ->name('goals.update');
+        ->name('goals.update');
 
-    // Savings transfers (Main Wallet ↔ Savings Pool)
+    Route::post('/goals/{goal}/delete', [\App\Http\Controllers\SavingsGoalController::class, 'destroy'])
+        ->name('goals.destroy');
+
+    Route::get('/goals/{goal}/details', [\App\Http\Controllers\SavingsGoalController::class, 'showDetails'])
+        ->name('goals.details');
+
+    // ====================================================
+    // SAVINGS TRANSFERS (Main Wallet ↔ Savings Pool)
+    // ====================================================
     Route::post('/savings/add', [\App\Http\Controllers\User\SavingsTransferController::class, 'addToSavings'])
         ->name('savings.add');
 
     Route::post('/savings/withdraw', [\App\Http\Controllers\User\SavingsTransferController::class, 'withdrawFromSavings'])
         ->name('savings.withdraw');
-    
-    Route::post('/goals/{goal}/delete', [\App\Http\Controllers\SavingsGoalController::class, 'destroy'])
-    ->name('goals.destroy');
 
-    Route::get('/goals/{goal}/details', [\App\Http\Controllers\SavingsGoalController::class, 'showDetails'])
-    ->name('goals.details');
-    
-    // KYC Routes
-    Route::post('/kyc/submit', [\App\Http\Controllers\User\KycController::class, 'submit'])->name('kyc.submit');
-    Route::get('/kyc/status', [\App\Http\Controllers\User\KycController::class, 'status'])->name('kyc.status');
+    // ====================================================
+    // KYC
+    // ====================================================
+    Route::post('/kyc/submit', [\App\Http\Controllers\User\KycController::class, 'submit'])
+        ->name('kyc.submit');
 
-     // logout session
+    Route::get('/kyc/status', [\App\Http\Controllers\User\KycController::class, 'status'])
+        ->name('kyc.status');
+
+    // ====================================================
+    // ADMIN ROUTES (Phase E) — requires admin role
+    // ====================================================
+    Route::prefix('admin')->name('admin.')->middleware(['role:any'])->group(function () {
+
+        Route::get('/', function () {
+            return Inertia::render('Admin/Dashboard');
+        })->name('dashboard');
+
+        // KYC Reviews — requires kyc_reviewer or super_admin
+        Route::middleware(['role:super_admin,kyc_reviewer'])->group(function () {
+            // Will add KYC review routes here in Day 3
+        });
+
+        // User Management — super_admin only
+        Route::middleware(['role:super_admin'])->group(function () {
+            // Will add user management routes here in Day 5
+        });
+
+    });
+
+    // ====================================================
+    // LOGOUT
+    // ====================================================
     Route::post('/logout', function (Request $request) {
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return Inertia\Inertia::location('/');
+        return Inertia::location('/');
     })->name('logout');
-    
-    });
+
+});
