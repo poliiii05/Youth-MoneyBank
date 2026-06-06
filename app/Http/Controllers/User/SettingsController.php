@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
+use App\Services\KycService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
@@ -11,7 +13,7 @@ class SettingsController extends Controller
 {
     /**
      * Display the Settings page.
-     * Shows tabs: Profile, Security, Tier Upgrade, Preferences.
+     * Shows tabs: Profile, Tier Upgrade.
      */
     public function index(Request $request)
     {
@@ -30,6 +32,7 @@ class SettingsController extends Controller
                 'email_verified' => !is_null($user->email_verified_at),
                 'phone_verified' => !is_null($user->phone_verified_at),
             ],
+            'kyc_status' => $this->getKycStatus($user),
             'active_tab' => $request->query('tab', 'profile'),
         ]);
     }
@@ -76,5 +79,38 @@ class SettingsController extends Controller
                 'general' => 'An error occurred. Please try again.',
             ]);
         }
+    }
+
+    /**
+     * Build KYC status payload for the frontend.
+     * Used sa Tier Upgrade tab to show current state.
+     */
+    protected function getKycStatus(User $user): array
+    {
+        $application = KycService::getCurrentApplication($user);
+
+        return [
+            'current_tier' => (int) ($user->kyc_tier ?? 1),
+            'has_application' => $application !== null,
+            'application' => $application ? [
+                'id' => $application->id,
+                'target_tier' => $application->target_tier,
+                'status' => $application->status,
+                'submitted_at' => $application->submitted_at?->toIso8601String(),
+                'reviewed_at' => $application->reviewed_at?->toIso8601String(),
+                'auto_approved' => (bool) $application->auto_approved,
+                'rejection_reason' => $application->rejection_reason,
+                'documents' => $application->documents->map(fn ($doc) => [
+                    'document_type' => $doc->document_type,
+                    'is_sample' => (bool) $doc->is_sample,
+                    'file_name' => $doc->file_name,
+                ])->toArray(),
+            ] : null,
+            'is_demo_mode' => config('kyc.auto_approve', false),
+            'required_documents' => [
+                2 => config('kyc.required_documents.2', []),
+                3 => config('kyc.required_documents.3', []),
+            ],
+        ];
     }
 }

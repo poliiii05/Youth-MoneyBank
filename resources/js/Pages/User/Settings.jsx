@@ -11,7 +11,7 @@ const TABS = [
     { id: 'upgrade', label: 'Tier Upgrade', icon: Sparkles },
 ];
 
-export default function Settings({ auth, profile, active_tab }) {
+export default function Settings({ auth, profile, kyc_status, active_tab }) {
     const user = auth?.user;
     const [activeTab, setActiveTab] = useState(active_tab || 'profile');
 
@@ -61,7 +61,7 @@ export default function Settings({ auth, profile, active_tab }) {
                     {/* TAB CONTENT */}
                     <div className="p-5 sm:p-6">
                         {activeTab === 'profile' && <ProfileTab profile={profile} />}
-                        {activeTab === 'upgrade' && <TierUpgradeTab profile={profile} />}
+                        {activeTab === 'upgrade' && <TierUpgradeTab profile={profile} kyc_status={kyc_status} />}
                     </div>
                 </div>
             </div>

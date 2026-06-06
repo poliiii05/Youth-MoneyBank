@@ -108,7 +108,7 @@ Route::middleware(['auth'])->group(function () {
                     ->where('status', '!=', 'deleted')
                     ->orderBy('target_amount_cents', 'asc')
                     ->first();
-}
+            }
 
             return Inertia::render('User/Dashboard', [
                 'auth' => ['user' => $user],
@@ -294,6 +294,10 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/goals/{goal}/details', [\App\Http\Controllers\SavingsGoalController::class, 'showDetails'])
     ->name('goals.details');
+    
+    // KYC Routes
+    Route::post('/kyc/submit', [\App\Http\Controllers\User\KycController::class, 'submit'])->name('kyc.submit');
+    Route::get('/kyc/status', [\App\Http\Controllers\User\KycController::class, 'status'])->name('kyc.status');
 
      // logout session
     Route::post('/logout', function (Request $request) {

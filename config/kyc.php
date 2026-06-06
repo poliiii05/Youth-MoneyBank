@@ -47,8 +47,8 @@ return [
     |
     */
     'required_documents' => [
-        2 => ['id_front', 'id_back', 'selfie'],
-        3 => ['id_front', 'id_back', 'selfie', 'proof_of_address', 'income_statement'],
+        2 => ['school_id_front', 'school_id_back', 'selfie'],
+        3 => ['valid_id_front', 'valid_id_back', 'address_proof'],
     ],
 
     /*
