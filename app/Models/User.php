@@ -45,4 +45,30 @@ class User extends Authenticatable
     public function transactions() {
         return $this->hasMany(Transaction::class)->orderBy('created_at', 'desc');
     }
+
+    /**
+     * All KYC applications by this user.
+     */
+    public function kycApplications()
+    {
+        return $this->hasMany(KycApplication::class)->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * Get the latest pending KYC application (if any).
+     */
+    public function pendingKycApplication()
+    {
+        return $this->hasOne(KycApplication::class)
+            ->where('status', 'pending')
+            ->latest();
+    }
+
+    /**
+     * Get the latest KYC application (any status).
+     */
+    public function latestKycApplication()
+    {
+        return $this->hasOne(KycApplication::class)->latestOfMany();
+    }
 }

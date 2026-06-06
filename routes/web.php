@@ -269,15 +269,6 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/settings/profile', [\App\Http\Controllers\User\SettingsController::class, 'updateProfile'])
         ->name('settings.profile.update');
     
-    // logout session
-    Route::post('/logout', function (Request $request) {
-        Auth::logout();
-        $request->session()->invalidate(); // Destroy the session data
-        $request->session()->regenerateToken(); // Create a new CSRF token for safety
- 
-        return redirect('/login');
-    })->name('logout');
-    
     // Add money transactions
     Route::post('/wallet/add-money', [WalletController::class, 'addMoney'])->name('wallet.add-money');
 
@@ -303,4 +294,14 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/goals/{goal}/details', [\App\Http\Controllers\SavingsGoalController::class, 'showDetails'])
     ->name('goals.details');
+
+     // logout session
+    Route::post('/logout', function (Request $request) {
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return Inertia\Inertia::location('/');
+    })->name('logout');
+    
     });

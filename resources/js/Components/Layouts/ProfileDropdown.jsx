@@ -9,7 +9,7 @@ export default function ProfileDropdown({ user }) {
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef(null);
     const [signOutOpen, setSignOutOpen] = useState(false);
-    const [isLoggingOut, setIsLoggingOut] = useState(false);
+   
     
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -55,18 +55,22 @@ export default function ProfileDropdown({ user }) {
     };
 
     const confirmSignOut = () => {
-        setIsLoggingOut(true);
-        router.post('/logout', {}, {
-            onSuccess: () => {
-                localStorage.clear();
-                setIsLoggingOut(false);
-                setSignOutOpen(false);
+        localStorage.clear();
+        
+        // Submit logout request in background (fire and forget)
+        fetch('/logout', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+                'X-Requested-With': 'XMLHttpRequest',
             },
-            onError: () => {
-                setIsLoggingOut(false);
-            }
+            credentials: 'same-origin',
         });
-    }; // End Logout
+        
+        // Navigate immediately — don't wait for response
+        window.location.href = '/';
+    };// End Logout
 
     return (
         <div className="relative" ref={dropdownRef}>
@@ -147,11 +151,11 @@ export default function ProfileDropdown({ user }) {
                 </div>
             )}
                     <SignOutModal
-                    isOpen={signOutOpen}
-                    onClose={() => !isLoggingOut && setSignOutOpen(false)}
-                    onConfirm={confirmSignOut}
-                    isProcessing={isLoggingOut}
-                />
+                        isOpen={signOutOpen}
+                        onClose={() => setSignOutOpen(false)}
+                        onConfirm={confirmSignOut}
+                        isProcessing={false}
+                    />
             </div>
         );
     }
