@@ -20,124 +20,111 @@ export default function AdminSidebar({ user, pendingCounts = {}, sidebarOpen, on
     const isSuperAdmin = role === 'super_admin';
     const canApproveKyc = role === 'super_admin' || role === 'kyc_reviewer';
 
+    // Get inline role label (short)
+    const getRoleLabel = (role) => {
+        const labels = {
+            super_admin: 'SUPER ADMIN',
+            kyc_reviewer: 'KYC REVIEWER',
+            support_staff: 'SUPPORT',
+        };
+        return labels[role] || 'ADMIN';
+    };
+
+    // Get nickname (first name only)
+    const getNickname = (name) => {
+        if (!name) return 'Admin';
+        return name.split(' ')[0];
+    };
+
+    const roleLabel = getRoleLabel(role);
+    const nickname = getNickname(user?.name);
+
     // Grouped nav structure
     const sections = [
         {
             title: 'Overview',
             items: [
-                { 
-                    label: 'Dashboard', 
-                    href: '/admin', 
-                    icon: LayoutDashboard,
-                    visible: true,
-                    locked: false,
-                },
+                { label: 'Dashboard', href: '/admin', icon: LayoutDashboard, visible: true, locked: false },
             ],
         },
         {
             title: 'Review',
             items: [
                 { 
-                    label: 'KYC Reviews', 
-                    href: '/admin/kyc', 
-                    icon: FileCheck,
-                    badge: pendingCounts.kyc || null,
-                    visible: true,
-                    locked: !canApproveKyc, // Read-only for support_staff
+                    label: 'KYC Reviews', href: '/admin/kyc', icon: FileCheck,
+                    badge: pendingCounts.kyc || null, visible: true, locked: !canApproveKyc,
                 },
-                { 
-                    label: 'Transactions', 
-                    href: '/admin/transactions', 
-                    icon: Receipt,
-                    visible: true,
-                    locked: false,
-                },
+                { label: 'Transactions', href: '/admin/transactions', icon: Receipt, visible: true, locked: false },
             ],
         },
         {
             title: 'Manage',
             items: [
                 { 
-                    label: 'Users', 
-                    href: '/admin/users', 
-                    icon: Users,
-                    badge: pendingCounts.users_new || null,
-                    visible: true, // Show to all, but locked for non-super
-                    locked: !isSuperAdmin,
-                    requiresSuper: true,
+                    label: 'Users', href: '/admin/users', icon: Users,
+                    badge: pendingCounts.users_new || null, visible: true, locked: !isSuperAdmin, requiresSuper: true,
                 },
             ],
         },
         {
             title: 'System',
             items: [
-                { 
-                    label: 'Audit Log', 
-                    href: '/admin/audit', 
-                    icon: Activity,
-                    visible: true,
-                    locked: !isSuperAdmin,
-                    requiresSuper: true,
-                },
-                { 
-                    label: 'Settings', 
-                    href: '/admin/settings', 
-                    icon: SettingsIcon,
-                    visible: true,
-                    locked: !isSuperAdmin,
-                    requiresSuper: true,
-                },
+                { label: 'Audit Log', href: '/admin/audit', icon: Activity, visible: true, locked: !isSuperAdmin, requiresSuper: true },
+                { label: 'Settings', href: '/admin/settings', icon: SettingsIcon, visible: true, locked: !isSuperAdmin, requiresSuper: true },
             ],
         },
     ];
 
-    const roleBadge = role === 'super_admin' 
-        ? { label: 'Super Admin', color: 'bg-purple-100 text-purple-700 border-purple-200' }
-        : role === 'kyc_reviewer'
-        ? { label: 'KYC Reviewer', color: 'bg-blue-100 text-blue-700 border-blue-200' }
-        : role === 'support_staff'
-        ? { label: 'Support', color: 'bg-emerald-100 text-emerald-700 border-emerald-200' }
-        : { label: 'Admin', color: 'bg-slate-100 text-slate-700 border-slate-200' };
-
-    const userName = user?.name || 'Admin';
-    const userInitial = userName.charAt(0).toUpperCase();
-
     return (
-        <aside className={`fixed lg:sticky top-0 lg:top-[57px] left-0 z-30 h-screen lg:h-[calc(100vh-57px)] w-64 bg-slate-900 text-slate-200 border-r border-slate-800 transform transition-transform lg:transform-none flex flex-col ${
+        <aside className={`fixed lg:sticky top-0 left-0 z-30 h-screen w-60 bg-slate-900 text-slate-200 border-r border-slate-800 transform transition-transform lg:transform-none flex flex-col ${
             sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}>
-            {/* Mobile header (only visible sa mobile) */}
-            <div className="lg:hidden flex items-center justify-between p-4 border-b border-slate-800">
-                <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-gradient-to-br from-slate-700 to-slate-600 rounded-lg flex items-center justify-center">
-                        <Shield size={16} className="text-white" strokeWidth={2.5} />
-                    </div>
-                    <div>
-                        <p className="text-sm font-black text-white tracking-tight leading-tight">
-                            Admin Panel
-                        </p>
-                    </div>
+            {/* TOP: Brand */}
+            <div className="p-4 pb-3 border-b border-slate-800/80">
+                <div className="flex items-center justify-between">
+                    <Link 
+                        href="/admin" 
+                        className="flex items-center gap-2.5 hover:opacity-90 transition-opacity cursor-pointer"
+                    >
+                        <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-md">
+                            <Shield size={17} className="text-white" strokeWidth={2.5} />
+                        </div>
+                        <div>
+                            <p className="text-sm font-black text-white tracking-tight leading-none">Youth Money</p>
+                            <p className="text-[9px] font-bold text-blue-400 uppercase tracking-widest mt-0.5">Bank</p>
+                        </div>
+                    </Link>
+                    
+                    {/* Mobile close button */}
+                    <button onClick={onClose} className="lg:hidden text-slate-400 hover:text-white p-1 cursor-pointer">
+                        <X size={18} />
+                    </button>
                 </div>
-                <button onClick={onClose} className="text-slate-400 hover:text-white p-1 cursor-pointer">
-                    <X size={18} />
-                </button>
+            </div>
+
+            {/* Role + Nickname */}
+            <div className="px-4 py-3 border-b border-slate-800/80">
+                <div className="flex items-baseline gap-1.5">
+                    <span className="text-[9px] font-black text-blue-400 uppercase tracking-widest">{roleLabel}</span>
+                    <span className="text-slate-600 text-[9px]">:</span>
+                    <span className="text-xs font-bold text-white truncate">{nickname}</span>
+                </div>
             </div>
 
             {/* Nav sections */}
-            <nav className="flex-1 overflow-y-auto p-4 space-y-5">
+            <nav className="flex-1 overflow-y-auto p-3 space-y-4">
                 {sections.map((section) => (
                     <div key={section.title}>
-                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2 px-2">
+                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1.5 px-2">
                             {section.title}
                         </p>
-                        <div className="space-y-1">
+                        <div className="space-y-0.5">
                             {section.items.filter(item => item.visible).map((item) => {
                                 const Icon = item.icon;
                                 const active = isUrlActive(item.href);
                                 const locked = item.locked;
                                 
                                 if (locked) {
-                                    // Locked item (visible but not clickable)
                                     return (
                                         <div
                                             key={item.href}
@@ -177,30 +164,12 @@ export default function AdminSidebar({ user, pendingCounts = {}, sidebarOpen, on
                 ))}
             </nav>
 
-            {/* User card sa bottom */}
-            <div className="p-4 border-t border-slate-800">
-                <div className="bg-slate-800/50 rounded-xl p-3">
-                    <div className="flex items-center gap-2.5 mb-2">
-                        {user?.profile_picture ? (
-                            <img 
-                                src={user.profile_picture}
-                                alt={userName}
-                                className="w-9 h-9 rounded-full border border-slate-700 object-cover shrink-0"
-                            />
-                        ) : (
-                            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-slate-700 to-slate-600 flex items-center justify-center text-white font-bold text-xs shrink-0">
-                                {userInitial}
-                            </div>
-                        )}
-                        <div className="min-w-0 flex-1">
-                            <p className="text-[11px] font-bold text-white truncate">{userName}</p>
-                            <p className="text-[9px] text-slate-400 truncate">{user?.email}</p>
-                        </div>
-                    </div>
-                    <span className={`inline-block text-[8px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded border ${roleBadge.color}`}>
-                        {roleBadge.label}
-                    </span>
-                </div>
+            {/* Footer */}
+            <div className="px-4 py-3 border-t border-slate-800/80">
+                <p className="text-[9px] font-medium text-slate-500 text-center leading-relaxed">
+                    Banking Admin Console<br/>
+                    <span className="text-slate-600">v1.0 · {new Date().getFullYear()}</span>
+                </p>
             </div>
         </aside>
     );

@@ -1,210 +1,136 @@
 // resources/js/Pages/Admin/Dashboard.jsx
-import { Head, Link } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
+import { useEffect, useState } from 'react';
 import AdminLayout from '../../Components/Layouts/AdminLayout';
 import StatCard from '../../Components/Admin/StatCard';
-import { 
-    FileCheck, Users, TrendingUp, Activity, 
-    Clock, CheckCircle2, AlertCircle, ArrowRight 
-} from 'lucide-react';
+import TierDistributionCard from '../../Components/Admin/Dashboard/TierDistributionCard';
+import ActivityAnalyticsCard from '../../Components/Admin/Dashboard/ActivityAnalyticsCard';
+import RecentTransactionsCard from '../../Components/Admin/Dashboard/RecentTransactionsCard';
+import RecentKycCard from '../../Components/Admin/Dashboard/RecentKycCard';
+import { Users, Activity, TrendingUp, Clock, RefreshCw } from 'lucide-react';
 
-export default function AdminDashboard({ auth, stats = null, recent_kyc = [], pendingCounts = {} }) {
+export default function AdminDashboard({ 
+    auth, 
+    stats = null, 
+    tier_distribution = [],
+    analytics = null,
+    recent_kyc = [], 
+    recent_transactions = [],
+    pendingCounts = {} 
+}) {
     const user = auth?.user;
+    const [lastRefresh, setLastRefresh] = useState(new Date());
+    const [isRefreshing, setIsRefreshing] = useState(false);
 
-    // Default stats if not yet wired up
     const defaultStats = {
-        pending_kyc: 0,
-        approved_today: 0,
-        total_users: 0,
-        active_today: 0,
-        trends: {},
+        total_users: 0, active_today: 0, total_volume: 0, pending_kyc: 0,
     };
     const s = stats || defaultStats;
 
-    const breadcrumbs = [
-        { label: 'Admin', href: '/admin' },
-        { label: 'Dashboard' },
-    ];
+    const formatPesoShort = (amount) => {
+        if (amount >= 1000000) return '₱' + (amount / 1000000).toFixed(1) + 'M';
+        if (amount >= 1000) return '₱' + (amount / 1000).toFixed(1) + 'K';
+        return '₱' + amount.toFixed(0);
+    };
+
+    // Auto-refresh every 60 seconds
+    useEffect(() => {
+        const interval = setInterval(() => {
+            refreshData();
+        }, 60000); // 60 seconds
+
+        return () => clearInterval(interval);
+    }, []);
+
+    // Refresh data via Inertia partial reload
+    const refreshData = () => {
+        setIsRefreshing(true);
+        router.reload({
+            only: ['stats', 'tier_distribution', 'analytics', 'recent_kyc', 'pendingCounts'],
+            onFinish: () => {
+                setIsRefreshing(false);
+                setLastRefresh(new Date());
+            },
+        });
+    };
+
+    // Format time since last refresh
+    const getTimeSinceRefresh = () => {
+        const seconds = Math.floor((Date.now() - lastRefresh.getTime()) / 1000);
+        if (seconds < 60) return `${seconds}s ago`;
+        return `${Math.floor(seconds / 60)}m ago`;
+    };
 
     return (
         <AdminLayout 
             user={user} 
-            breadcrumbs={breadcrumbs}
+            header="Dashboard" 
             pendingCounts={pendingCounts}
+            actions={
+                <RefreshIndicator 
+                    isRefreshing={isRefreshing}
+                    timeSince={getTimeSinceRefresh()}
+                    onRefresh={refreshData}
+                />
+            }
         >
             <Head title="Admin Dashboard | Youth MoneyBank" />
 
-            <div className="max-w-7xl">
-                {/* PAGE HEADING */}
-                <div className="mb-6">
-                    <h1 className="text-2xl font-black text-slate-900 tracking-tight mb-1">
-                        Dashboard
-                    </h1>
-                    <p className="text-sm text-slate-500 font-medium">
-                        Welcome back, <span className="font-bold text-slate-700">{user?.name}</span>. Here's what's happening today.
-                    </p>
-                </div>
-
-                {/* STATS GRID */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+            <div className="max-w-7xl space-y-4">
+                {/* ROW 1: KPI Stats Grid */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                    <StatCard label="Total Users" value={s.total_users.toLocaleString()} icon={Users} color="blue" />
+                    <StatCard label="Active Today" value={s.active_today.toLocaleString()} icon={Activity} color="emerald" />
+                    <StatCard label="Total Volume" value={formatPesoShort(s.total_volume)} icon={TrendingUp} color="purple" />
                     <StatCard 
-                        label="Pending KYC"
-                        value={s.pending_kyc}
-                        icon={Clock}
+                        label="Pending KYC" 
+                        value={s.pending_kyc.toLocaleString()} 
+                        icon={Clock} 
                         color="amber"
                         onClick={() => window.location.href = '/admin/kyc?status=pending'}
                     />
-                    <StatCard 
-                        label="Approved Today"
-                        value={s.approved_today}
-                        icon={CheckCircle2}
-                        color="emerald"
-                        trend={s.trends?.approved ? { value: s.trends.approved, direction: 'up' } : null}
-                    />
-                    <StatCard 
-                        label="Total Users"
-                        value={s.total_users.toLocaleString()}
-                        icon={Users}
-                        color="blue"
-                    />
-                    <StatCard 
-                        label="Active Today"
-                        value={s.active_today}
-                        icon={Activity}
-                        color="purple"
-                    />
                 </div>
 
-                {/* MAIN CONTENT GRID */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
-                    
-                    {/* RECENT KYC SUBMISSIONS — 2 cols */}
-                    <div className="lg:col-span-2 bg-white rounded-xl border border-slate-200 overflow-hidden">
-                        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-                            <div>
-                                <h3 className="text-sm font-black text-slate-900 tracking-tight">Recent KYC Submissions</h3>
-                                <p className="text-[10px] text-slate-500 font-medium mt-0.5">Latest applications awaiting review</p>
-                            </div>
-                            <Link 
-                                href="/admin/kyc"
-                                className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold text-[10px] uppercase tracking-wider rounded-lg transition-all cursor-pointer"
-                            >
-                                View All
-                                <ArrowRight size={11} strokeWidth={2.5} />
-                            </Link>
-                        </div>
-                        
-                        {recent_kyc.length > 0 ? (
-                            <div className="divide-y divide-slate-100">
-                                {recent_kyc.map((app) => (
-                                    <Link
-                                        key={app.id}
-                                        href={`/admin/kyc/${app.id}`}
-                                        className="block px-5 py-3 hover:bg-slate-50 transition-colors cursor-pointer"
-                                    >
-                                        <div className="flex items-center justify-between gap-3">
-                                            <div className="flex items-center gap-3 min-w-0 flex-1">
-                                                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white font-bold text-xs shrink-0">
-                                                    {(app.user_name || '?').charAt(0).toUpperCase()}
-                                                </div>
-                                                <div className="min-w-0 flex-1">
-                                                    <p className="text-sm font-bold text-slate-900 truncate">{app.user_name}</p>
-                                                    <p className="text-[10px] text-slate-500 font-medium truncate">
-                                                        Target Tier {app.target_tier} · {app.submitted_relative}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <StatusBadge status={app.status} />
-                                        </div>
-                                    </Link>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="p-8 text-center">
-                                <FileCheck size={32} className="text-slate-300 mx-auto mb-2" strokeWidth={1.5} />
-                                <p className="text-sm font-bold text-slate-700">No pending applications</p>
-                                <p className="text-[11px] text-slate-500 font-medium mt-0.5">All caught up!</p>
-                            </div>
-                        )}
+                {/* ROW 2: Tier Distribution + Activity Analytics */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+                    <div className="lg:col-span-1">
+                        <TierDistributionCard data={tier_distribution} />
                     </div>
-
-                    {/* PENDING ACTIONS — 1 col */}
-                    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-                        <div className="px-5 py-4 border-b border-slate-100">
-                            <h3 className="text-sm font-black text-slate-900 tracking-tight">Pending Actions</h3>
-                            <p className="text-[10px] text-slate-500 font-medium mt-0.5">Items needing your attention</p>
-                        </div>
-                        <div className="p-3 space-y-2">
-                            {s.pending_kyc > 0 && (
-                                <Link 
-                                    href="/admin/kyc?status=pending"
-                                    className="flex items-center gap-3 p-3 rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-200 transition-colors cursor-pointer"
-                                >
-                                    <Clock size={16} className="text-amber-600 shrink-0" strokeWidth={2.5} />
-                                    <div className="min-w-0 flex-1">
-                                        <p className="text-xs font-bold text-amber-900">{s.pending_kyc} KYC review{s.pending_kyc > 1 ? 's' : ''}</p>
-                                        <p className="text-[9px] text-amber-700">Awaiting your decision</p>
-                                    </div>
-                                    <ArrowRight size={12} className="text-amber-600 shrink-0" />
-                                </Link>
-                            )}
-
-                            {s.pending_kyc === 0 && (
-                                <div className="flex items-center gap-3 p-3 rounded-lg bg-emerald-50 border border-emerald-200">
-                                    <CheckCircle2 size={16} className="text-emerald-600 shrink-0" strokeWidth={2.5} />
-                                    <div className="min-w-0 flex-1">
-                                        <p className="text-xs font-bold text-emerald-900">All clear!</p>
-                                        <p className="text-[9px] text-emerald-700">No pending tasks</p>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
+                    <div className="lg:col-span-2">
+                        <ActivityAnalyticsCard analytics={analytics} />
                     </div>
                 </div>
 
-                {/* SYSTEM HEALTH (Super Admin only) */}
-                {user?.admin_role === 'super_admin' && (
-                    <div className="bg-white rounded-xl border border-slate-200 p-5">
-                        <h3 className="text-sm font-black text-slate-900 tracking-tight mb-3">System Health</h3>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            <HealthIndicator label="Database" status="operational" />
-                            <HealthIndicator label="API Endpoints" status="operational" />
-                            <HealthIndicator label="File Storage" status="operational" />
-                        </div>
-                    </div>
-                )}
+                {/* ROW 3: Recent Transactions + Recent KYC */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                    <RecentTransactionsCard initialTransactions={recent_transactions} />
+                    <RecentKycCard applications={recent_kyc} />
+                </div>
             </div>
         </AdminLayout>
     );
 }
 
-// Status badge sa list
-function StatusBadge({ status }) {
-    const styles = {
-        pending: 'bg-amber-50 text-amber-700 border-amber-200',
-        approved: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-        rejected: 'bg-red-50 text-red-700 border-red-200',
-    };
-    const label = status?.toUpperCase() || 'UNKNOWN';
-    const style = styles[status] || 'bg-slate-50 text-slate-700 border-slate-200';
+// Refresh indicator badge sa header
+function RefreshIndicator({ isRefreshing, timeSince, onRefresh }) {
     return (
-        <span className={`text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded border ${style} shrink-0`}>
-            {label}
-        </span>
-    );
-}
-
-// System health indicator
-function HealthIndicator({ label, status }) {
-    const isOk = status === 'operational';
-    return (
-        <div className="flex items-center gap-2 p-3 rounded-lg bg-slate-50 border border-slate-200">
-            <div className={`w-2 h-2 rounded-full ${isOk ? 'bg-emerald-500' : 'bg-red-500'} ${isOk ? 'animate-pulse' : ''}`}></div>
-            <div className="min-w-0 flex-1">
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{label}</p>
-                <p className={`text-xs font-bold ${isOk ? 'text-emerald-700' : 'text-red-700'}`}>
-                    {isOk ? 'Operational' : 'Degraded'}
-                </p>
+        <button
+            onClick={onRefresh}
+            disabled={isRefreshing}
+            className="flex items-center gap-2 px-2.5 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed group"
+            title="Manual refresh"
+        >
+            <RefreshCw 
+                size={12} 
+                className={`text-slate-600 group-hover:text-slate-900 ${isRefreshing ? 'animate-spin' : ''}`} 
+                strokeWidth={2.5}
+            />
+            <div className="hidden sm:flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                <span className="text-[9px] font-bold text-slate-600 uppercase tracking-widest">
+                    {isRefreshing ? 'Refreshing' : timeSince}
+                </span>
             </div>
-        </div>
+        </button>
     );
 }

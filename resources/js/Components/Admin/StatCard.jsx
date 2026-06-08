@@ -1,17 +1,9 @@
-
 // resources/js/Components/Admin/StatCard.jsx
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
 /**
  * Reusable stat card for admin dashboard.
- * 
- * Props:
- * - label: card title
- * - value: main stat (number or string)
- * - icon: lucide icon component
- * - color: tint color (blue, emerald, amber, purple, red, slate)
- * - trend: { value, direction } optional
- * - href: optional Link target
+ * Features subtle gradient backgrounds per color variant.
  */
 export default function StatCard({ 
     label, 
@@ -22,12 +14,48 @@ export default function StatCard({
     onClick = null,
 }) {
     const colorMap = {
-        blue: { bg: 'bg-blue-50', text: 'text-blue-600', accent: 'text-blue-700' },
-        emerald: { bg: 'bg-emerald-50', text: 'text-emerald-600', accent: 'text-emerald-700' },
-        amber: { bg: 'bg-amber-50', text: 'text-amber-600', accent: 'text-amber-700' },
-        purple: { bg: 'bg-purple-50', text: 'text-purple-600', accent: 'text-purple-700' },
-        red: { bg: 'bg-red-50', text: 'text-red-600', accent: 'text-red-700' },
-        slate: { bg: 'bg-slate-100', text: 'text-slate-600', accent: 'text-slate-700' },
+        blue: { 
+            bg: 'bg-gradient-to-br from-blue-50 to-blue-100/50', 
+            iconBg: 'bg-blue-500/10', 
+            iconText: 'text-blue-600',
+            border: 'border-blue-100',
+            hoverBorder: 'hover:border-blue-300',
+        },
+        emerald: { 
+            bg: 'bg-gradient-to-br from-emerald-50 to-emerald-100/50', 
+            iconBg: 'bg-emerald-500/10', 
+            iconText: 'text-emerald-600',
+            border: 'border-emerald-100',
+            hoverBorder: 'hover:border-emerald-300',
+        },
+        amber: { 
+            bg: 'bg-gradient-to-br from-amber-50 to-amber-100/50', 
+            iconBg: 'bg-amber-500/10', 
+            iconText: 'text-amber-600',
+            border: 'border-amber-100',
+            hoverBorder: 'hover:border-amber-300',
+        },
+        purple: { 
+            bg: 'bg-gradient-to-br from-purple-50 to-purple-100/50', 
+            iconBg: 'bg-purple-500/10', 
+            iconText: 'text-purple-600',
+            border: 'border-purple-100',
+            hoverBorder: 'hover:border-purple-300',
+        },
+        red: { 
+            bg: 'bg-gradient-to-br from-red-50 to-red-100/50', 
+            iconBg: 'bg-red-500/10', 
+            iconText: 'text-red-600',
+            border: 'border-red-100',
+            hoverBorder: 'hover:border-red-300',
+        },
+        slate: { 
+            bg: 'bg-gradient-to-br from-slate-50 to-slate-100/50', 
+            iconBg: 'bg-slate-500/10', 
+            iconText: 'text-slate-600',
+            border: 'border-slate-200',
+            hoverBorder: 'hover:border-slate-300',
+        },
     };
     const c = colorMap[color] || colorMap.slate;
 
@@ -36,11 +64,11 @@ export default function StatCard({
         const TrendIcon = trend.direction === 'up' ? TrendingUp 
             : trend.direction === 'down' ? TrendingDown 
             : Minus;
-        const trendColor = trend.direction === 'up' ? 'text-emerald-600 bg-emerald-50' 
-            : trend.direction === 'down' ? 'text-red-600 bg-red-50'
-            : 'text-slate-500 bg-slate-50';
+        const trendColor = trend.direction === 'up' ? 'text-emerald-700 bg-emerald-100/80' 
+            : trend.direction === 'down' ? 'text-red-700 bg-red-100/80'
+            : 'text-slate-600 bg-slate-100/80';
         return (
-            <div className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold ${trendColor}`}>
+            <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold ${trendColor}`}>
                 <TrendIcon size={10} strokeWidth={2.5} />
                 {trend.value}
             </div>
@@ -53,18 +81,24 @@ export default function StatCard({
     return (
         <Wrapper
             {...wrapperProps}
-            className={`bg-white rounded-xl border border-slate-200 p-4 transition-all text-left ${
-                onClick ? 'hover:border-slate-300 hover:shadow-md cursor-pointer' : ''
+            className={`relative ${c.bg} rounded-xl border ${c.border} p-4 transition-all text-left overflow-hidden ${
+                onClick ? `${c.hoverBorder} hover:shadow-md cursor-pointer` : ''
             }`}
         >
-            <div className="flex items-start justify-between mb-3">
-                <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${c.bg} ${c.text}`}>
-                    <Icon size={16} strokeWidth={2.5} />
+            {/* Subtle decoration corner */}
+            <div className={`absolute -top-6 -right-6 w-20 h-20 rounded-full ${c.iconBg} opacity-40 blur-xl`}></div>
+            
+            {/* Content */}
+            <div className="relative">
+                <div className="flex items-start justify-between mb-3">
+                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${c.iconBg} ${c.iconText}`}>
+                        <Icon size={16} strokeWidth={2.5} />
+                    </div>
+                    {renderTrend()}
                 </div>
-                {renderTrend()}
+                <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">{label}</p>
+                <p className="text-2xl font-black text-slate-900 mt-1 tracking-tight">{value}</p>
             </div>
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{label}</p>
-            <p className="text-2xl font-black text-slate-900 mt-1 tracking-tight">{value}</p>
         </Wrapper>
     );
 }

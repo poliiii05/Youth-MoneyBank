@@ -305,24 +305,33 @@ Route::middleware(['auth'])->group(function () {
         ->name('kyc.status');
 
     // ====================================================
-    // ADMIN ROUTES (Phase E) — requires admin role
+    // ADMIN ROUTES 
     // ====================================================
     Route::prefix('admin')->name('admin.')->middleware(['role:any'])->group(function () {
 
-        Route::get('/', function () {
-            return Inertia::render('Admin/Dashboard');
-        })->name('dashboard');
-
+        Route::get('/', [\App\Http\Controllers\Admin\AdminDashboardController::class, 'index'])
+            ->name('dashboard');
+        
+        // API: Real-time recent transactions (for polling)
+        Route::get('/api/recent-transactions', [\App\Http\Controllers\Admin\AdminDashboardController::class, 'recentTransactions'])
+            ->name('api.recent-transactions');
+        
         // KYC Reviews — requires kyc_reviewer or super_admin
         Route::middleware(['role:super_admin,kyc_reviewer'])->group(function () {
-            // Will add KYC review routes here in Day 3
+            Route::get('/kyc', [\App\Http\Controllers\Admin\KycReviewController::class, 'index'])
+                ->name('kyc.index');
+            
+            Route::get('/kyc/{id}', [\App\Http\Controllers\Admin\KycReviewController::class, 'show'])
+                ->whereNumber('id')
+                ->name('kyc.show');
+            
+            // POST endpoints (approve/reject) sa Day 4
         });
 
         // User Management — super_admin only
         Route::middleware(['role:super_admin'])->group(function () {
             // Will add user management routes here in Day 5
         });
-
     });
 
     // ====================================================
