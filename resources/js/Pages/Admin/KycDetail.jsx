@@ -34,7 +34,9 @@ export default function KycDetail({ auth, application, pendingCounts = {} }) {
     }, [flash]);
 
     return (
-        <AdminLayout user={user} header={`KYC #${application.id}`} pendingCounts={pendingCounts}>
+        <AdminLayout user={user} header={`KYC Reviews #${application.id}`} pendingCounts={pendingCounts}>
+{/* <AdminLayout user={user} header={`KYC Review · Application #${application.id}`} pendingCounts={pendingCounts}>
+*/}
             <Head title={`KYC #${application.id} | Admin`} />
 
             <div className="max-w-6xl space-y-4">
@@ -66,7 +68,7 @@ export default function KycDetail({ auth, application, pendingCounts = {} }) {
 
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-slate-100">
                         <Stat label="Application ID" value={`#${application.id}`} />
-                        <Stat label="Tier Upgrade" value={`T${application.user.current_tier} → T${application.target_tier}`} />
+                        <Stat label="Tier Upgrade" value={`T${application.original_tier} → T${application.target_tier}`} />
                         <Stat label="Submitted" value={application.submitted_formatted} />
                         <Stat label="Documents" value={`${application.documents.length} files`} />
                     </div>

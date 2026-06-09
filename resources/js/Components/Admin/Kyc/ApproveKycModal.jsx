@@ -54,7 +54,7 @@ export default function ApproveKycModal({ isOpen, onClose, application }) {
                         <div className="flex justify-between text-xs">
                             <span className="text-emerald-800 font-bold">Tier Upgrade:</span>
                             <span className="text-emerald-900 font-black">
-                                T{application.user.current_tier} → T{application.target_tier}
+                                T{application.original_tier} → T{application.target_tier}
                             </span>
                         </div>
                         <div className="flex justify-between text-xs">

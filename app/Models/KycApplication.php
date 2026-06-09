@@ -14,6 +14,7 @@ class KycApplication extends Model
     protected $fillable = [
         'user_id',
         'target_tier',
+        'original_tier', 
         'status',
         'submitted_at',
         'reviewed_at',

@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { Link } from '@inertiajs/react';
 import { ArrowRight, FileCheck } from 'lucide-react';
+import Avatar from '../Avatar';
 
 export default function RecentKycCard({ applications = [] }) {
     const [filter, setFilter] = useState('all');
@@ -45,9 +46,11 @@ export default function RecentKycCard({ applications = [] }) {
                         >
                             <div className="flex items-center justify-between gap-3">
                                 <div className="flex items-center gap-3 min-w-0 flex-1">
-                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white font-bold text-[10px] shrink-0">
-                                        {(app.user_name || '?').charAt(0).toUpperCase()}
-                                    </div>
+                                    <Avatar 
+                                        src={app.user_picture}
+                                        name={app.user_name}
+                                        size="sm"
+                                    />
                                     <div className="min-w-0 flex-1">
                                         <p className="text-xs font-bold text-slate-900 truncate">{app.user_name}</p>
                                         <p className="text-[10px] text-slate-500 font-medium truncate">

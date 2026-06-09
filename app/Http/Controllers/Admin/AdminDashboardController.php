@@ -82,7 +82,7 @@ class AdminDashboardController extends Controller
         // ====================================================
         // RECENT KYC
         // ====================================================
-        $recentKyc = KycApplication::with('user:id,name,email')
+        $recentKyc = KycApplication::with('user:id,name,email,profile_picture')
             ->orderBy('submitted_at', 'desc')
             ->limit(5)
             ->get()
@@ -90,6 +90,8 @@ class AdminDashboardController extends Controller
                 return [
                     'id' => $app->id,
                     'user_name' => $app->user->name ?? 'Unknown',
+                    'user_email' => $app->user->email ?? '',
+                    'user_picture' => $app->user->profile_picture ?? null,  
                     'target_tier' => $app->target_tier,
                     'status' => $app->status,
                     'submitted_at' => $app->submitted_at?->toIso8601String(),

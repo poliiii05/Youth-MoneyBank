@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import AdminLayout from '../../Components/Layouts/AdminLayout';
 import Avatar from '../../Components/Admin/Avatar';
+
 import { 
     Search, Clock, CheckCircle2, XCircle, FileCheck,
     ChevronLeft, ChevronRight, ChevronDown,
@@ -20,6 +21,20 @@ export default function KycList({
     const user = auth?.user;
     const [searchInput, setSearchInput] = useState(filters.search || '');
 
+    // Debounced auto-search (300ms after typing stops)
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (searchInput !== (filters.search || '')) {
+                router.get('/admin/kyc', { ...filters, search: searchInput, page: 1 }, {
+                    preserveState: true,
+                    preserveScroll: true,
+                    replace: true,
+                });
+            }
+        }, 300);
+
+        return () => clearTimeout(timer);
+    }, [searchInput]);
     // Show flash toast messages
     const { flash } = usePage().props;
     useEffect(() => {
@@ -33,15 +48,6 @@ export default function KycList({
     // Change filter
     const setFilter = (status) => {
         router.get('/admin/kyc', { ...filters, status, page: 1 }, {
-            preserveState: true,
-            preserveScroll: true,
-        });
-    };
-
-    // Search
-    const handleSearch = (e) => {
-        e.preventDefault();
-        router.get('/admin/kyc', { ...filters, search: searchInput, page: 1 }, {
             preserveState: true,
             preserveScroll: true,
         });
@@ -65,8 +71,8 @@ export default function KycList({
                     <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4 border-b border-slate-100">
                         <FilterTabs current={filters.status || 'all'} counts={counts} onChange={setFilter} />
                         
-                        {/* Search box */}
-                        <form onSubmit={handleSearch} className="flex items-center gap-2">
+                       {/* Real-time search */}
+                        <div className="flex items-center gap-2">
                             <div className="relative">
                                 <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
                                 <input
@@ -80,28 +86,40 @@ export default function KycList({
                             {searchInput && (
                                 <button
                                     type="button"
-                                    onClick={() => {
-                                        setSearchInput('');
-                                        router.get('/admin/kyc', { ...filters, search: '', page: 1 }, {
-                                            preserveState: true, preserveScroll: true,
-                                        });
-                                    }}
+                                    onClick={() => setSearchInput('')}
                                     className="px-2 py-1.5 text-[10px] font-bold text-slate-500 hover:text-slate-900 transition-colors cursor-pointer"
                                 >
                                     Clear
                                 </button>
                             )}
-                        </form>
+                        </div>
                     </div>
 
-                    {/* APPLICATIONS LIST */}
-                    {applications.length > 0 ? (
-                        <>
-                            <div className="divide-y divide-slate-100">
-                                {applications.map((app) => (
-                                    <KycListItem key={app.id} application={app} />
-                                ))}
-                            </div>
+                    {/* Applications list */}
+                        {applications.length > 0 ? (
+                            <>
+                                {/* Table header (hidden sa mobile) */}
+                                <div className="hidden sm:grid grid-cols-12 items-center gap-3 px-5 py-2.5 bg-slate-50 border-b border-slate-200">
+                                    <div className="col-span-6">
+                                        <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">User</p>
+                                    </div>
+                                    <div className="col-span-2 text-center">
+                                        <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Tier</p>
+                                    </div>
+                                    <div className="hidden md:block col-span-2 text-center">
+                                        <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Submitted</p>
+                                    </div>
+                                    <div className="col-span-2 text-center">
+                                        <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Status</p>
+                                    </div>
+                                </div>
+                                                                
+                                {/* Rows */}
+                                <div>
+                                    {applications.map((app) => (
+                                        <KycListItem key={app.id} application={app} />
+                                    ))}
+                                </div>
 
                             {/* PAGINATION */}
                             <div className="px-5 py-3 border-t border-slate-100 flex items-center justify-between gap-3">
@@ -196,44 +214,41 @@ function FilterTabs({ current, counts, onChange }) {
     );
 }
 
-// Single list item component
-function KycListItem({ application }) {
+    // Single list item component
+    function KycListItem({ application }) {
     return (
         <Link
             href={`/admin/kyc/${application.id}`}
-            className="block px-5 py-3 hover:bg-slate-50 transition-colors cursor-pointer"
+            className="grid grid-cols-12 items-center gap-3 px-5 py-3 hover:bg-slate-50 transition-colors cursor-pointer border-b border-slate-100 last:border-b-0"
         >
-            <div className="flex items-center gap-3">
+            {/* Column 1: User (Avatar + Name + Email) — 6 cols */}
+            <div className="col-span-12 sm:col-span-6 flex items-center gap-3 min-w-0">
                 <Avatar 
                     src={application.user.profile_picture}
                     name={application.user.name}
                     size="md"
                 />
-
-                {/* User info */}
                 <div className="min-w-0 flex-1">
-                    <p className="text-sm font-bold text-slate-900 truncate">{application.user.name}</p>
-                    <p className="text-[11px] text-slate-500 font-medium truncate">{application.user.email}</p>
+                    <p className="text-xs font-bold text-slate-900 truncate">{application.user.name}</p>
+                    <p className="text-[10px] text-slate-500 font-medium truncate">{application.user.email}</p>
                 </div>
+            </div>
 
-                {/* Tier */}
-                <div className="hidden sm:flex flex-col items-center gap-0.5 shrink-0 min-w-[80px]">
-                    <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Tier</p>
-                    <p className="text-xs font-black text-slate-900">
-                        T{application.user.current_tier} → T{application.target_tier}
-                    </p>
-                </div>
+            {/* Column 2: Tier — 2 cols, centered */}
+            <div className="hidden sm:flex flex-col items-center col-span-2">
+                <p className="text-xs font-black text-slate-900">
+                    T{application.original_tier} → T{application.target_tier}
+                </p>
+            </div>
 
-                {/* Submitted */}
-                <div className="hidden md:flex flex-col items-center gap-0.5 shrink-0 min-w-[100px]">
-                    <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Submitted</p>
-                    <p className="text-[11px] font-bold text-slate-700">{application.submitted_relative}</p>
-                </div>
+            {/* Column 3: Submitted — 2 cols, centered */}
+            <div className="hidden md:flex flex-col items-center col-span-2">
+                <p className="text-[11px] font-bold text-slate-700">{application.submitted_relative}</p>
+            </div>
 
-                {/* Status badge */}
+            {/* Column 4: Status + Arrow — 2 cols, centered */}
+            <div className="col-span-12 sm:col-span-2 flex justify-center items-center gap-1.5">
                 <StatusBadge status={application.status} autoApproved={application.auto_approved} />
-
-                {/* Arrow */}
                 <ChevronRight size={14} className="text-slate-300 shrink-0" />
             </div>
         </Link>

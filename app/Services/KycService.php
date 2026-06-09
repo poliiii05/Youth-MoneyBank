@@ -92,6 +92,7 @@ class KycService
             $application = KycApplication::create([
                 'user_id' => $user->id,
                 'target_tier' => $targetTier,
+                'original_tier' => $currentTier,   
                 'status' => 'pending',
                 'submitted_at' => now(),
                 'auto_approved' => false, // Will be flipped if auto-approve runs
