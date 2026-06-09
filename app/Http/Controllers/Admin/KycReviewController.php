@@ -151,4 +151,94 @@ class KycReviewController extends Controller
             'pendingCounts' => ['kyc' => KycApplication::where('status', 'pending')->count()],
         ]);
     }
+
+    /**
+     * Approve a KYC application.
+     */
+    public function approve(Request $request, int $id)
+{
+    $admin = $request->user();
+    if (!$admin->canApproveKyc()) {
+        return back()->withErrors([
+            'permission' => 'You do not have permission to approve KYC applications.',
+        ]);
+    }
+
+    try {
+        $application = KycApplication::findOrFail($id);
+
+        if ($application->user_id === $admin->id) {
+            return back()->withErrors([
+                'application' => 'You cannot approve your own KYC application.',
+            ]);
+        }
+
+        // Use existing service method (manual approval, not auto)
+        $approvedApp = \App\Services\KycService::approveApplication($application, $admin, false);
+
+        return redirect()->route('admin.kyc.index', ['status' => 'pending'])
+        ->with('success', "Application approved. {$approvedApp->user->name} is now Tier {$approvedApp->target_tier}.");
+
+    } catch (\Exception $e) {
+        \Log::error('KYC approval failed', [
+            'application_id' => $id,
+            'admin_id' => $admin->id,
+            'error' => $e->getMessage(),
+        ]);
+        return back()->withErrors([
+            'application' => 'Failed to approve application. Please try again.',
+        ]);
+    }
+}
+
+    /**
+     * Reject a KYC application with reason.
+     */
+    public function reject(Request $request, int $id)
+    {
+        $admin = $request->user();
+        if (!$admin->canApproveKyc()) {
+            return back()->withErrors([
+                'permission' => 'You do not have permission to reject KYC applications.',
+            ]);
+        }
+
+        $validated = $request->validate([
+            'reason' => 'required|string|min:10|max:500',
+        ], [
+            'reason.required' => 'A rejection reason is required.',
+            'reason.min' => 'Please provide a more detailed reason (at least 10 characters).',
+            'reason.max' => 'Rejection reason cannot exceed 500 characters.',
+        ]);
+
+        try {
+            $application = KycApplication::findOrFail($id);
+
+            if ($application->user_id === $admin->id) {
+                return back()->withErrors([
+                    'application' => 'You cannot reject your own KYC application.',
+                ]);
+            }
+
+            // Use existing service method
+            \App\Services\KycService::rejectApplication(
+                $application, 
+                $admin, 
+                $validated['reason']
+            );
+
+            return redirect()->route('admin.kyc.index', ['status' => 'pending'])
+            ->with('success', 'Application rejected with reason recorded.');
+
+        } catch (\Exception $e) {
+            \Log::error('KYC rejection failed', [
+                'application_id' => $id,
+                'admin_id' => $admin->id,
+                'error' => $e->getMessage(),
+            ]);
+            return back()->withErrors([
+                'application' => 'Failed to reject application. Please try again.',
+            ]);
+        }
+    }
 }

@@ -97,7 +97,7 @@ export default function ActivityAnalyticsCard({ analytics = null }) {
                 </div>
             </div>
 
-            <div className="flex-1 p-3 min-h-[180px]">
+            <div className="flex-1 p-3 min-h-[250px] w-full">
                 {current.chart_data && current.chart_data.length > 0 ? (
                     <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={current.chart_data} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>

@@ -1,7 +1,9 @@
 // resources/js/Pages/Admin/KycList.jsx
-import { Head, Link, router } from '@inertiajs/react';
-import { useState } from 'react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import AdminLayout from '../../Components/Layouts/AdminLayout';
+import Avatar from '../../Components/Admin/Avatar';
 import { 
     Search, Clock, CheckCircle2, XCircle, FileCheck,
     ChevronLeft, ChevronRight, ChevronDown,
@@ -18,6 +20,16 @@ export default function KycList({
     const user = auth?.user;
     const [searchInput, setSearchInput] = useState(filters.search || '');
 
+    // Show flash toast messages
+    const { flash } = usePage().props;
+    useEffect(() => {
+        if (flash?.success) {
+            toast.success(flash.success);
+        }
+        if (flash?.error) {
+            toast.error(flash.error);
+        }
+    }, [flash]);
     // Change filter
     const setFilter = (status) => {
         router.get('/admin/kyc', { ...filters, status, page: 1 }, {
@@ -192,18 +204,11 @@ function KycListItem({ application }) {
             className="block px-5 py-3 hover:bg-slate-50 transition-colors cursor-pointer"
         >
             <div className="flex items-center gap-3">
-                {/* Avatar */}
-                {application.user.profile_picture ? (
-                    <img 
-                        src={application.user.profile_picture} 
-                        alt={application.user.name}
-                        className="w-10 h-10 rounded-full border border-slate-200 object-cover shrink-0"
-                    />
-                ) : (
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white font-bold text-xs shrink-0">
-                        {(application.user.name || '?').charAt(0).toUpperCase()}
-                    </div>
-                )}
+                <Avatar 
+                    src={application.user.profile_picture}
+                    name={application.user.name}
+                    size="md"
+                />
 
                 {/* User info */}
                 <div className="min-w-0 flex-1">

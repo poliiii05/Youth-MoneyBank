@@ -325,7 +325,13 @@ Route::middleware(['auth'])->group(function () {
                 ->whereNumber('id')
                 ->name('kyc.show');
             
-            // POST endpoints (approve/reject) sa Day 4
+            Route::post('/kyc/{id}/approve', [\App\Http\Controllers\Admin\KycReviewController::class, 'approve'])
+                ->whereNumber('id')
+                ->name('kyc.approve');
+            
+            Route::post('/kyc/{id}/reject', [\App\Http\Controllers\Admin\KycReviewController::class, 'reject'])
+                ->whereNumber('id')
+                ->name('kyc.reject');
         });
 
         // User Management — super_admin only
