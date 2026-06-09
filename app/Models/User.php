@@ -25,7 +25,11 @@ class User extends Authenticatable
         'admin_role',
         'admin_role_granted_at',
         'admin_role_granted_by',
-       
+        'is_suspended',
+        'suspended_at',
+        'suspension_reason',
+        'suspended_by',
+        
     ];
 
     protected $hidden = [
@@ -37,6 +41,8 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'phone_verified_at' => 'datetime',
         'admin_role_granted_at' => 'datetime',
+        'is_suspended' => 'boolean',
+        'suspended_at' => 'datetime',
     ];
 
     public function wallet() {

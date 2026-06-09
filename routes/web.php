@@ -67,7 +67,7 @@ Route::post('/signup', function (Request $request) {
 //   Protected Routes (Authenticated)          //
 //---------------------------------------------//
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'not.suspended'])->group(function (){
 
     // ====================================================
     // DASHBOARD
@@ -334,9 +334,27 @@ Route::middleware(['auth'])->group(function () {
                 ->name('kyc.reject');
         });
 
-        // User Management — super_admin only
+        // User Management — read access for any admin, write only for super_admin
+        Route::get('/users', [\App\Http\Controllers\Admin\UserManagementController::class, 'index'])
+            ->name('users.index');
+
+        Route::get('/users/{id}', [\App\Http\Controllers\Admin\UserManagementController::class, 'show'])
+            ->whereNumber('id')
+            ->name('users.show');
+
+       // Write actions — super_admin only
         Route::middleware(['role:super_admin'])->group(function () {
-            // Will add user management routes here in Day 5
+            Route::post('/users/{id}/override-tier', [\App\Http\Controllers\Admin\UserManagementController::class, 'overrideTier'])
+                ->whereNumber('id')
+                ->name('users.override-tier');
+            
+            Route::post('/users/{id}/toggle-suspension', [\App\Http\Controllers\Admin\UserManagementController::class, 'toggleSuspension'])
+                ->whereNumber('id')
+                ->name('users.toggle-suspension');
+            
+            Route::post('/users/{id}/force-logout', [\App\Http\Controllers\Admin\UserManagementController::class, 'forceLogout'])
+                ->whereNumber('id')
+                ->name('users.force-logout');
         });
     });
 

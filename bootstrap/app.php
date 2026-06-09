@@ -16,9 +16,13 @@ return Application::configure(basePath: dirname(__DIR__))
         \App\Http\Middleware\HandleInertiaRequests::class,
     ]);
     
-    // Register named middleware
     $middleware->alias([
         'role' => \App\Http\Middleware\EnsureUserHasRole::class,
+        'not.suspended' => \App\Http\Middleware\EnsureUserNotSuspended::class,
+    ]);
+    // Apply globally to web routes (after auth)
+    $middleware->web(append: [
+        \App\Http\Middleware\EnsureUserNotSuspended::class,
     ]);
 })
 
