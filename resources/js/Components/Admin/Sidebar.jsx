@@ -7,6 +7,10 @@ import {
 
 /**
  * Admin sidebar with grouped sections, role-based visibility, and pending badges.
+ * 
+ * Role-based access:
+ * - admin: Can view dashboard, KYC, transactions, users (read-only)
+ * - super_admin: Same as admin + destructive actions + admin management
  */
 export default function AdminSidebar({ user, pendingCounts = {}, sidebarOpen, onClose }) {
     const isUrlActive = (path) => {
@@ -17,17 +21,26 @@ export default function AdminSidebar({ user, pendingCounts = {}, sidebarOpen, on
     };
 
     const role = user?.admin_role;
-    const isSuperAdmin = role === 'super_admin';
-    const canApproveKyc = role === 'super_admin' || role === 'kyc_reviewer';
+    
+    // Permission helpers (mirror sa User.php helpers)
+    const isAdminLevel = role === 'admin' || role === 'super_admin';  // both
+    const isSuperAdmin = role === 'super_admin';                       // super only
+    
+    // Specific permissions
+    const canAccessKyc = isAdminLevel;        // both can review KYC
+    const canViewTransactions = isAdminLevel; // both can view
+    const canManageUsers = isAdminLevel;      // both can view users
+    const canManageAdmins = isSuperAdmin;     // super only
+    const canAccessAudit = isSuperAdmin;      // super only
+    const canAccessSettings = isSuperAdmin;   // super only
 
-    // Get inline role label (short)
+    // Get inline role label (short, all caps)
     const getRoleLabel = (role) => {
         const labels = {
             super_admin: 'SUPER ADMIN',
-            kyc_reviewer: 'KYC REVIEWER',
-            support_staff: 'SUPPORT',
+            admin: 'ADMIN',
         };
-        return labels[role] || 'ADMIN';
+        return labels[role] || 'STAFF';
     };
 
     // Get nickname (first name only)
@@ -39,38 +52,83 @@ export default function AdminSidebar({ user, pendingCounts = {}, sidebarOpen, on
     const roleLabel = getRoleLabel(role);
     const nickname = getNickname(user?.name);
 
-    // Grouped nav structure
+    // Grouped nav structure with permission-based locking
     const sections = [
         {
             title: 'Overview',
             items: [
-                { label: 'Dashboard', href: '/admin', icon: LayoutDashboard, visible: true, locked: false },
+                { 
+                    label: 'Dashboard', 
+                    href: '/admin', 
+                    icon: LayoutDashboard, 
+                    visible: true, 
+                    locked: false 
+                },
             ],
         },
         {
             title: 'Review',
             items: [
                 { 
-                    label: 'KYC Reviews', href: '/admin/kyc', icon: FileCheck,
-                    badge: pendingCounts.kyc || null, visible: true, locked: !canApproveKyc,
+                    label: 'KYC Reviews', 
+                    href: '/admin/kyc', 
+                    icon: FileCheck,
+                    badge: pendingCounts.kyc || null, 
+                    visible: true, 
+                    locked: !canAccessKyc,
                 },
-                { label: 'Transactions', href: '/admin/transactions', icon: Receipt, visible: true, locked: false },
+                { 
+                    label: 'Transactions', 
+                    href: '/admin/transactions', 
+                    icon: Receipt, 
+                    visible: true, 
+                    locked: !canViewTransactions 
+                },
             ],
         },
         {
             title: 'Manage',
             items: [
                 { 
-                    label: 'Users', href: '/admin/users', icon: Users,
-                    badge: pendingCounts.users_new || null, visible: true, locked: !isSuperAdmin, requiresSuper: true,
+                    label: 'Users', 
+                    href: '/admin/users', 
+                    icon: Users,
+                    badge: pendingCounts.users_new || null, 
+                    visible: true, 
+                    locked: !canManageUsers,
+                },
+                { 
+                    label: 'Admins', 
+                    href: '/admin/admins', 
+                    icon: Shield,
+                    visible: true, 
+                    locked: !canManageAdmins, 
+                    requiresSuper: true,
+                    comingSoon: true,
                 },
             ],
         },
         {
             title: 'System',
             items: [
-                { label: 'Audit Log', href: '/admin/audit', icon: Activity, visible: true, locked: !isSuperAdmin, requiresSuper: true },
-                { label: 'Settings', href: '/admin/settings', icon: SettingsIcon, visible: true, locked: !isSuperAdmin, requiresSuper: true },
+                { 
+                    label: 'Audit Log', 
+                    href: '/admin/audit', 
+                    icon: Activity, 
+                    visible: true, 
+                    locked: !canAccessAudit, 
+                    requiresSuper: true,
+                    comingSoon: true,
+                },
+                { 
+                    label: 'Settings', 
+                    href: '/admin/settings', 
+                    icon: SettingsIcon, 
+                    visible: true, 
+                    locked: !canAccessSettings, 
+                    requiresSuper: true,
+                    comingSoon: true,
+                },
             ],
         },
     ];
@@ -105,7 +163,11 @@ export default function AdminSidebar({ user, pendingCounts = {}, sidebarOpen, on
             {/* Role + Nickname */}
             <div className="px-4 py-3 border-b border-slate-800/80">
                 <div className="flex items-baseline gap-1.5">
-                    <span className="text-[9px] font-black text-blue-400 uppercase tracking-widest">{roleLabel}</span>
+                    <span className={`text-[9px] font-black uppercase tracking-widest ${
+                        isSuperAdmin ? 'text-amber-400' : 'text-blue-400'
+                    }`}>
+                        {roleLabel}
+                    </span>
                     <span className="text-slate-600 text-[9px]">:</span>
                     <span className="text-xs font-bold text-white truncate">{nickname}</span>
                 </div>
@@ -123,17 +185,26 @@ export default function AdminSidebar({ user, pendingCounts = {}, sidebarOpen, on
                                 const Icon = item.icon;
                                 const active = isUrlActive(item.href);
                                 const locked = item.locked;
+                                const comingSoon = item.comingSoon;
                                 
-                                if (locked) {
+                                if (locked || comingSoon) {
+                                    const tooltipText = comingSoon 
+                                        ? 'Coming soon' 
+                                        : `Requires ${item.requiresSuper ? 'Super Admin' : 'higher'} role`;
+                                    
                                     return (
                                         <div
                                             key={item.href}
                                             className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-500 text-xs font-semibold cursor-not-allowed opacity-60"
-                                            title={`Requires ${item.requiresSuper ? 'Super Admin' : 'higher'} role`}
+                                            title={tooltipText}
                                         >
                                             <Icon size={14} strokeWidth={2} className="opacity-50" />
                                             <span className="flex-1">{item.label}</span>
-                                            <Lock size={10} strokeWidth={2.5} className="text-slate-600" />
+                                            {comingSoon ? (
+                                                <span className="text-[8px] font-bold text-amber-500 uppercase tracking-widest">Soon</span>
+                                            ) : (
+                                                <Lock size={10} strokeWidth={2.5} className="text-slate-600" />
+                                            )}
                                         </div>
                                     );
                                 }

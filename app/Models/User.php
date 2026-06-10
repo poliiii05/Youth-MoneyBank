@@ -87,35 +87,34 @@ class User extends Authenticatable
     
     /**
      * Available admin roles.
+     * - 'admin': Handles KYC reviews, user lookups, transaction investigations
+     * - 'super_admin': Full access + destructive actions (override tier, suspend, manage admins)
      */
+    public const ROLE_ADMIN = 'admin';
     public const ROLE_SUPER_ADMIN = 'super_admin';
-    public const ROLE_KYC_REVIEWER = 'kyc_reviewer';
-    public const ROLE_SUPPORT_STAFF = 'support_staff';
 
     /**
      * All available admin roles (for validation/dropdowns).
      */
     public const ADMIN_ROLES = [
+        self::ROLE_ADMIN,
         self::ROLE_SUPER_ADMIN,
-        self::ROLE_KYC_REVIEWER,
-        self::ROLE_SUPPORT_STAFF,
     ];
 
     /**
      * Role display names.
      */
     public const ROLE_NAMES = [
+        self::ROLE_ADMIN => 'Admin',
         self::ROLE_SUPER_ADMIN => 'Super Admin',
-        self::ROLE_KYC_REVIEWER => 'KYC Reviewer',
-        self::ROLE_SUPPORT_STAFF => 'Support Staff',
     ];
 
     /**
-     * Check if user is any admin.
+     * Check if user is any admin (admin or super_admin).
      */
     public function isAdmin(): bool
     {
-        return !is_null($this->admin_role);
+        return in_array($this->admin_role, self::ADMIN_ROLES);
     }
 
     /**
@@ -124,6 +123,14 @@ class User extends Authenticatable
     public function isSuperAdmin(): bool
     {
         return $this->admin_role === self::ROLE_SUPER_ADMIN;
+    }
+
+    /**
+     * Check if user is a regular user (no admin role).
+     */
+    public function isRegularUser(): bool
+    {
+        return is_null($this->admin_role);
     }
 
     /**
@@ -142,39 +149,89 @@ class User extends Authenticatable
         return in_array($this->admin_role, $roles);
     }
 
+    // ============================================================
+    // PERMISSION HELPERS
+    // ============================================================
+    // Logic:
+    //   - Admin level (both admin + super_admin): day-to-day operations
+    //   - Super Admin only: destructive/critical actions
+
     /**
-     * Check if user can approve KYC.
+     * Can approve/reject KYC applications.
+     * Both admin and super_admin can do this.
      */
     public function canApproveKyc(): bool
     {
-        return $this->hasAnyRole([
-            self::ROLE_SUPER_ADMIN,
-            self::ROLE_KYC_REVIEWER,
-        ]);
+        return $this->isAdmin();
     }
 
     /**
-     * Check if user can view KYC applications (read-only).
+     * Can view KYC applications (read-only access).
      */
     public function canViewKyc(): bool
     {
-        return $this->isAdmin(); // All admins can view
+        return $this->isAdmin();
     }
 
     /**
-     * Check if user can manage users.
+     * Can view users (search, browse, view details).
      */
     public function canManageUsers(): bool
+    {
+        return $this->isAdmin();
+    }
+
+    /**
+     * Can view transactions and investigate.
+     */
+    public function canViewTransactions(): bool
+    {
+        return $this->isAdmin();
+    }
+
+    /**
+     * Can override user's KYC tier manually.
+     * SUPER_ADMIN ONLY — destructive action.
+     */
+    public function canOverrideTier(): bool
     {
         return $this->isSuperAdmin();
     }
 
     /**
-     * Check if user can view transactions.
+     * Can suspend/reactivate user accounts.
+     * SUPER_ADMIN ONLY — destructive action.
      */
-    public function canViewTransactions(): bool
+    public function canSuspendUsers(): bool
     {
-        return $this->isAdmin(); // All admins
+        return $this->isSuperAdmin();
+    }
+
+    /**
+     * Can force logout users from all sessions.
+     * SUPER_ADMIN ONLY — destructive action.
+     */
+    public function canForceLogout(): bool
+    {
+        return $this->isSuperAdmin();
+    }
+
+    /**
+     * Can flag transactions as fraud.
+     * SUPER_ADMIN ONLY (Day 6).
+     */
+    public function canFlagTransactions(): bool
+    {
+        return $this->isSuperAdmin();
+    }
+
+    /**
+     * Can manage admin accounts (promote, demote, revoke).
+     * SUPER_ADMIN ONLY (Day 7).
+     */
+    public function canManageAdmins(): bool
+    {
+        return $this->isSuperAdmin();
     }
 
     /**
@@ -192,5 +249,13 @@ class User extends Authenticatable
     {
         if (!$this->admin_role) return null;
         return self::ROLE_NAMES[$this->admin_role] ?? $this->admin_role;
+    }
+
+    /**
+     * Get the default redirect path after login based on user role.
+     */
+    public function getDefaultRedirectPath(): string
+    {
+        return $this->isAdmin() ? '/admin' : '/dashboard';
     }
 }

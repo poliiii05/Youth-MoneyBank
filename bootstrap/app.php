@@ -11,7 +11,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
 
-    ->withMiddleware(function (Middleware $middleware): void {
+   ->withMiddleware(function (Middleware $middleware): void {
     $middleware->web(append: [
         \App\Http\Middleware\HandleInertiaRequests::class,
     ]);
@@ -19,10 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
     $middleware->alias([
         'role' => \App\Http\Middleware\EnsureUserHasRole::class,
         'not.suspended' => \App\Http\Middleware\EnsureUserNotSuspended::class,
-    ]);
-    // Apply globally to web routes (after auth)
-    $middleware->web(append: [
-        \App\Http\Middleware\EnsureUserNotSuspended::class,
+        'user.only' => \App\Http\Middleware\RedirectAdminFromUserApp::class,
     ]);
 })
 

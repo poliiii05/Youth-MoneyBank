@@ -29,18 +29,23 @@ class GoogleAuthController extends Controller
         $existingUser = User::where('email', $googleUser->getEmail())->first();
 
         if ($existingUser) {
+            // Check suspension status — only block regular users (admins can't be suspended)
+            if ($existingUser->is_suspended && $existingUser->isRegularUser()) {
+                return redirect()->route('login')->withErrors([
+                    'email' => 'Your account has been suspended. Please contact support for assistance.',
+                ]);
+            }
+
             // 2. Kung existing na, i-update lang ang profile picture
             $existingUser->update([
                 'google_id' => $googleUser->getId(),
                 'profile_picture' => $googleUser->getAvatar(),
             ]);
             $user = $existingUser;
-     } else {
-            // 3. Kung BAGONG user, pure 10-digit number generator
-           // $accountNum = '00' . date('Y') . str_pad(random_int(0, 99999), 5, '0', STR_PAD_LEFT);
-
-             do {
-             $accountNum = '00' . date('Y') . str_pad(random_int(0, 99999), 5, '0', STR_PAD_LEFT);
+        } else {
+            // 3. Kung BAGONG user, generate unique 10-digit account number
+            do {
+                $accountNum = '00' . date('Y') . str_pad(random_int(0, 99999), 5, '0', STR_PAD_LEFT);
             } while (User::where('account_number', $accountNum)->exists());
             
             $user = User::create([
@@ -53,19 +58,20 @@ class GoogleAuthController extends Controller
                 'email_verified_at' => now(),
             ]);
 
-           // Gawan agad ng Wallet na 0 ang balance (in cents)
+            // Gawan agad ng Wallet na 0 ang balance (in cents)
             $user->wallet()->create(['balance_cents' => 0, 'savings_balance_cents' => 0]);
-  
-        // Default goals removed in favor of template-based onboarding.
-        // New users now see template suggestions sa empty state (Dashboard at Goals page).
-        // This gives users explicit choice instead of pre-populating their dashboard
-        // with goals they may not want.
+            
+            // Default goals removed in favor of template-based onboarding.
+            // New users now see template suggestions sa empty state (Dashboard at Goals page).
         }
 
         // I-login ang user
         Auth::login($user, true);
 
-        // I-redirect diretso sa dashboard
-        return redirect()->to(url('/dashboard?login=success'));
+        // Role-based redirect
+        $redirectPath = $user->getDefaultRedirectPath();
+        $queryString = $user->isAdmin() ? '' : '?login=success';
+        
+        return redirect()->to(url($redirectPath . $queryString));
     }
 }

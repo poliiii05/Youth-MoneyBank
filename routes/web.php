@@ -67,13 +67,17 @@ Route::post('/signup', function (Request $request) {
 //   Protected Routes (Authenticated)          //
 //---------------------------------------------//
 
-Route::middleware(['auth', 'not.suspended'])->group(function (){
-
+Route::middleware(['auth', 'not.suspended', 'user.only'])->group(function () {
     // ====================================================
     // DASHBOARD
     // ====================================================
     Route::get('/dashboard', function () {
         $user = auth()->user();
+
+        if ($user->isAdmin()) {
+        return redirect('/admin');
+        }
+    
         $wallet = $user->wallet;
 
         $mainBalanceCents = $wallet ? $wallet->balance_cents : 0;
@@ -312,12 +316,11 @@ Route::middleware(['auth', 'not.suspended'])->group(function (){
         Route::get('/', [\App\Http\Controllers\Admin\AdminDashboardController::class, 'index'])
             ->name('dashboard');
         
-        // API: Real-time recent transactions (for polling)
         Route::get('/api/recent-transactions', [\App\Http\Controllers\Admin\AdminDashboardController::class, 'recentTransactions'])
             ->name('api.recent-transactions');
         
-        // KYC Reviews — requires kyc_reviewer or super_admin
-        Route::middleware(['role:super_admin,kyc_reviewer'])->group(function () {
+        // KYC Reviews — any admin (admin or super_admin)
+        Route::middleware(['role:any'])->group(function () {
             Route::get('/kyc', [\App\Http\Controllers\Admin\KycReviewController::class, 'index'])
                 ->name('kyc.index');
             
@@ -334,7 +337,7 @@ Route::middleware(['auth', 'not.suspended'])->group(function (){
                 ->name('kyc.reject');
         });
 
-        // User Management — read access for any admin, write only for super_admin
+        // User Management
         Route::get('/users', [\App\Http\Controllers\Admin\UserManagementController::class, 'index'])
             ->name('users.index');
 
@@ -342,7 +345,7 @@ Route::middleware(['auth', 'not.suspended'])->group(function (){
             ->whereNumber('id')
             ->name('users.show');
 
-       // Write actions — super_admin only
+        // Write actions — super_admin only
         Route::middleware(['role:super_admin'])->group(function () {
             Route::post('/users/{id}/override-tier', [\App\Http\Controllers\Admin\UserManagementController::class, 'overrideTier'])
                 ->whereNumber('id')
