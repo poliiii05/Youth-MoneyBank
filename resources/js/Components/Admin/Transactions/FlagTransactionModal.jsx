@@ -98,13 +98,22 @@ export default function FlagTransactionModal({ isOpen, onClose, transaction }) {
                                 error ? 'border-red-300 focus:border-red-400 focus:ring-red-50' : 'border-slate-200 focus:border-blue-400 focus:ring-blue-50'
                             }`}
                         />
-                        <div className="flex items-center justify-between mt-1">
+                       <div className="flex items-center justify-between mt-1">
                             {error ? (
                                 <p className="text-[10px] font-bold text-red-600">{error}</p>
                             ) : (
-                                <p className="text-[10px] text-slate-500 font-medium">Audit trail logged</p>
+                                <p className={`text-[10px] font-bold ${
+                                    reason.trim().length >= 10 ? 'text-emerald-600' : 'text-red-600'
+                                }`}>
+                                    {reason.trim().length >= 10 
+                                        ? '✓ Minimum reached' 
+                                        : `${10 - reason.trim().length} more characters needed`
+                                    }
+                                </p>
                             )}
-                            <p className="text-[10px] font-bold text-slate-500">{charsRemaining} left</p>
+                            <p className="text-[10px] font-medium text-slate-400">
+                                {reason.length}/500
+                            </p>
                         </div>
                     </div>
 

@@ -105,14 +105,13 @@ export default function AdminSidebar({ user, pendingCounts = {}, sidebarOpen, on
                     visible: true, 
                     locked: !canManageUsers,
                 },
-                { 
-                    label: 'Admins', 
+               { 
+                label: 'Admins', 
                     href: '/admin/admins', 
                     icon: Shield,
                     visible: true, 
                     locked: !canManageAdmins, 
                     requiresSuper: true,
-                    comingSoon: true,
                 },
             ],
         },

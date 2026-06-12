@@ -141,7 +141,7 @@ export default function ManualCreditModal({ isOpen, onClose, transaction }) {
                             <label className="text-[10px] font-bold text-slate-700 uppercase tracking-widest mb-1.5 block">
                                 Resolution Notes <span className="text-red-600">*</span>
                             </label>
-                            <textarea
+                           <textarea
                                 value={notes}
                                 onChange={(e) => setNotes(e.target.value)}
                                 placeholder="What action did you take to resolve this?"
@@ -152,9 +152,23 @@ export default function ManualCreditModal({ isOpen, onClose, transaction }) {
                                     error ? 'border-red-300 focus:border-red-400 focus:ring-red-50' : 'border-slate-200 focus:border-emerald-400 focus:ring-emerald-50'
                                 }`}
                             />
-                            {error && (
-                                <p className="text-[10px] font-bold text-red-600 mt-1">{error}</p>
-                            )}
+                            <div className="flex items-center justify-between mt-1">
+                                {error ? (
+                                    <p className="text-[10px] font-bold text-red-600">{error}</p>
+                                ) : (
+                                    <p className={`text-[10px] font-bold ${
+                                        notes.trim().length >= 20 ? 'text-emerald-600' : 'text-red-600'
+                                    }`}>
+                                        {notes.trim().length >= 20 
+                                            ? '✓ Minimum reached' 
+                                            : `${20 - notes.trim().length} more characters needed`
+                                        }
+                                    </p>
+                                )}
+                                <p className="text-[10px] font-medium text-slate-400">
+                                    {notes.length}/1000
+                                </p>
+                            </div>
                         </div>
                     </div>
 

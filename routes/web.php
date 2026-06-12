@@ -326,7 +326,6 @@ Route::middleware(['auth', 'not.suspended', 'user.only'])->group(function () {
             ->name('api.recent-transactions');
         
         // KYC Reviews — any admin (admin or super_admin)
-        
         Route::get('/kyc', [\App\Http\Controllers\Admin\KycReviewController::class, 'index'])
             ->name('kyc.index');
 
@@ -393,11 +392,29 @@ Route::middleware(['auth', 'not.suspended', 'user.only'])->group(function () {
             ->whereNumber('id')
             ->name('transactions.manual-credit');
 
-        // Reopen action — super_admin only (already inside super_admin group)
+        // Reopen + Admin Management — super_admin only
         Route::middleware(['role:super_admin'])->group(function () {
             Route::post('/transactions/{id}/reopen', [\App\Http\Controllers\Admin\TransactionMonitorController::class, 'reopenTransaction'])
                 ->whereNumber('id')
                 ->name('transactions.reopen');
+            
+            // Admin Management
+            Route::get('/admins', [\App\Http\Controllers\Admin\AdminManagementController::class, 'index'])
+                ->name('admins.index');
+            
+            Route::post('/admins/promote', [\App\Http\Controllers\Admin\AdminManagementController::class, 'promote'])
+                ->name('admins.promote');
+            
+            Route::post('/admins/{id}/change-role', [\App\Http\Controllers\Admin\AdminManagementController::class, 'changeRole'])
+                ->whereNumber('id')
+                ->name('admins.change-role');
+            
+            Route::post('/admins/{id}/revoke', [\App\Http\Controllers\Admin\AdminManagementController::class, 'revoke'])
+                ->whereNumber('id')
+                ->name('admins.revoke');
+
+            Route::get('/admins/search-users', [\App\Http\Controllers\Admin\AdminManagementController::class, 'searchPromotableUsers'])
+                ->name('admins.search-users');
         });
 
         // Customer Support — action queue for CS workflow

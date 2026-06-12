@@ -20,8 +20,8 @@ class User extends Authenticatable
         'account_number', 
         'email_verified_at',
         'phone_verified_at',
-        'kyc_tier', // Dinagdag natin: Para ma-update natin if Tier 1, 2, or 3 siya
-        'is_parent', // Dinagdag natin: Para ma-identify kung Bata ba siya o Magulang
+        'kyc_tier', 
+        'is_parent', 
         'admin_role',
         'admin_role_granted_at',
         'admin_role_granted_by',
@@ -29,6 +29,9 @@ class User extends Authenticatable
         'suspended_at',
         'suspension_reason',
         'suspended_by',
+        'admin_role_revoked_at',
+        'admin_role_revoked_by',
+        'admin_role_change_reason',
         
     ];
 
@@ -43,6 +46,7 @@ class User extends Authenticatable
         'admin_role_granted_at' => 'datetime',
         'is_suspended' => 'boolean',
         'suspended_at' => 'datetime',
+        'admin_role_revoked_at' => 'datetime',
     ];
 
     public function wallet() {
@@ -257,5 +261,13 @@ class User extends Authenticatable
     public function getDefaultRedirectPath(): string
     {
         return $this->isAdmin() ? '/admin' : '/dashboard';
+    }
+    
+    /**
+     * Admin who revoked this user's admin role (if applicable).
+     */
+    public function adminRoleRevoker()
+    {
+        return $this->belongsTo(User::class, 'admin_role_revoked_by');
     }
 }
