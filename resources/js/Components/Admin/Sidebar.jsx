@@ -1,7 +1,7 @@
 // resources/js/Components/Admin/Sidebar.jsx
 import { Link } from '@inertiajs/react';
 import { 
-    LayoutDashboard, FileCheck, Users, Receipt, 
+    LayoutDashboard, FileCheck, Users, Receipt, Headphones,
     Activity, Settings as SettingsIcon, Lock, Shield, X,
 } from 'lucide-react';
 
@@ -66,7 +66,7 @@ export default function AdminSidebar({ user, pendingCounts = {}, sidebarOpen, on
                 },
             ],
         },
-        {
+            {
             title: 'Review',
             items: [
                 { 
@@ -83,6 +83,14 @@ export default function AdminSidebar({ user, pendingCounts = {}, sidebarOpen, on
                     icon: Receipt, 
                     visible: true, 
                     locked: !canViewTransactions 
+                },
+                { 
+                    label: 'Customer Support', 
+                    href: '/admin/customer-support', 
+                    icon: Headphones,
+                    badge: pendingCounts.cs || null, 
+                    visible: true, 
+                    locked: !canViewTransactions,
                 },
             ],
         },
@@ -244,4 +252,6 @@ export default function AdminSidebar({ user, pendingCounts = {}, sidebarOpen, on
             </div>
         </aside>
     );
+
+    
 }

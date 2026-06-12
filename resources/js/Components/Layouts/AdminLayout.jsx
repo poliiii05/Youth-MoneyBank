@@ -1,8 +1,11 @@
 // resources/js/Components/Layouts/AdminLayout.jsx
-import { useState } from 'react';
 import { Link, router } from '@inertiajs/react';
 import { LogOut, ChevronDown, Menu } from 'lucide-react';
 import AdminSidebar from '../Admin/Sidebar';
+import { useState, useEffect } from 'react';
+import { usePage } from '@inertiajs/react';
+import toast from 'react-hot-toast';
+import { Toaster } from 'react-hot-toast';
 
 export default function AdminLayout({ user, header = 'Dashboard', actions = null, pendingCounts = {}, children }) {
     const [profileOpen, setProfileOpen] = useState(false);
@@ -10,7 +13,82 @@ export default function AdminLayout({ user, header = 'Dashboard', actions = null
 
     const userName = user?.name || 'Admin';
     const userInitial = userName.charAt(0).toUpperCase();
+    // Real-time pending counts polling
+    const [livePendingCounts, setLivePendingCounts] = useState(pendingCounts);
+    const [previousCsCount, setPreviousCsCount] = useState(pendingCounts?.cs || 0);
 
+    // Flash message handling
+    const { flash } = usePage().props;
+
+    useEffect(() => {
+        if (flash?.success) {
+            toast.success(flash.success, {
+                duration: 4000,
+                position: 'top-right',
+                style: {
+                    background: '#059669',
+                    color: '#fff',
+                    fontWeight: 'bold',
+                    fontSize: '12px',
+                    padding: '12px 16px',
+                    borderRadius: '8px',
+                },
+            });
+        }
+        if (flash?.error) {
+            toast.error(flash.error, {
+                duration: 5000,
+                position: 'top-right',
+                style: {
+                    fontSize: '12px',
+                    fontWeight: 'bold',
+                    padding: '12px 16px',
+                    borderRadius: '8px',
+                },
+            });
+        }
+    }, [flash?.success, flash?.error]);
+
+    useEffect(() => {
+        // Poll every 30 seconds for fresh counts
+        const interval = setInterval(async () => {
+            try {
+                const response = await fetch('/admin/api/pending-counts', {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    setLivePendingCounts(data);
+                    
+                    // Toast notification kapag may bagong CS case
+                    if (data.cs > previousCsCount) {
+                        const newCases = data.cs - previousCsCount;
+                        toast(`${newCases} new customer support case${newCases > 1 ? 's' : ''}`, {
+                            icon: '🔔',
+                            duration: 4000,
+                            style: {
+                                background: '#1e293b',
+                                color: '#fff',
+                                fontWeight: 'bold',
+                                fontSize: '12px',
+                            },
+                        });
+                    }
+                    
+                    setPreviousCsCount(data.cs);
+                }
+            } catch (e) {
+                console.error('Polling failed:', e);
+            }
+        }, 30000); // 30 seconds
+
+        return () => clearInterval(interval);
+    }, [previousCsCount]);
+    
     const handleLogout = () => {
         if (confirm('Logout from admin panel?')) {
             window.location.href = '/';
@@ -22,11 +100,11 @@ export default function AdminLayout({ user, header = 'Dashboard', actions = null
         <div className="min-h-screen bg-slate-50 flex">
             
             {/* SIDEBAR */}
-            <AdminSidebar 
+           <AdminSidebar 
                 user={user} 
-                pendingCounts={pendingCounts}
-                sidebarOpen={sidebarOpen}
-                onClose={() => setSidebarOpen(false)}
+                pendingCounts={livePendingCounts}  
+                sidebarOpen={sidebarOpen} 
+                onClose={() => setSidebarOpen(false)} 
             />
 
             {/* Mobile overlay */}
@@ -117,6 +195,9 @@ export default function AdminLayout({ user, header = 'Dashboard', actions = null
                 <main className="flex-1 p-4 sm:p-6 lg:p-8">
                     {children}
                 </main>
+
+                <Toaster position="top-right" />
+                
             </div>
         </div>
     );

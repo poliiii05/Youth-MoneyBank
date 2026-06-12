@@ -92,7 +92,7 @@ class UserManagementController extends Controller
                 'search' => $search,
             ],
             'counts' => $counts,
-            'pendingCounts' => ['kyc' => KycApplication::where('status', 'pending')->count()],
+            'pendingCounts' => $this->getAdminPendingCounts(),
         ]);
     }
 
@@ -199,7 +199,7 @@ class UserManagementController extends Controller
             ],
             'recent_transactions' => $recentTransactions,
             'kyc_history' => $kycHistory,
-            'pendingCounts' => ['kyc' => KycApplication::where('status', 'pending')->count()],
+            'pendingCounts' => $this->getAdminPendingCounts(),
         ]);
     }
 

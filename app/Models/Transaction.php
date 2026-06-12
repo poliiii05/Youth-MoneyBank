@@ -20,12 +20,27 @@ class Transaction extends Model
         'description',
         'is_positive',
         'ledger_posted', 
+        'is_flagged',
+        'flagged_at',
+        'flag_reason',
+        'flagged_by',
+        'is_resolved',
+        'resolved_at',
+        'resolution_type',
+        'resolution_notes',
+        'resolved_by',
     ];
 
     protected $casts = [
         'amount_cents' => 'integer',
         'is_positive' => 'boolean',
-         'ledger_posted' => 'boolean',
+        'ledger_posted' => 'boolean',
+        'is_flagged' => 'boolean',
+        'flagged_at' => 'datetime',
+        'is_resolved' => 'boolean',
+        'resolved_at' => 'datetime',
+        'parent_transaction_id',
+        'correction_proof',
     ];
 
     public function user()
@@ -75,5 +90,35 @@ class Transaction extends Model
             ->count() + 1;
         
         return sprintf('TXN-%d-%04d', $year, $count);
+    }
+        /**
+     * Admin who flagged this transaction.
+     */
+    public function flagger()
+    {
+        return $this->belongsTo(User::class, 'flagged_by');
+    }
+
+        /**
+     * Admin who resolved this transaction.
+     */
+    public function resolver()
+    {
+        return $this->belongsTo(User::class, 'resolved_by');
+    }
+    /**
+     * Original transaction that this correction transaction was created for.
+     */
+    public function parentTransaction()
+    {
+        return $this->belongsTo(Transaction::class, 'parent_transaction_id');
+    }
+
+    /**
+     * Correction transactions that fixed this transaction.
+     */
+    public function correctionTransactions()
+    {
+        return $this->hasMany(Transaction::class, 'parent_transaction_id');
     }
 }

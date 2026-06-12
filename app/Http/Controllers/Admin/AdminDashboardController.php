@@ -119,7 +119,7 @@ class AdminDashboardController extends Controller
                 ];
             });
 
-        $pendingCounts = ['kyc' => $pendingKyc];
+        $pendingCounts = $this->getAdminPendingCounts();
 
         return Inertia::render('Admin/Dashboard', [
             'auth' => ['user' => $user],
@@ -360,5 +360,13 @@ class AdminDashboardController extends Controller
             'value' => abs(round($change)),
             'direction' => $direction,
         ];
+    }
+    /**
+     * Get current pending counts for sidebar badge polling.
+     * Returns just the counts for efficiency.
+     */
+    public function pendingCounts(Request $request)
+    {
+        return response()->json($this->getAdminPendingCounts());
     }
 }

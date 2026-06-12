@@ -87,7 +87,7 @@ class KycReviewController extends Controller
                 'search' => $search,
             ],
             'counts' => $counts,
-            'pendingCounts' => ['kyc' => $counts['pending']],
+            'pendingCounts' => $this->getAdminPendingCounts(),
         ]);
     }
 
@@ -150,7 +150,7 @@ class KycReviewController extends Controller
                 ] : null,
                 'documents' => $documents,
             ],
-            'pendingCounts' => ['kyc' => KycApplication::where('status', 'pending')->count()],
+            'pendingCounts' => $this->getAdminPendingCounts(),
         ]);
     }
 

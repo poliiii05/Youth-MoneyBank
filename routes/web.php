@@ -212,6 +212,12 @@ Route::middleware(['auth', 'not.suspended', 'user.only'])->group(function () {
                 'has_older' => $hasOlderTransactions,
             ],
         ]);
+
+        // Manual credit — both admin and super_admin can perform
+        Route::post('/transactions/{id}/manual-credit', [\App\Http\Controllers\Admin\TransactionMonitorController::class, 'manualCredit'])
+            ->whereNumber('id')
+            ->name('transactions.manual-credit');
+            
     })->name('transactions');
 
     // ====================================================
@@ -320,22 +326,24 @@ Route::middleware(['auth', 'not.suspended', 'user.only'])->group(function () {
             ->name('api.recent-transactions');
         
         // KYC Reviews — any admin (admin or super_admin)
-        Route::middleware(['role:any'])->group(function () {
-            Route::get('/kyc', [\App\Http\Controllers\Admin\KycReviewController::class, 'index'])
-                ->name('kyc.index');
-            
-            Route::get('/kyc/{id}', [\App\Http\Controllers\Admin\KycReviewController::class, 'show'])
-                ->whereNumber('id')
-                ->name('kyc.show');
-            
-            Route::post('/kyc/{id}/approve', [\App\Http\Controllers\Admin\KycReviewController::class, 'approve'])
-                ->whereNumber('id')
-                ->name('kyc.approve');
-            
-            Route::post('/kyc/{id}/reject', [\App\Http\Controllers\Admin\KycReviewController::class, 'reject'])
-                ->whereNumber('id')
-                ->name('kyc.reject');
-        });
+        
+        Route::get('/kyc', [\App\Http\Controllers\Admin\KycReviewController::class, 'index'])
+            ->name('kyc.index');
+
+        Route::get('/kyc/{id}', [\App\Http\Controllers\Admin\KycReviewController::class, 'show'])
+            ->whereNumber('id')
+            ->name('kyc.show');
+
+        Route::post('/kyc/{id}/approve', [\App\Http\Controllers\Admin\KycReviewController::class, 'approve'])
+            ->whereNumber('id')
+            ->name('kyc.approve');
+
+        Route::post('/kyc/{id}/reject', [\App\Http\Controllers\Admin\KycReviewController::class, 'reject'])
+            ->whereNumber('id')
+            ->name('kyc.reject');
+
+        Route::get('/api/pending-counts', [\App\Http\Controllers\Admin\AdminDashboardController::class, 'pendingCounts'])
+            ->name('api.pending-counts');
 
         // User Management
         Route::get('/users', [\App\Http\Controllers\Admin\UserManagementController::class, 'index'])
@@ -359,6 +367,42 @@ Route::middleware(['auth', 'not.suspended', 'user.only'])->group(function () {
                 ->whereNumber('id')
                 ->name('users.force-logout');
         });
+
+        // Transaction Monitoring — any admin can view, super_admin can flag
+        Route::get('/transactions', [\App\Http\Controllers\Admin\TransactionMonitorController::class, 'index'])
+            ->name('transactions.index');
+        
+        Route::get('/transactions/{id}', [\App\Http\Controllers\Admin\TransactionMonitorController::class, 'show'])
+            ->whereNumber('id')
+            ->name('transactions.show');
+        
+        // Flag action — super_admin only
+        Route::middleware(['role:super_admin'])->group(function () {
+            Route::post('/transactions/{id}/flag', [\App\Http\Controllers\Admin\TransactionMonitorController::class, 'flagTransaction'])
+                ->whereNumber('id')
+                ->name('transactions.flag');
+        });
+
+        // Resolution actions
+        Route::post('/transactions/{id}/resolve', [\App\Http\Controllers\Admin\TransactionMonitorController::class, 'resolveTransaction'])
+            ->whereNumber('id')
+            ->name('transactions.resolve');
+            
+         // Manual credit — both admin and super_admin can perform
+        Route::post('/transactions/{id}/manual-credit', [\App\Http\Controllers\Admin\TransactionMonitorController::class, 'manualCredit'])
+            ->whereNumber('id')
+            ->name('transactions.manual-credit');
+
+        // Reopen action — super_admin only (already inside super_admin group)
+        Route::middleware(['role:super_admin'])->group(function () {
+            Route::post('/transactions/{id}/reopen', [\App\Http\Controllers\Admin\TransactionMonitorController::class, 'reopenTransaction'])
+                ->whereNumber('id')
+                ->name('transactions.reopen');
+        });
+
+        // Customer Support — action queue for CS workflow
+        Route::get('/customer-support', [\App\Http\Controllers\Admin\TransactionMonitorController::class, 'customerSupport'])
+            ->name('customer-support.index');
     });
 
     // ====================================================
