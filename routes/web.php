@@ -67,7 +67,7 @@ Route::post('/signup', function (Request $request) {
 //   Protected Routes (Authenticated)          //
 //---------------------------------------------//
 
-Route::middleware(['auth', 'not.suspended', 'user.only'])->group(function () {
+Route::middleware(['auth', 'not.suspended', 'user.only','check.maintenance'])->group(function () {
     // ====================================================
     // DASHBOARD
     // ====================================================
@@ -392,7 +392,7 @@ Route::middleware(['auth', 'not.suspended', 'user.only'])->group(function () {
             ->whereNumber('id')
             ->name('transactions.manual-credit');
 
-        // Reopen + Admin Management — super_admin only
+        // SUPER ADMIN ! SUPER ADMIN ! SUPER ADMIN ! Admin Management, audit, settings
         Route::middleware(['role:super_admin'])->group(function () {
             Route::post('/transactions/{id}/reopen', [\App\Http\Controllers\Admin\TransactionMonitorController::class, 'reopenTransaction'])
                 ->whereNumber('id')
@@ -415,6 +415,31 @@ Route::middleware(['auth', 'not.suspended', 'user.only'])->group(function () {
 
             Route::get('/admins/search-users', [\App\Http\Controllers\Admin\AdminManagementController::class, 'searchPromotableUsers'])
                 ->name('admins.search-users');
+
+            // Audit - super admiin
+            Route::get('/audit', [\App\Http\Controllers\Admin\AuditLogController::class, 'index'])
+                ->name('audit.index');
+
+            Route::get('/audit/export', [\App\Http\Controllers\Admin\AuditLogController::class, 'export'])
+                ->name('audit.export');
+
+            // Settings - super admiin
+            Route::get('/settings', [\App\Http\Controllers\Admin\SettingsController::class, 'index'])
+                ->name('settings.index');
+            
+            Route::post('/settings/update', [\App\Http\Controllers\Admin\SettingsController::class, 'update'])
+                ->name('settings.update');
+
+            Route::post('/settings/profile', [\App\Http\Controllers\Admin\SettingsController::class, 'updateProfile'])
+                ->name('settings.profile');
+
+            // Maintenance Mode — dedicated controls
+            Route::get('/maintenance', [\App\Http\Controllers\Admin\MaintenanceModeController::class, 'index'])
+                ->name('maintenance.index');
+            
+            Route::post('/maintenance/toggle', [\App\Http\Controllers\Admin\MaintenanceModeController::class, 'toggle'])
+                ->name('maintenance.toggle');
+                
         });
 
         // Customer Support — action queue for CS workflow

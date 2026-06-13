@@ -8,6 +8,7 @@ use App\Models\Transaction;
 use App\Models\KycApplication;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Models\AdminAuditLog;
 
 class UserManagementController extends Controller
 {
@@ -236,9 +237,23 @@ class UserManagementController extends Controller
                     'user' => 'Cannot override admin account tier.',
                 ]);
             }
-
+            
             $oldTier = $targetUser->kyc_tier;
             $targetUser->update(['kyc_tier' => $validated['new_tier']]);
+
+            AdminAuditLog::record([
+                'actor_id' => $admin->id,
+                'target_user_id' => $targetUser->id,
+                'action_type' => 'override_tier',
+                'category' => 'user_management',
+                'reason' => $validated['reason'],
+                'metadata' => [
+                    'old_tier' => $oldTier,
+                    'new_tier' => $validated['new_tier'],
+                    'target_email' => $targetUser->email,
+                    'target_name' => $targetUser->name,
+                ],
+            ]);
 
             \Log::info('Admin tier override', [
                 'admin_id' => $admin->id,
@@ -318,6 +333,18 @@ class UserManagementController extends Controller
                 $action = 'suspended';
             }
 
+            AdminAuditLog::record([
+                'actor_id' => $admin->id,
+                'target_user_id' => $targetUser->id,
+                'action_type' => $wasSuspended ? 'unsuspend_user' : 'suspend_user',
+                'category' => 'user_management',
+                'reason' => $validated['reason'],
+                'metadata' => [
+                    'target_email' => $targetUser->email,
+                    'target_name' => $targetUser->name,
+                ],
+            ]);
+
             \Log::info("Admin {$action} user account", [
                 'admin_id' => $admin->id,
                 'target_user_id' => $targetUser->id,
@@ -373,6 +400,18 @@ class UserManagementController extends Controller
             \DB::table('sessions')
                 ->where('user_id', $targetUser->id)
                 ->delete();
+
+            AdminAuditLog::record([
+                'actor_id' => $admin->id,
+                'target_user_id' => $targetUser->id,
+                'action_type' => 'force_logout',
+                'category' => 'user_management',
+                'reason' => 'Force logout from all sessions',
+                'metadata' => [
+                    'target_email' => $targetUser->email,
+                    'target_name' => $targetUser->name,
+                ],
+            ]);
 
             \Log::info('Admin force logged out user', [
                 'admin_id' => $admin->id,

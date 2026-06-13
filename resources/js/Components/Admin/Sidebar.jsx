@@ -2,7 +2,7 @@
 import { Link } from '@inertiajs/react';
 import { 
     LayoutDashboard, FileCheck, Users, Receipt, Headphones,
-    Activity, Settings as SettingsIcon, Lock, Shield, X,
+    Activity, Settings as SettingsIcon, Lock, Shield, X, Power,
 } from 'lucide-react';
 
 /**
@@ -12,7 +12,7 @@ import {
  * - admin: Can view dashboard, KYC, transactions, users (read-only)
  * - super_admin: Same as admin + destructive actions + admin management
  */
-export default function AdminSidebar({ user, pendingCounts = {}, sidebarOpen, onClose }) {
+export default function AdminSidebar({ user, pendingCounts = {}, maintenanceMode = false, sidebarOpen, onClose }) {
     const isUrlActive = (path) => {
         if (typeof window === 'undefined') return false;
         const currentPath = window.location.pathname;
@@ -125,7 +125,15 @@ export default function AdminSidebar({ user, pendingCounts = {}, sidebarOpen, on
                     visible: true, 
                     locked: !canAccessAudit, 
                     requiresSuper: true,
-                    comingSoon: true,
+                },
+                { 
+                    label: 'Maintenance', 
+                    href: '/admin/maintenance', 
+                    icon: Power, 
+                    visible: true, 
+                    locked: !canAccessSettings, 
+                    requiresSuper: true,
+                    statusIndicator: maintenanceMode ? 'active' : null,
                 },
                 { 
                     label: 'Settings', 
@@ -134,7 +142,6 @@ export default function AdminSidebar({ user, pendingCounts = {}, sidebarOpen, on
                     visible: true, 
                     locked: !canAccessSettings, 
                     requiresSuper: true,
-                    comingSoon: true,
                 },
             ],
         },
@@ -233,6 +240,9 @@ export default function AdminSidebar({ user, pendingCounts = {}, sidebarOpen, on
                                             <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full bg-red-500 text-white text-[9px] font-bold">
                                                 {item.badge}
                                             </span>
+                                            )}
+                                        {item.statusIndicator === 'active' && (
+                                            <span className="inline-flex w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
                                         )}
                                     </Link>
                                 );

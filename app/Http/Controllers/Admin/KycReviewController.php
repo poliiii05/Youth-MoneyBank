@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\KycApplication;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Models\AdminAuditLog;
 
 class KycReviewController extends Controller
 {
@@ -175,8 +176,23 @@ class KycReviewController extends Controller
             ]);
         }
 
-        // Use existing service method (manual approval, not auto)
+         // Use existing service method (manual approval, not auto)
         $approvedApp = \App\Services\KycService::approveApplication($application, $admin, false);
+
+         AdminAuditLog::record([
+            'actor_id' => $admin->id,
+            'target_user_id' => $approvedApp->user_id,
+            'action_type' => 'kyc_approve',
+            'category' => 'kyc',
+            'reason' => 'Approved via admin review',
+            'metadata' => [
+                'application_id' => $approvedApp->id,
+                'original_tier' => $approvedApp->original_tier,
+                'target_tier' => $approvedApp->target_tier,
+                'target_email' => $approvedApp->user->email,
+                'target_name' => $approvedApp->user->name,
+            ],
+        ]);
 
         return redirect()->route('admin.kyc.index', ['status' => 'pending'])
         ->with('success', "Application approved. {$approvedApp->user->name} is now Tier {$approvedApp->target_tier}.");
@@ -229,6 +245,21 @@ class KycReviewController extends Controller
                 $validated['reason']
             );
 
+             AdminAuditLog::record([
+                'actor_id' => $admin->id,
+                'target_user_id' => $application->user_id,
+                'action_type' => 'kyc_reject',
+                'category' => 'kyc',
+                'reason' => $validated['reason'],
+                'metadata' => [
+                    'application_id' => $application->id,
+                    'original_tier' => $application->original_tier ?? null,
+                    'target_tier' => $application->target_tier,
+                    'target_email' => $application->user->email,
+                    'target_name' => $application->user->name,
+                ],
+            ]);
+            
             return redirect()->route('admin.kyc.index', ['status' => 'pending'])
             ->with('success', 'Application rejected with reason recorded.');
 

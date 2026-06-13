@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
         'role' => \App\Http\Middleware\EnsureUserHasRole::class,
         'not.suspended' => \App\Http\Middleware\EnsureUserNotSuspended::class,
         'user.only' => \App\Http\Middleware\RedirectAdminFromUserApp::class,
+        'check.maintenance' => \App\Http\Middleware\CheckMaintenanceMode::class,
     ]);
 })
 

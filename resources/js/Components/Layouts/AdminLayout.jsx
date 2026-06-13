@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 import { usePage } from '@inertiajs/react';
 import toast from 'react-hot-toast';
 import { Toaster } from 'react-hot-toast';
+import { Power } from 'lucide-react';
 
 export default function AdminLayout({ user, header = 'Dashboard', actions = null, pendingCounts = {}, children }) {
     const [profileOpen, setProfileOpen] = useState(false);
@@ -18,7 +19,7 @@ export default function AdminLayout({ user, header = 'Dashboard', actions = null
     const [previousCsCount, setPreviousCsCount] = useState(pendingCounts?.cs || 0);
 
     // Flash message handling
-    const { flash } = usePage().props;
+    const { flash, maintenanceMode } = usePage().props;
 
     useEffect(() => {
         if (flash?.success) {
@@ -100,9 +101,10 @@ export default function AdminLayout({ user, header = 'Dashboard', actions = null
         <div className="min-h-screen bg-slate-50 flex">
             
             {/* SIDEBAR */}
-           <AdminSidebar 
+            <AdminSidebar 
                 user={user} 
-                pendingCounts={livePendingCounts}  
+                pendingCounts={livePendingCounts}
+                maintenanceMode={maintenanceMode}
                 sidebarOpen={sidebarOpen} 
                 onClose={() => setSidebarOpen(false)} 
             />
@@ -190,6 +192,26 @@ export default function AdminLayout({ user, header = 'Dashboard', actions = null
                         </div>
                     </div>
                 </header>
+
+                {maintenanceMode && (
+                    <div className="bg-amber-500 border-b border-amber-600 px-4 py-2 flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2">
+                            <Power size={14} className="text-amber-900 animate-pulse" strokeWidth={2.5} />
+                            <p className="text-[11px] font-black text-amber-900 uppercase tracking-widest">
+                                Maintenance Mode Active
+                            </p>
+                            <p className="text-[11px] text-amber-900 font-medium hidden sm:block">
+                                Regular users are blocked. Admins maintain access.
+                            </p>
+                        </div>
+                        <Link
+                            href="/admin/maintenance"
+                            className="text-[10px] font-black text-amber-900 hover:text-amber-950 underline cursor-pointer"
+                        >
+                            Manage →
+                        </Link>
+                    </div>
+                )}
 
                 {/* MAIN CONTENT */}
                 <main className="flex-1 p-4 sm:p-6 lg:p-8">

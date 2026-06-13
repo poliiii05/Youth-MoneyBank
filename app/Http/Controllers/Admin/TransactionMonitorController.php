@@ -10,6 +10,7 @@ use Inertia\Inertia;
 use App\Models\Wallet;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use App\Models\AdminAuditLog;
 
 class TransactionMonitorController extends Controller
 {
@@ -249,6 +250,19 @@ class TransactionMonitorController extends Controller
                 $action = 'flagged';
             }
 
+           AdminAuditLog::record([
+                'actor_id' => $admin->id,
+                'target_user_id' => $transaction->user_id,
+                'action_type' => $action === 'flagged' ? 'flag_transaction' : 'unflag_transaction',
+                'category' => 'transaction',
+                'reason' => $validated['reason'],
+                'metadata' => [
+                    'transaction_id' => $transaction->id,
+                    'reference_id' => $transaction->public_reference_id,
+                    'amount_cents' => $transaction->amount_cents,
+                ],
+            ]);
+
             \Log::info("Admin {$action} transaction", [
                 'admin_id' => $admin->id,
                 'admin_name' => $admin->name,
@@ -308,8 +322,21 @@ class TransactionMonitorController extends Controller
                 'resolved_by' => $admin->id,
             ]);
 
-            \Log::info('Admin resolved transaction', [
-                'admin_id' => $admin->id,
+            AdminAuditLog::record([
+                'actor_id' => $admin->id,
+                'target_user_id' => $transaction->user_id,
+                'action_type' => 'resolve_transaction',
+                'category' => 'transaction',
+                'reason' => $validated['notes'],
+                'metadata' => [
+                    'transaction_id' => $transaction->id,
+                    'reference_id' => $transaction->public_reference_id,
+                    'resolution_type' => $validated['resolution_type'],
+                    'amount_cents' => $transaction->amount_cents,
+                ],
+            ]);
+
+            \Log::info('Admin resolved transaction', [                'admin_id' => $admin->id,
                 'admin_name' => $admin->name,
                 'transaction_id' => $transaction->id,
                 'reference_id' => $transaction->public_reference_id,
@@ -360,6 +387,18 @@ class TransactionMonitorController extends Controller
                 'resolved_by' => null,
             ]);
 
+            AdminAuditLog::record([
+                'actor_id' => $admin->id,
+                'target_user_id' => $transaction->user_id,
+                'action_type' => 'reopen_transaction',
+                'category' => 'transaction',
+                'reason' => 'Reopened by super admin for further review',
+                'metadata' => [
+                    'transaction_id' => $transaction->id,
+                    'reference_id' => $transaction->public_reference_id,
+                ],
+            ]);
+
             \Log::info('Super admin reopened transaction', [
                 'admin_id' => $admin->id,
                 'transaction_id' => $transaction->id,
@@ -372,7 +411,7 @@ class TransactionMonitorController extends Controller
                 : route('admin.transactions.show', $id);
 
             return redirect($redirectUrl)
-                ->with('success', "Transaction marked as {$validated['resolution_type']}.");
+                ->with('success', 'Transaction reopened for further review.');
 
         } catch (\Exception $e) {
             return back()->withErrors([
@@ -614,6 +653,23 @@ class TransactionMonitorController extends Controller
                     'resolution_type' => 'reprocessed',
                     'resolution_notes' => "Manual credit applied (₱{$validated['amount']}). Correction TX: {$correction->public_reference_id}. Notes: {$validated['notes']}",
                     'resolved_by' => $admin->id,
+                ]);
+
+                // 4. Write to audit log
+                AdminAuditLog::record([
+                    'actor_id' => $admin->id,
+                    'target_user_id' => $user->id,
+                    'action_type' => 'manual_credit',
+                    'category' => 'transaction',
+                    'reason' => $validated['notes'],
+                    'metadata' => [
+                        'original_transaction_id' => $originalTransaction->id,
+                        'correction_transaction_id' => $correction->id,
+                        'amount_cents' => $amountCents,
+                        'correction_proof' => $validated['correction_proof'],
+                        'target_email' => $user->email,
+                        'target_name' => $user->name,
+                    ],
                 ]);
             });
 

@@ -14,6 +14,7 @@ export default function Avatar({
     const [imageError, setImageError] = useState(false);
 
     const sizeClasses = {
+        xs: 'w-5 h-5 text-[9px]',
         sm: 'w-8 h-8 text-[10px]',
         md: 'w-10 h-10 text-xs',
         lg: 'w-14 h-14 text-lg',
