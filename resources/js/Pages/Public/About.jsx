@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import { usePage } from '@inertiajs/react';
 import Navbar from "../../Components/Common/Navbar";
 import Footer from "../../Components/Common/Footer";
-import AIChat from "../../Components/AI/AIChat";
 import { 
     Target, Users, Zap, ShieldCheck, Smartphone, 
     Wallet, GraduationCap, Sparkles, Shield, HeartHandshake

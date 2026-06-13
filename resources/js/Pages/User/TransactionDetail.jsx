@@ -2,7 +2,7 @@
 import { Head, Link } from '@inertiajs/react';
 import { useState } from 'react';
 import UserLayout from '../../Components/Layouts/UserLayout';
-import { ArrowLeft, ArrowDownRight, ArrowUpRight, Copy, Check, ChevronDown } from 'lucide-react';
+import { ArrowLeft, ArrowDownRight, ArrowUpRight, Copy, Check, ChevronDown, Headphones  } from 'lucide-react';
 
 export default function TransactionDetail({ auth, transaction }) {
     const user = auth?.user;
@@ -179,9 +179,16 @@ export default function TransactionDetail({ auth, transaction }) {
                 </div>
 
                 {/* SUPPORT FOOTER */}
-                <p className="text-center text-[10px] text-slate-400 font-medium mt-4 pb-6">
-                    Need help? <button className="text-blue-600 font-bold hover:underline cursor-pointer">Contact support</button>
-                </p>
+                    <div className="flex justify-center mt-4 pb-6">
+                        <Link
+                            href={`/support/new?transaction_id=${transaction.id}`}
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-orange-50 hover:bg-orange-100 text-orange-700 text-xs font-black rounded-xl border border-orange-200 cursor-pointer transition-all"
+                        >
+                            <Headphones size={13} strokeWidth={2.5} />
+                            Get Help with This Transaction
+                        </Link>
+                    </div>
+                
             </div>
         </UserLayout>
     );

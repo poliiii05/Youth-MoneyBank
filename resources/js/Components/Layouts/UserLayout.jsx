@@ -3,6 +3,8 @@ import { useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import ProfileDropdown from './ProfileDropdown';
 import { Target, CreditCard, Settings, Menu, Home, Sparkles, Star, X } from 'lucide-react';
+import FloatingButton from '../Support/FloatingButton';
+
 export default function UserLayout({ user, header, children }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const { url } = usePage();
@@ -148,7 +150,10 @@ export default function UserLayout({ user, header, children }) {
                 <main className="flex-1 p-4 lg:p-8 max-w-7xl mx-auto w-full">
                     {children}
                 </main>
+                
+                  <FloatingButton isAuthenticated={true} />
             </div>
         </div>
+        
     );
 }

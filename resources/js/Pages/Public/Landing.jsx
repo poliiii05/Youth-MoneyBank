@@ -2,7 +2,7 @@ import { Link } from '@inertiajs/react';
 import Navbar from "../../Components/Common/Navbar";
 import Footer from "../../Components/Common/Footer";
 import Button from "../../Components/Common/Button";
-import AIChat from "../../Components/AI/AIChat";
+import FloatingButton from '../../Components/Support/FloatingButton';
 
 export default function Landing() {
     return (
@@ -105,8 +105,7 @@ export default function Landing() {
 
             <Footer />
 
-            {/* AI CHAT COMPONENT */}
-            <AIChat />
+            <FloatingButton isAuthenticated={false} />
             
         </div>
     );

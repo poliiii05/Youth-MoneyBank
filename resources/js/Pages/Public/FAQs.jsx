@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import Navbar from "../../Components/Common/Navbar";
 import Footer from "../../Components/Common/Footer";
-import AIChat from "../../Components/AI/AIChat";
 import { Rocket, Target, Wallet, ShieldCheck, Settings, LifeBuoy, Plus, MessageSquare, Mail } from 'lucide-react';
 
 export default function FAQ() {

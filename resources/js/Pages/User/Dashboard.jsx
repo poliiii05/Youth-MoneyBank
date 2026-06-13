@@ -2,7 +2,7 @@
 import { Head, Link } from '@inertiajs/react';
 import { useState } from 'react';
 import UserLayout from '../../Components/Layouts/UserLayout';
-import { Wallet, Target, Send, Download, ArrowUpCircle, Gift, ArrowRight, Lightbulb, ChevronRight } from 'lucide-react';
+import { Wallet, Target, ArrowRight, Lightbulb, ChevronRight, Headphones } from 'lucide-react';
 import AddMoneyModal from '../../Components/Wallet/AddMoneyModal';
 import RecentTransactionsCard from '../../Components/Transactions/RecentTransactionsCard';
 
@@ -214,35 +214,35 @@ export default function Dashboard({ auth, finances, active_goal, kyc_tier, recen
             </div>
 
             {/* 4. QUICK ACTIONS */}
-            <div className="bg-white rounded-[1.5rem] shadow-sm border border-gray-100 p-5 mb-5">
-                <h2 className="text-[11px] font-semibold text-gray-500 mb-4 uppercase tracking-widest">Quick Actions</h2>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                    <button className="flex flex-col items-center gap-2 group cursor-pointer">
-                        <div className="w-14 h-14 md:w-16 md:h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center transition-all duration-300 group-hover:bg-blue-500 group-hover:text-white group-hover:-translate-y-1 group-hover:shadow-lg group-hover:shadow-blue-200 group-hover:ring-4 ring-blue-50">
-                            <Send size={24} strokeWidth={1.5} />
-                        </div>
-                        <span className="font-semibold text-[10px] text-gray-600 uppercase tracking-wide group-hover:text-blue-600 transition-colors">Pay a Friend</span>
-                    </button>
-                    <button className="flex flex-col items-center gap-2 group cursor-pointer">
-                        <div className="w-14 h-14 md:w-16 md:h-16 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center transition-all duration-300 group-hover:bg-purple-500 group-hover:text-white group-hover:-translate-y-1 group-hover:shadow-lg group-hover:shadow-purple-200 group-hover:ring-4 ring-purple-50">
-                            <Download size={24} strokeWidth={1.5} />
-                        </div>
-                        <span className="font-semibold text-[10px] text-gray-600 uppercase tracking-wide group-hover:text-purple-600 transition-colors">Ask Allowance</span>
-                    </button>
-                    <button className="flex flex-col items-center gap-2 group cursor-pointer">
-                        <div className="w-14 h-14 md:w-16 md:h-16 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center transition-all duration-300 group-hover:bg-orange-500 group-hover:text-white group-hover:-translate-y-1 group-hover:shadow-lg group-hover:shadow-orange-200 group-hover:ring-4 ring-orange-50">
-                            <ArrowUpCircle size={24} strokeWidth={1.5} />
-                        </div>
-                        <span className="font-semibold text-[10px] text-gray-600 uppercase tracking-wide group-hover:text-orange-600 transition-colors">Withdraw</span>
-                    </button>
-                    <button className="flex flex-col items-center gap-2 group cursor-pointer">
-                        <div className="w-14 h-14 md:w-16 md:h-16 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center transition-all duration-300 group-hover:bg-emerald-500 group-hover:text-white group-hover:-translate-y-1 group-hover:shadow-lg group-hover:shadow-emerald-200 group-hover:ring-4 ring-emerald-50">
-                            <Gift size={24} strokeWidth={1.5} />
-                        </div>
-                        <span className="font-semibold text-[10px] text-gray-600 uppercase tracking-wide group-hover:text-emerald-600 transition-colors">Rewards</span>
-                    </button>
+                <div className="bg-white rounded-[1.5rem] shadow-sm border border-gray-100 p-5 mb-5">
+                    <h2 className="text-[11px] font-semibold text-gray-500 mb-4 uppercase tracking-widest">Quick Actions</h2>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                        <Link href="/transactions" className="flex flex-col items-center gap-2 group cursor-pointer">
+                            <div className="w-14 h-14 md:w-16 md:h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center transition-all duration-300 group-hover:bg-blue-500 group-hover:text-white group-hover:-translate-y-1 group-hover:shadow-lg group-hover:shadow-blue-200 group-hover:ring-4 ring-blue-50">
+                                <ArrowRight size={24} strokeWidth={1.5} />
+                            </div>
+                            <span className="font-semibold text-[10px] text-gray-600 uppercase tracking-wide group-hover:text-blue-600 transition-colors">Transactions</span>
+                        </Link>
+                        <Link href="/goals" className="flex flex-col items-center gap-2 group cursor-pointer">
+                            <div className="w-14 h-14 md:w-16 md:h-16 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center transition-all duration-300 group-hover:bg-emerald-500 group-hover:text-white group-hover:-translate-y-1 group-hover:shadow-lg group-hover:shadow-emerald-200 group-hover:ring-4 ring-emerald-50">
+                                <Target size={24} strokeWidth={1.5} />
+                            </div>
+                            <span className="font-semibold text-[10px] text-gray-600 uppercase tracking-wide group-hover:text-emerald-600 transition-colors">Goals</span>
+                        </Link>
+                        <button onClick={() => setIsAddMoneyOpen(true)} className="flex flex-col items-center gap-2 group cursor-pointer">
+                            <div className="w-14 h-14 md:w-16 md:h-16 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center transition-all duration-300 group-hover:bg-purple-500 group-hover:text-white group-hover:-translate-y-1 group-hover:shadow-lg group-hover:shadow-purple-200 group-hover:ring-4 ring-purple-50">
+                                <Wallet size={24} strokeWidth={1.5} />
+                            </div>
+                            <span className="font-semibold text-[10px] text-gray-600 uppercase tracking-wide group-hover:text-purple-600 transition-colors">Add Money</span>
+                        </button>
+                        <Link href="/support" className="flex flex-col items-center gap-2 group cursor-pointer">
+                            <div className="w-14 h-14 md:w-16 md:h-16 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center transition-all duration-300 group-hover:bg-orange-500 group-hover:text-white group-hover:-translate-y-1 group-hover:shadow-lg group-hover:shadow-orange-200 group-hover:ring-4 ring-orange-50">
+                                <Headphones size={24} strokeWidth={1.5} />
+                            </div>
+                            <span className="font-semibold text-[10px] text-gray-600 uppercase tracking-wide group-hover:text-orange-600 transition-colors">Get Help</span>
+                        </Link>
+                    </div>
                 </div>
-            </div>
 
            {/* 5. RECENT TRANSACTIONS */}
                 <RecentTransactionsCard 

@@ -64,10 +64,12 @@ Route::post('/signup', function (Request $request) {
 })->name('signup.store');
 
 //---------------------------------------------//
-//   Protected Routes (Authenticated)          //
+//   USER PROTECTED ROUTES                     //
+//   (auth + not suspended + user only + maintenance check)
 //---------------------------------------------//
 
-Route::middleware(['auth', 'not.suspended', 'user.only','check.maintenance'])->group(function () {
+Route::middleware(['auth', 'not.suspended', 'user.only', 'check.maintenance'])->group(function () {
+    
     // ====================================================
     // DASHBOARD
     // ====================================================
@@ -75,7 +77,7 @@ Route::middleware(['auth', 'not.suspended', 'user.only','check.maintenance'])->g
         $user = auth()->user();
 
         if ($user->isAdmin()) {
-        return redirect('/admin');
+            return redirect('/admin');
         }
     
         $wallet = $user->wallet;
@@ -92,7 +94,6 @@ Route::middleware(['auth', 'not.suspended', 'user.only','check.maintenance'])->g
         $totalHoldingsCents = \App\Services\TierLimitService::getTotalHoldingsCents($user);
         $remainingCapacityCents = \App\Services\TierLimitService::getRemainingCapacityCents($user);
 
-        // Active goal logic: most funds first, fallback to smallest target
         $activeGoal = $user->savingsGoals()
             ->where('status', '!=', 'deleted')
             ->where('current_amount_cents', '>', 0)
@@ -145,6 +146,30 @@ Route::middleware(['auth', 'not.suspended', 'user.only','check.maintenance'])->g
                 }),
         ]);
     })->name('dashboard');
+
+    // ====================================================
+    // Customer Support (User side)
+    // ====================================================
+    Route::get('/support', [\App\Http\Controllers\SupportController::class, 'index'])
+        ->name('support.index');
+    
+    Route::get('/support/new', [\App\Http\Controllers\SupportController::class, 'create'])
+        ->name('support.create');
+    
+    Route::post('/support', [\App\Http\Controllers\SupportController::class, 'store'])
+        ->name('support.store');
+    
+    Route::get('/support/{id}', [\App\Http\Controllers\SupportController::class, 'show'])
+        ->whereNumber('id')
+        ->name('support.show');
+    
+    Route::post('/support/{id}/reply', [\App\Http\Controllers\SupportController::class, 'reply'])
+        ->whereNumber('id')
+        ->name('support.reply');
+    
+    Route::post('/support/{id}/close', [\App\Http\Controllers\SupportController::class, 'close'])
+        ->whereNumber('id')
+        ->name('support.close');
 
     // ====================================================
     // SAVINGS GOALS
@@ -212,12 +237,6 @@ Route::middleware(['auth', 'not.suspended', 'user.only','check.maintenance'])->g
                 'has_older' => $hasOlderTransactions,
             ],
         ]);
-
-        // Manual credit — both admin and super_admin can perform
-        Route::post('/transactions/{id}/manual-credit', [\App\Http\Controllers\Admin\TransactionMonitorController::class, 'manualCredit'])
-            ->whereNumber('id')
-            ->name('transactions.manual-credit');
-            
     })->name('transactions');
 
     // ====================================================
@@ -265,7 +284,7 @@ Route::middleware(['auth', 'not.suspended', 'user.only','check.maintenance'])->g
     })->name('transactions.show');
 
     // ====================================================
-    // SETTINGS
+    // USER SETTINGS
     // ====================================================
     Route::get('/settings', [\App\Http\Controllers\User\SettingsController::class, 'index'])
         ->name('settings');
@@ -297,7 +316,7 @@ Route::middleware(['auth', 'not.suspended', 'user.only','check.maintenance'])->g
         ->name('goals.details');
 
     // ====================================================
-    // SAVINGS TRANSFERS (Main Wallet ↔ Savings Pool)
+    // SAVINGS TRANSFERS
     // ====================================================
     Route::post('/savings/add', [\App\Http\Controllers\User\SavingsTransferController::class, 'addToSavings'])
         ->name('savings.add');
@@ -314,142 +333,162 @@ Route::middleware(['auth', 'not.suspended', 'user.only','check.maintenance'])->g
     Route::get('/kyc/status', [\App\Http\Controllers\User\KycController::class, 'status'])
         ->name('kyc.status');
 
-    // ====================================================
-    // ADMIN ROUTES 
-    // ====================================================
-    Route::prefix('admin')->name('admin.')->middleware(['role:any'])->group(function () {
+});
 
-        Route::get('/', [\App\Http\Controllers\Admin\AdminDashboardController::class, 'index'])
-            ->name('dashboard');
+//---------------------------------------------//
+//   ADMIN PROTECTED ROUTES                    //
+//   (auth + not suspended + role:any — NO user.only, NO maintenance)
+//---------------------------------------------//
+
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'not.suspended', 'role:any'])->group(function () {
+
+    Route::get('/', [\App\Http\Controllers\Admin\AdminDashboardController::class, 'index'])
+        ->name('dashboard');
+    
+    Route::get('/api/recent-transactions', [\App\Http\Controllers\Admin\AdminDashboardController::class, 'recentTransactions'])
+        ->name('api.recent-transactions');
+    
+    Route::get('/api/pending-counts', [\App\Http\Controllers\Admin\AdminDashboardController::class, 'pendingCounts'])
+        ->name('api.pending-counts');
+
+    // KYC Reviews — any admin (admin or super_admin)
+    Route::get('/kyc', [\App\Http\Controllers\Admin\KycReviewController::class, 'index'])
+        ->name('kyc.index');
+
+    Route::get('/kyc/{id}', [\App\Http\Controllers\Admin\KycReviewController::class, 'show'])
+        ->whereNumber('id')
+        ->name('kyc.show');
+
+    Route::post('/kyc/{id}/approve', [\App\Http\Controllers\Admin\KycReviewController::class, 'approve'])
+        ->whereNumber('id')
+        ->name('kyc.approve');
+
+    Route::post('/kyc/{id}/reject', [\App\Http\Controllers\Admin\KycReviewController::class, 'reject'])
+        ->whereNumber('id')
+        ->name('kyc.reject');
+
+    // User Management
+    Route::get('/users', [\App\Http\Controllers\Admin\UserManagementController::class, 'index'])
+        ->name('users.index');
+
+    Route::get('/users/{id}', [\App\Http\Controllers\Admin\UserManagementController::class, 'show'])
+        ->whereNumber('id')
+        ->name('users.show');
+
+    // Write actions — super_admin only
+    Route::middleware(['role:super_admin'])->group(function () {
+        Route::post('/users/{id}/override-tier', [\App\Http\Controllers\Admin\UserManagementController::class, 'overrideTier'])
+            ->whereNumber('id')
+            ->name('users.override-tier');
         
-        Route::get('/api/recent-transactions', [\App\Http\Controllers\Admin\AdminDashboardController::class, 'recentTransactions'])
-            ->name('api.recent-transactions');
+        Route::post('/users/{id}/toggle-suspension', [\App\Http\Controllers\Admin\UserManagementController::class, 'toggleSuspension'])
+            ->whereNumber('id')
+            ->name('users.toggle-suspension');
         
-        // KYC Reviews — any admin (admin or super_admin)
-        Route::get('/kyc', [\App\Http\Controllers\Admin\KycReviewController::class, 'index'])
-            ->name('kyc.index');
-
-        Route::get('/kyc/{id}', [\App\Http\Controllers\Admin\KycReviewController::class, 'show'])
+        Route::post('/users/{id}/force-logout', [\App\Http\Controllers\Admin\UserManagementController::class, 'forceLogout'])
             ->whereNumber('id')
-            ->name('kyc.show');
-
-        Route::post('/kyc/{id}/approve', [\App\Http\Controllers\Admin\KycReviewController::class, 'approve'])
-            ->whereNumber('id')
-            ->name('kyc.approve');
-
-        Route::post('/kyc/{id}/reject', [\App\Http\Controllers\Admin\KycReviewController::class, 'reject'])
-            ->whereNumber('id')
-            ->name('kyc.reject');
-
-        Route::get('/api/pending-counts', [\App\Http\Controllers\Admin\AdminDashboardController::class, 'pendingCounts'])
-            ->name('api.pending-counts');
-
-        // User Management
-        Route::get('/users', [\App\Http\Controllers\Admin\UserManagementController::class, 'index'])
-            ->name('users.index');
-
-        Route::get('/users/{id}', [\App\Http\Controllers\Admin\UserManagementController::class, 'show'])
-            ->whereNumber('id')
-            ->name('users.show');
-
-        // Write actions — super_admin only
-        Route::middleware(['role:super_admin'])->group(function () {
-            Route::post('/users/{id}/override-tier', [\App\Http\Controllers\Admin\UserManagementController::class, 'overrideTier'])
-                ->whereNumber('id')
-                ->name('users.override-tier');
-            
-            Route::post('/users/{id}/toggle-suspension', [\App\Http\Controllers\Admin\UserManagementController::class, 'toggleSuspension'])
-                ->whereNumber('id')
-                ->name('users.toggle-suspension');
-            
-            Route::post('/users/{id}/force-logout', [\App\Http\Controllers\Admin\UserManagementController::class, 'forceLogout'])
-                ->whereNumber('id')
-                ->name('users.force-logout');
-        });
-
-        // Transaction Monitoring — any admin can view, super_admin can flag
-        Route::get('/transactions', [\App\Http\Controllers\Admin\TransactionMonitorController::class, 'index'])
-            ->name('transactions.index');
-        
-        Route::get('/transactions/{id}', [\App\Http\Controllers\Admin\TransactionMonitorController::class, 'show'])
-            ->whereNumber('id')
-            ->name('transactions.show');
-        
-        // Flag action — super_admin only
-        Route::middleware(['role:super_admin'])->group(function () {
-            Route::post('/transactions/{id}/flag', [\App\Http\Controllers\Admin\TransactionMonitorController::class, 'flagTransaction'])
-                ->whereNumber('id')
-                ->name('transactions.flag');
-        });
-
-        // Resolution actions
-        Route::post('/transactions/{id}/resolve', [\App\Http\Controllers\Admin\TransactionMonitorController::class, 'resolveTransaction'])
-            ->whereNumber('id')
-            ->name('transactions.resolve');
-            
-         // Manual credit — both admin and super_admin can perform
-        Route::post('/transactions/{id}/manual-credit', [\App\Http\Controllers\Admin\TransactionMonitorController::class, 'manualCredit'])
-            ->whereNumber('id')
-            ->name('transactions.manual-credit');
-
-        // SUPER ADMIN ! SUPER ADMIN ! SUPER ADMIN ! Admin Management, audit, settings
-        Route::middleware(['role:super_admin'])->group(function () {
-            Route::post('/transactions/{id}/reopen', [\App\Http\Controllers\Admin\TransactionMonitorController::class, 'reopenTransaction'])
-                ->whereNumber('id')
-                ->name('transactions.reopen');
-            
-            // Admin Management
-            Route::get('/admins', [\App\Http\Controllers\Admin\AdminManagementController::class, 'index'])
-                ->name('admins.index');
-            
-            Route::post('/admins/promote', [\App\Http\Controllers\Admin\AdminManagementController::class, 'promote'])
-                ->name('admins.promote');
-            
-            Route::post('/admins/{id}/change-role', [\App\Http\Controllers\Admin\AdminManagementController::class, 'changeRole'])
-                ->whereNumber('id')
-                ->name('admins.change-role');
-            
-            Route::post('/admins/{id}/revoke', [\App\Http\Controllers\Admin\AdminManagementController::class, 'revoke'])
-                ->whereNumber('id')
-                ->name('admins.revoke');
-
-            Route::get('/admins/search-users', [\App\Http\Controllers\Admin\AdminManagementController::class, 'searchPromotableUsers'])
-                ->name('admins.search-users');
-
-            // Audit - super admiin
-            Route::get('/audit', [\App\Http\Controllers\Admin\AuditLogController::class, 'index'])
-                ->name('audit.index');
-
-            Route::get('/audit/export', [\App\Http\Controllers\Admin\AuditLogController::class, 'export'])
-                ->name('audit.export');
-
-            // Settings - super admiin
-            Route::get('/settings', [\App\Http\Controllers\Admin\SettingsController::class, 'index'])
-                ->name('settings.index');
-            
-            Route::post('/settings/update', [\App\Http\Controllers\Admin\SettingsController::class, 'update'])
-                ->name('settings.update');
-
-            Route::post('/settings/profile', [\App\Http\Controllers\Admin\SettingsController::class, 'updateProfile'])
-                ->name('settings.profile');
-
-            // Maintenance Mode — dedicated controls
-            Route::get('/maintenance', [\App\Http\Controllers\Admin\MaintenanceModeController::class, 'index'])
-                ->name('maintenance.index');
-            
-            Route::post('/maintenance/toggle', [\App\Http\Controllers\Admin\MaintenanceModeController::class, 'toggle'])
-                ->name('maintenance.toggle');
-                
-        });
-
-        // Customer Support — action queue for CS workflow
-        Route::get('/customer-support', [\App\Http\Controllers\Admin\TransactionMonitorController::class, 'customerSupport'])
-            ->name('customer-support.index');
+            ->name('users.force-logout');
     });
 
-    // ====================================================
-    // LOGOUT
-    // ====================================================
+    // Transaction Monitoring
+    Route::get('/transactions', [\App\Http\Controllers\Admin\TransactionMonitorController::class, 'index'])
+        ->name('transactions.index');
+    
+    Route::get('/transactions/{id}', [\App\Http\Controllers\Admin\TransactionMonitorController::class, 'show'])
+        ->whereNumber('id')
+        ->name('transactions.show');
+    
+    // Flag action — super_admin only
+    Route::middleware(['role:super_admin'])->group(function () {
+        Route::post('/transactions/{id}/flag', [\App\Http\Controllers\Admin\TransactionMonitorController::class, 'flagTransaction'])
+            ->whereNumber('id')
+            ->name('transactions.flag');
+    });
+
+    // Resolution actions — both admins can do
+    Route::post('/transactions/{id}/resolve', [\App\Http\Controllers\Admin\TransactionMonitorController::class, 'resolveTransaction'])
+        ->whereNumber('id')
+        ->name('transactions.resolve');
+        
+    Route::post('/transactions/{id}/manual-credit', [\App\Http\Controllers\Admin\TransactionMonitorController::class, 'manualCredit'])
+        ->whereNumber('id')
+        ->name('transactions.manual-credit');
+
+    // Customer Support — action queue for CS workflow
+    Route::get('/customer-support', [\App\Http\Controllers\Admin\TransactionMonitorController::class, 'customerSupport'])
+        ->name('customer-support.index');
+
+    // SUPER ADMIN ONLY actions
+    Route::middleware(['role:super_admin'])->group(function () {
+        Route::post('/transactions/{id}/reopen', [\App\Http\Controllers\Admin\TransactionMonitorController::class, 'reopenTransaction'])
+            ->whereNumber('id')
+            ->name('transactions.reopen');
+        
+        // Admin Management
+        Route::get('/admins', [\App\Http\Controllers\Admin\AdminManagementController::class, 'index'])
+            ->name('admins.index');
+        
+        Route::post('/admins/promote', [\App\Http\Controllers\Admin\AdminManagementController::class, 'promote'])
+            ->name('admins.promote');
+        
+        Route::post('/admins/{id}/change-role', [\App\Http\Controllers\Admin\AdminManagementController::class, 'changeRole'])
+            ->whereNumber('id')
+            ->name('admins.change-role');
+        
+        Route::post('/admins/{id}/revoke', [\App\Http\Controllers\Admin\AdminManagementController::class, 'revoke'])
+            ->whereNumber('id')
+            ->name('admins.revoke');
+
+        Route::get('/admins/search-users', [\App\Http\Controllers\Admin\AdminManagementController::class, 'searchPromotableUsers'])
+            ->name('admins.search-users');
+
+        // Audit
+        Route::get('/audit', [\App\Http\Controllers\Admin\AuditLogController::class, 'index'])
+            ->name('audit.index');
+
+        Route::get('/audit/export', [\App\Http\Controllers\Admin\AuditLogController::class, 'export'])
+            ->name('audit.export');
+
+        // Settings
+        Route::get('/settings', [\App\Http\Controllers\Admin\SettingsController::class, 'index'])
+            ->name('settings.index');
+        
+        Route::post('/settings/update', [\App\Http\Controllers\Admin\SettingsController::class, 'update'])
+            ->name('settings.update');
+
+        Route::post('/settings/profile', [\App\Http\Controllers\Admin\SettingsController::class, 'updateProfile'])
+            ->name('settings.profile');
+
+        // Maintenance Mode
+        Route::get('/maintenance', [\App\Http\Controllers\Admin\MaintenanceModeController::class, 'index'])
+            ->name('maintenance.index');
+        
+        Route::post('/maintenance/toggle', [\App\Http\Controllers\Admin\MaintenanceModeController::class, 'toggle'])
+            ->name('maintenance.toggle');
+    });
+
+});
+
+//---------------------------------------------//
+//   Help Center (PUBLIC)                      //
+//---------------------------------------------//
+
+Route::prefix('help')->name('help.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\HelpController::class, 'index'])
+        ->name('index');
+    
+    Route::get('/{category}', [\App\Http\Controllers\HelpController::class, 'category'])
+        ->name('category');
+    
+    Route::get('/{category}/{article}', [\App\Http\Controllers\HelpController::class, 'article'])
+        ->name('article');
+});
+
+//---------------------------------------------//
+//   LOGOUT (any authenticated user)           //
+//---------------------------------------------//
+
+Route::middleware(['auth'])->group(function () {
     Route::post('/logout', function (Request $request) {
         Auth::logout();
         $request->session()->invalidate();
@@ -457,5 +496,4 @@ Route::middleware(['auth', 'not.suspended', 'user.only','check.maintenance'])->g
 
         return Inertia::location('/');
     })->name('logout');
-
 });
