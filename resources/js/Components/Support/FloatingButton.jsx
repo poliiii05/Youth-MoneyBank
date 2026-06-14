@@ -1,7 +1,7 @@
 // resources/js/Components/Support/FloatingButton.jsx
 import { useState } from 'react';
 import HelpCenterModal from './HelpCenterModal';
-import { MessageCircle } from 'lucide-react';
+import { Headphones } from 'lucide-react';
 
 export default function FloatingButton({ isAuthenticated = false }) {
     const [isOpen, setIsOpen] = useState(false);
@@ -16,7 +16,7 @@ export default function FloatingButton({ isAuthenticated = false }) {
                     title="Help Center"
                     aria-label="Open Help Center"
                 >
-                    <MessageCircle size={24} strokeWidth={2.5} />
+                   <Headphones size={24} strokeWidth={2.5} />
                     
                     {/* Pulse ring */}
                     <span className="absolute inset-0 rounded-full bg-blue-500 animate-ping opacity-20"></span>
