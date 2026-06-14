@@ -148,28 +148,29 @@ Route::middleware(['auth', 'not.suspended', 'user.only', 'check.maintenance'])->
     })->name('dashboard');
 
     // ====================================================
-    // Customer Support (User side)
+    // Customer Support — API endpoints for ChatModal
     // ====================================================
-    Route::get('/support', [\App\Http\Controllers\SupportController::class, 'index'])
-        ->name('support.index');
+   
+Route::prefix('api/support')->name('api.support.')->group(function () {
+    Route::get('/conversation', [\App\Http\Controllers\SupportController::class, 'getOrCreateConversation'])
+        ->name('conversation');
     
-    Route::get('/support/new', [\App\Http\Controllers\SupportController::class, 'create'])
-        ->name('support.create');
-    
-    Route::post('/support', [\App\Http\Controllers\SupportController::class, 'store'])
-        ->name('support.store');
-    
-    Route::get('/support/{id}', [\App\Http\Controllers\SupportController::class, 'show'])
+    Route::get('/conversation/{id}/messages', [\App\Http\Controllers\SupportController::class, 'getMessages'])
         ->whereNumber('id')
-        ->name('support.show');
+        ->name('messages');
     
-    Route::post('/support/{id}/reply', [\App\Http\Controllers\SupportController::class, 'reply'])
+    Route::post('/conversation/{id}/send', [\App\Http\Controllers\SupportController::class, 'sendMessage'])
         ->whereNumber('id')
-        ->name('support.reply');
+        ->name('send');
     
-    Route::post('/support/{id}/close', [\App\Http\Controllers\SupportController::class, 'close'])
+    Route::post('/conversation/{id}/request-agent', [\App\Http\Controllers\SupportController::class, 'requestAgent'])
         ->whereNumber('id')
-        ->name('support.close');
+        ->name('request-agent');
+    
+    Route::post('/conversation/{id}/close', [\App\Http\Controllers\SupportController::class, 'close'])
+        ->whereNumber('id')
+        ->name('close');
+});
 
     // ====================================================
     // SAVINGS GOALS

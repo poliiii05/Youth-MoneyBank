@@ -1,0 +1,3 @@
+- chat($systemPrompt, $messages) — call Gemini API
+- buildContext($user) — add user info (tier, balance, recent tx)
+- isEscalationNeeded($response) — detect when AI suggests human

@@ -6,6 +6,7 @@ import {
     Target, Users, Zap, ShieldCheck, Smartphone, 
     Wallet, GraduationCap, Sparkles, Shield, HeartHandshake
 } from 'lucide-react';
+import FloatingButton from '../../Components/Support/FloatingButton';
 
 export default function About() {
     const { url } = usePage();
@@ -174,7 +175,8 @@ export default function About() {
             </main>
             
             <Footer />
-            <AIChat />
+           <FloatingButton isAuthenticated={false} />
+
 
             <style>{`
                 html {

@@ -11,60 +11,50 @@ class HelpController extends Controller
      * Help Center landing — list all categories.
      */
     public function index()
-    {
-        return Inertia::render('Help/Index', [
-            'categories' => $this->categoriesWithCounts(),
-        ]);
-    }
+{
+    return Inertia::render('Help/Index', [
+        'auth' => ['user' => auth()->user()],  // ← Add this
+        'categories' => $this->categoriesWithCounts(),
+    ]);
+}
 
-    /**
-     * Category page with article list.
-     */
-    public function category(string $categorySlug)
-    {
-        $category = HelpArticles::getCategory($categorySlug);
-        
-        if (!$category) {
-            abort(404, 'Category not found.');
-        }
+public function category(string $categorySlug)
+{
+    $category = HelpArticles::getCategory($categorySlug);
+    
+    if (!$category) abort(404, 'Category not found.');
 
-        $articles = HelpArticles::articles()[$categorySlug] ?? [];
-        
-        // Strip content for list view (just titles/summaries)
-        $articles = array_map(fn($a) => [
-            'slug' => $a['slug'],
-            'title' => $a['title'],
-            'summary' => $a['summary'],
-        ], $articles);
+    $articles = HelpArticles::articles()[$categorySlug] ?? [];
+    $articles = array_map(fn($a) => [
+        'slug' => $a['slug'],
+        'title' => $a['title'],
+        'summary' => $a['summary'],
+    ], $articles);
 
-        return Inertia::render('Help/Category', [
-            'category' => $category,
-            'articles' => $articles,
-            'allCategories' => $this->categoriesWithCounts(),
-        ]);
-    }
+    return Inertia::render('Help/Category', [
+        'auth' => ['user' => auth()->user()],  // ← Add this
+        'category' => $category,
+        'articles' => $articles,
+        'allCategories' => $this->categoriesWithCounts(),
+    ]);
+}
 
-    /**
-     * Single article page.
-     */
-    public function article(string $categorySlug, string $articleSlug)
-    {
-        $article = HelpArticles::getArticle($categorySlug, $articleSlug);
-        
-        if (!$article) {
-            abort(404, 'Article not found.');
-        }
+public function article(string $categorySlug, string $articleSlug)
+{
+    $article = HelpArticles::getArticle($categorySlug, $articleSlug);
+    
+    if (!$article) abort(404, 'Article not found.');
 
-        $category = HelpArticles::getCategory($categorySlug);
-        $relatedArticles = HelpArticles::getRelated($article['related'] ?? [], $articleSlug);
+    $category = HelpArticles::getCategory($categorySlug);
+    $relatedArticles = HelpArticles::getRelated($article['related'] ?? [], $articleSlug);
 
-        return Inertia::render('Help/Article', [
-            'article' => $article,
-            'category' => $category,
-            'relatedArticles' => $relatedArticles,
-        ]);
-    }
-
+    return Inertia::render('Help/Article', [
+        'auth' => ['user' => auth()->user()],  // ← Add this
+        'article' => $article,
+        'category' => $category,
+        'relatedArticles' => $relatedArticles,
+    ]);
+}
     /**
      * Add article counts per category.
      */

@@ -14,27 +14,31 @@ return new class extends Migration
             // Ticket owner
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             
-            // Optional: linked transaction (kapag related sa specific tx)
+            // Optional: linked transaction
             $table->foreignId('transaction_id')->nullable()->constrained('transactions')->nullOnDelete();
             
-            // Public ticket reference (TKT-XXXXX)
+            // Public reference ID (TKT-XXXXXXXX)
             $table->string('public_reference_id', 50)->unique();
             
             // Ticket details
             $table->string('subject', 200);
-            $table->string('category', 50)->default('general'); // general, transaction, kyc, account, other
-            $table->string('priority', 20)->default('normal'); // low, normal, high, urgent
+            $table->string('category', 50)->default('general');
+            // Categories: general, transaction, kyc, account, security, other
             
-            // Status workflow
-            $table->string('status', 20)->default('open'); // open, in_progress, awaiting_user, resolved, closed
+            $table->string('priority', 20)->default('normal');
+            // Priorities: low, normal, high, urgent
             
-            // Assigned admin (when admin picks up the ticket)
+            $table->string('status', 20)->default('open');
+            // Statuses: open, in_progress, awaiting_user, resolved, closed
+            
+            // Assignment
             $table->foreignId('assigned_to')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamp('assigned_at')->nullable();
             
             // Resolution
             $table->timestamp('resolved_at')->nullable();
             $table->foreignId('resolved_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->text('resolution_notes')->nullable();
             
             // Closure
             $table->timestamp('closed_at')->nullable();
@@ -45,7 +49,9 @@ return new class extends Migration
             $table->index('user_id');
             $table->index('status');
             $table->index(['status', 'created_at']);
+            $table->index(['user_id', 'status']);
             $table->index('assigned_to');
+            $table->index('transaction_id');
         });
     }
 

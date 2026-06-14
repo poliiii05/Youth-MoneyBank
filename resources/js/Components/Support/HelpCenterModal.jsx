@@ -13,7 +13,7 @@ const colorMap = {
     slate: { bg: 'bg-slate-50', text: 'text-slate-700', border: 'border-slate-200' },
 };
 
-export default function HelpCenterModal({ onClose, isAuthenticated = false }) {
+export default function HelpCenterModal({ onClose, isAuthenticated = false, onChatOpen = null }) {
     const [categories] = useState([
         { slug: 'deposit', name: 'Deposit', description: 'Adding money to your wallet', color: 'blue', article_count: 7 },
         { slug: 'savings', name: 'Savings & Goals', description: 'Saving money and tracking goals', color: 'emerald', article_count: 7 },
@@ -92,13 +92,15 @@ export default function HelpCenterModal({ onClose, isAuthenticated = false }) {
                 {/* Compact footer — highlighted button */}
                 <div className="border-t border-slate-100 bg-slate-50 p-3">
                     {isAuthenticated ? (
-                        <Link
-                            href="/support/new"
-                            onClick={onClose}
+                        <button
+                            onClick={() => {
+                                onClose();
+                                onChatOpen && onChatOpen();
+                            }}
                             className="block w-full px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black text-center rounded-lg shadow-md cursor-pointer transition-all"
                         >
                             Contact Support
-                        </Link>
+                        </button>
                     ) : (
                         <Link
                             href="/login"

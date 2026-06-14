@@ -10,7 +10,7 @@ const colorMap = {
     slate: { bg: 'bg-slate-50', text: 'text-slate-700', border: 'border-slate-200' },
 };
 
-export default function HelpIndex({ categories = [] }) {
+export default function HelpIndex({ auth, categories = [] }) {
     return (
         <div className="min-h-screen bg-slate-50">
             <Head title="Help Center | Youth MoneyBank" />
@@ -18,14 +18,14 @@ export default function HelpIndex({ categories = [] }) {
            {/* Compact header — back button + title side by side */}
             <div className="bg-blue-600 text-white py-5 px-4">
                 <div className="max-w-3xl mx-auto flex items-center gap-4">
-                    <Link
-                        href="/"
+                   <Link
+                        href={auth?.user ? "/dashboard" : "/"}
                         className="inline-flex items-center gap-1.5 text-[11px] font-bold text-white/80 hover:text-white cursor-pointer transition-colors shrink-0 whitespace-nowrap"
                     >
                         <ArrowLeft size={12} strokeWidth={2.5} />
-                        Back to Home
+                        Back to {auth?.user ? 'Dashboard' : 'Home'}
                     </Link>
-                    
+                                        
                     <div className="flex-1 min-w-0 border-l border-white/20 pl-4 flex items-center gap-3">
                         <Headphones size={24} className="text-white shrink-0" strokeWidth={2.5} />
                         <div>

@@ -151,7 +151,7 @@ export default function UserLayout({ user, header, children }) {
                     {children}
                 </main>
                 
-                  <FloatingButton isAuthenticated={true} />
+                 <FloatingButton isAuthenticated={true} currentUser={user} />
             </div>
         </div>
         

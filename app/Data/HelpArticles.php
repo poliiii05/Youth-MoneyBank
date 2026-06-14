@@ -40,55 +40,55 @@ class HelpArticles
         ];
     }
 
-    public static function articles(): array
-    {
-        return [
-            'deposit' => [
-                ['slug' => 'how-to-add-money', 'title' => 'How do I add money to my wallet?', 'summary' => 'Step-by-step guide on depositing funds', 'content' => self::howToAddMoney(), 'related' => ['deposit-not-reflected', 'deposit-limits', 'minimum-deposit']],
-                ['slug' => 'deposit-not-reflected', 'title' => 'My deposit is not reflecting in my wallet', 'summary' => 'What to do when your deposit takes too long', 'content' => self::depositNotReflected(), 'related' => ['how-to-add-money', 'failed-deposit']],
-                ['slug' => 'deposit-limits', 'title' => 'What are my deposit limits?', 'summary' => 'Understanding tier-based wallet limits', 'content' => self::depositLimits(), 'related' => ['kyc-upgrade', 'how-to-add-money']],
-                ['slug' => 'minimum-deposit', 'title' => 'Is there a minimum deposit amount?', 'summary' => 'Smallest amount you can add', 'content' => self::minimumDeposit(), 'related' => ['how-to-add-money', 'deposit-limits']],
-                ['slug' => 'failed-deposit', 'title' => 'My deposit failed but money was deducted', 'summary' => 'What to do with failed transactions', 'content' => self::failedDeposit(), 'related' => ['deposit-not-reflected']],
-                ['slug' => 'deposit-methods', 'title' => 'What payment methods can I use?', 'summary' => 'Available deposit options', 'content' => self::depositMethods(), 'related' => ['how-to-add-money']],
-                ['slug' => 'deposit-fees', 'title' => 'Are there fees for depositing?', 'summary' => 'Cost of adding money to your wallet', 'content' => self::depositFees(), 'related' => ['deposit-methods', 'how-to-add-money']],
-            ],
-            'savings' => [
-                ['slug' => 'how-to-set-goal', 'title' => 'How do I set a savings goal?', 'summary' => 'Creating and managing your savings goals', 'content' => self::howToSetGoal(), 'related' => ['savings-vs-wallet', 'goal-not-progressing']],
-                ['slug' => 'savings-vs-wallet', 'title' => 'What\'s the difference between Wallet and Savings?', 'summary' => 'Understanding the two balance types', 'content' => self::savingsVsWallet(), 'related' => ['how-to-set-goal', 'allocate-funds']],
-                ['slug' => 'goal-not-progressing', 'title' => 'My goal is not progressing', 'summary' => 'How to allocate funds to your goals', 'content' => self::goalNotProgressing(), 'related' => ['allocate-funds', 'how-to-set-goal']],
-                ['slug' => 'allocate-funds', 'title' => 'How do I allocate funds to a goal?', 'summary' => 'Moving money into your goals', 'content' => self::allocateFunds(), 'related' => ['how-to-set-goal', 'deallocate-funds']],
-                ['slug' => 'deallocate-funds', 'title' => 'Can I remove money from a goal?', 'summary' => 'Withdrawing from your goals', 'content' => self::deallocateFunds(), 'related' => ['allocate-funds']],
-                ['slug' => 'delete-goal', 'title' => 'How do I delete a savings goal?', 'summary' => 'Removing goals you no longer need', 'content' => self::deleteGoal(), 'related' => ['how-to-set-goal']],
-                ['slug' => 'savings-tips', 'title' => 'Tips for saving money effectively', 'summary' => 'Best practices for young savers', 'content' => self::savingsTips(), 'related' => ['how-to-set-goal']],
-            ],
-            'account' => [
-                ['slug' => 'what-is-kyc', 'title' => 'What is KYC and why do I need it?', 'summary' => 'Understanding identity verification', 'content' => self::whatIsKyc(), 'related' => ['kyc-upgrade', 'kyc-rejected', 'kyc-documents']],
-                ['slug' => 'kyc-upgrade', 'title' => 'How do I upgrade my tier?', 'summary' => 'Step-by-step tier upgrade process', 'content' => self::kycUpgrade(), 'related' => ['what-is-kyc', 'deposit-limits', 'kyc-documents']],
-                ['slug' => 'kyc-rejected', 'title' => 'My KYC application was rejected', 'summary' => 'What to do after a rejected application', 'content' => self::kycRejected(), 'related' => ['kyc-upgrade', 'what-is-kyc']],
-                ['slug' => 'kyc-documents', 'title' => 'What documents do I need for KYC?', 'summary' => 'Acceptable identification documents', 'content' => self::kycDocuments(), 'related' => ['kyc-upgrade']],
-                ['slug' => 'update-profile', 'title' => 'How do I update my profile information?', 'summary' => 'Changing your account details', 'content' => self::updateProfile(), 'related' => ['what-is-kyc']],
-                ['slug' => 'change-email', 'title' => 'Can I change my email address?', 'summary' => 'Email management for OAuth users', 'content' => self::changeEmail(), 'related' => ['update-profile', 'how-to-login']],
-                ['slug' => 'delete-account', 'title' => 'How do I delete my account?', 'summary' => 'Closing your YMB account', 'content' => self::deleteAccount(), 'related' => ['update-profile']],
-            ],
-            'security' => [
-                ['slug' => 'how-to-login', 'title' => 'How do I log in?', 'summary' => 'Sign in with Google', 'content' => self::howToLogin(), 'related' => ['account-locked', 'is-ymb-safe']],
-                ['slug' => 'account-locked', 'title' => 'My account is locked or suspended', 'summary' => 'What to do if you can\'t access your account', 'content' => self::accountLocked(), 'related' => ['how-to-login', 'suspicious-activity']],
-                ['slug' => 'is-ymb-safe', 'title' => 'Is Youth MoneyBank safe?', 'summary' => 'Our security practices', 'content' => self::isYmbSafe(), 'related' => ['suspicious-activity', 'privacy-policy']],
-                ['slug' => 'suspicious-activity', 'title' => 'I noticed suspicious activity on my account', 'summary' => 'Reporting unauthorized access', 'content' => self::suspiciousActivity(), 'related' => ['account-locked', 'is-ymb-safe']],
-                ['slug' => 'phishing-scams', 'title' => 'How to spot phishing scams', 'summary' => 'Protect yourself from fraud', 'content' => self::phishingScams(), 'related' => ['is-ymb-safe', 'suspicious-activity']],
-                ['slug' => 'privacy-policy', 'title' => 'How is my data protected?', 'summary' => 'Our privacy practices', 'content' => self::privacyPolicy(), 'related' => ['is-ymb-safe']],
-                ['slug' => 'session-timeout', 'title' => 'Why was I logged out automatically?', 'summary' => 'Session security explained', 'content' => self::sessionTimeout(), 'related' => ['how-to-login', 'is-ymb-safe']],
-            ],
-            'about' => [
-                ['slug' => 'what-is-ymb', 'title' => 'What is Youth MoneyBank?', 'summary' => 'Introduction to YMB', 'content' => self::whatIsYmb(), 'related' => ['who-can-use', 'ymb-features']],
-                ['slug' => 'who-can-use', 'title' => 'Who can use Youth MoneyBank?', 'summary' => 'Eligibility and target users', 'content' => self::whoCanUse(), 'related' => ['what-is-ymb']],
-                ['slug' => 'ymb-features', 'title' => 'What features does YMB offer?', 'summary' => 'Complete list of features', 'content' => self::ymbFeatures(), 'related' => ['what-is-ymb']],
-                ['slug' => 'fees-overview', 'title' => 'What fees does YMB charge?', 'summary' => 'Pricing transparency', 'content' => self::feesOverview(), 'related' => ['deposit-fees']],
-                ['slug' => 'is-ymb-a-bank', 'title' => 'Is YMB a real bank?', 'summary' => 'Understanding what YMB is', 'content' => self::isYmbABank(), 'related' => ['what-is-ymb', 'is-ymb-safe']],
-                ['slug' => 'contact-information', 'title' => 'How do I contact Youth MoneyBank?', 'summary' => 'Ways to reach our team', 'content' => self::contactInformation(), 'related' => ['what-is-ymb']],
-            ],
-        ];
-    }
+   public static function articles(): array
+{
+    return [
+        'deposit' => [
+            ['slug' => 'how-to-add-money', 'title' => 'How do I add money to my wallet?', 'summary' => 'Step-by-step guide on depositing funds', 'content' => self::howToAddMoney(), 'related' => ['deposit-not-reflected', 'deposit-limits', 'minimum-deposit', 'deposit-methods', 'deposit-fees']],
+            ['slug' => 'deposit-not-reflected', 'title' => 'My deposit is not reflecting in my wallet', 'summary' => 'What to do when your deposit takes too long', 'content' => self::depositNotReflected(), 'related' => ['how-to-add-money', 'failed-deposit', 'deposit-methods', 'deposit-limits', 'deposit-fees']],
+            ['slug' => 'deposit-limits', 'title' => 'What are my deposit limits?', 'summary' => 'Understanding tier-based wallet limits', 'content' => self::depositLimits(), 'related' => ['kyc-upgrade', 'how-to-add-money', 'what-is-kyc', 'minimum-deposit', 'kyc-documents']],
+            ['slug' => 'minimum-deposit', 'title' => 'Is there a minimum deposit amount?', 'summary' => 'Smallest amount you can add', 'content' => self::minimumDeposit(), 'related' => ['how-to-add-money', 'deposit-limits', 'deposit-fees', 'deposit-methods', 'savings-tips']],
+            ['slug' => 'failed-deposit', 'title' => 'My deposit failed but money was deducted', 'summary' => 'What to do with failed transactions', 'content' => self::failedDeposit(), 'related' => ['deposit-not-reflected', 'how-to-add-money', 'deposit-methods', 'suspicious-activity', 'contact-information']],
+            ['slug' => 'deposit-methods', 'title' => 'What payment methods can I use?', 'summary' => 'Available deposit options', 'content' => self::depositMethods(), 'related' => ['how-to-add-money', 'deposit-fees', 'minimum-deposit', 'deposit-limits', 'failed-deposit']],
+            ['slug' => 'deposit-fees', 'title' => 'Are there fees for depositing?', 'summary' => 'Cost of adding money to your wallet', 'content' => self::depositFees(), 'related' => ['deposit-methods', 'how-to-add-money', 'fees-overview', 'minimum-deposit', 'deposit-limits']],
+        ],
+        'savings' => [
+            ['slug' => 'how-to-set-goal', 'title' => 'How do I set a savings goal?', 'summary' => 'Creating and managing your savings goals', 'content' => self::howToSetGoal(), 'related' => ['savings-vs-wallet', 'goal-not-progressing', 'allocate-funds', 'savings-tips', 'delete-goal']],
+            ['slug' => 'savings-vs-wallet', 'title' => 'What\'s the difference between Wallet and Savings?', 'summary' => 'Understanding the two balance types', 'content' => self::savingsVsWallet(), 'related' => ['how-to-set-goal', 'allocate-funds', 'deallocate-funds', 'savings-tips', 'goal-not-progressing']],
+            ['slug' => 'goal-not-progressing', 'title' => 'My goal is not progressing', 'summary' => 'How to allocate funds to your goals', 'content' => self::goalNotProgressing(), 'related' => ['allocate-funds', 'how-to-set-goal', 'savings-vs-wallet', 'deallocate-funds', 'savings-tips']],
+            ['slug' => 'allocate-funds', 'title' => 'How do I allocate funds to a goal?', 'summary' => 'Moving money into your goals', 'content' => self::allocateFunds(), 'related' => ['how-to-set-goal', 'deallocate-funds', 'savings-vs-wallet', 'goal-not-progressing', 'savings-tips']],
+            ['slug' => 'deallocate-funds', 'title' => 'Can I remove money from a goal?', 'summary' => 'Withdrawing from your goals', 'content' => self::deallocateFunds(), 'related' => ['allocate-funds', 'savings-vs-wallet', 'how-to-set-goal', 'delete-goal', 'savings-tips']],
+            ['slug' => 'delete-goal', 'title' => 'How do I delete a savings goal?', 'summary' => 'Removing goals you no longer need', 'content' => self::deleteGoal(), 'related' => ['how-to-set-goal', 'deallocate-funds', 'allocate-funds', 'savings-vs-wallet', 'savings-tips']],
+            ['slug' => 'savings-tips', 'title' => 'Tips for saving money effectively', 'summary' => 'Best practices for young savers', 'content' => self::savingsTips(), 'related' => ['how-to-set-goal', 'savings-vs-wallet', 'allocate-funds', 'minimum-deposit', 'goal-not-progressing']],
+        ],
+        'account' => [
+            ['slug' => 'what-is-kyc', 'title' => 'What is KYC and why do I need it?', 'summary' => 'Understanding identity verification', 'content' => self::whatIsKyc(), 'related' => ['kyc-upgrade', 'kyc-rejected', 'kyc-documents', 'deposit-limits', 'update-profile']],
+            ['slug' => 'kyc-upgrade', 'title' => 'How do I upgrade my tier?', 'summary' => 'Step-by-step tier upgrade process', 'content' => self::kycUpgrade(), 'related' => ['what-is-kyc', 'deposit-limits', 'kyc-documents', 'kyc-rejected', 'update-profile']],
+            ['slug' => 'kyc-rejected', 'title' => 'My KYC application was rejected', 'summary' => 'What to do after a rejected application', 'content' => self::kycRejected(), 'related' => ['kyc-upgrade', 'what-is-kyc', 'kyc-documents', 'update-profile', 'contact-information']],
+            ['slug' => 'kyc-documents', 'title' => 'What documents do I need for KYC?', 'summary' => 'Acceptable identification documents', 'content' => self::kycDocuments(), 'related' => ['kyc-upgrade', 'what-is-kyc', 'kyc-rejected', 'update-profile', 'is-ymb-safe']],
+            ['slug' => 'update-profile', 'title' => 'How do I update my profile information?', 'summary' => 'Changing your account details', 'content' => self::updateProfile(), 'related' => ['what-is-kyc', 'change-email', 'kyc-upgrade', 'how-to-login', 'delete-account']],
+            ['slug' => 'change-email', 'title' => 'Can I change my email address?', 'summary' => 'Email management for OAuth users', 'content' => self::changeEmail(), 'related' => ['update-profile', 'how-to-login', 'account-locked', 'is-ymb-safe', 'delete-account']],
+            ['slug' => 'delete-account', 'title' => 'How do I delete my account?', 'summary' => 'Closing your YMB account', 'content' => self::deleteAccount(), 'related' => ['update-profile', 'change-email', 'account-locked', 'privacy-policy', 'contact-information']],
+        ],
+        'security' => [
+            ['slug' => 'how-to-login', 'title' => 'How do I log in?', 'summary' => 'Sign in with Google', 'content' => self::howToLogin(), 'related' => ['account-locked', 'is-ymb-safe', 'session-timeout', 'phishing-scams', 'change-email']],
+            ['slug' => 'account-locked', 'title' => 'My account is locked or suspended', 'summary' => 'What to do if you can\'t access your account', 'content' => self::accountLocked(), 'related' => ['how-to-login', 'suspicious-activity', 'is-ymb-safe', 'phishing-scams', 'contact-information']],
+            ['slug' => 'is-ymb-safe', 'title' => 'Is Youth MoneyBank safe?', 'summary' => 'Our security practices', 'content' => self::isYmbSafe(), 'related' => ['suspicious-activity', 'privacy-policy', 'phishing-scams', 'session-timeout', 'is-ymb-a-bank']],
+            ['slug' => 'suspicious-activity', 'title' => 'I noticed suspicious activity on my account', 'summary' => 'Reporting unauthorized access', 'content' => self::suspiciousActivity(), 'related' => ['account-locked', 'is-ymb-safe', 'phishing-scams', 'session-timeout', 'contact-information']],
+            ['slug' => 'phishing-scams', 'title' => 'How to spot phishing scams', 'summary' => 'Protect yourself from fraud', 'content' => self::phishingScams(), 'related' => ['is-ymb-safe', 'suspicious-activity', 'account-locked', 'privacy-policy', 'how-to-login']],
+            ['slug' => 'privacy-policy', 'title' => 'How is my data protected?', 'summary' => 'Our privacy practices', 'content' => self::privacyPolicy(), 'related' => ['is-ymb-safe', 'phishing-scams', 'delete-account', 'session-timeout', 'suspicious-activity']],
+            ['slug' => 'session-timeout', 'title' => 'Why was I logged out automatically?', 'summary' => 'Session security explained', 'content' => self::sessionTimeout(), 'related' => ['how-to-login', 'is-ymb-safe', 'account-locked', 'privacy-policy', 'phishing-scams']],
+        ],
+        'about' => [
+            ['slug' => 'what-is-ymb', 'title' => 'What is Youth MoneyBank?', 'summary' => 'Introduction to YMB', 'content' => self::whatIsYmb(), 'related' => ['who-can-use', 'ymb-features', 'fees-overview', 'is-ymb-a-bank', 'is-ymb-safe']],
+            ['slug' => 'who-can-use', 'title' => 'Who can use Youth MoneyBank?', 'summary' => 'Eligibility and target users', 'content' => self::whoCanUse(), 'related' => ['what-is-ymb', 'ymb-features', 'what-is-kyc', 'fees-overview', 'contact-information']],
+            ['slug' => 'ymb-features', 'title' => 'What features does YMB offer?', 'summary' => 'Complete list of features', 'content' => self::ymbFeatures(), 'related' => ['what-is-ymb', 'who-can-use', 'how-to-set-goal', 'how-to-add-money', 'is-ymb-safe']],
+            ['slug' => 'fees-overview', 'title' => 'What fees does YMB charge?', 'summary' => 'Pricing transparency', 'content' => self::feesOverview(), 'related' => ['deposit-fees', 'deposit-methods', 'what-is-ymb', 'is-ymb-a-bank', 'minimum-deposit']],
+            ['slug' => 'is-ymb-a-bank', 'title' => 'Is YMB a real bank?', 'summary' => 'Understanding what YMB is', 'content' => self::isYmbABank(), 'related' => ['what-is-ymb', 'is-ymb-safe', 'fees-overview', 'privacy-policy', 'who-can-use']],
+            ['slug' => 'contact-information', 'title' => 'How do I contact Youth MoneyBank?', 'summary' => 'Ways to reach our team', 'content' => self::contactInformation(), 'related' => ['what-is-ymb', 'is-ymb-safe', 'suspicious-activity', 'account-locked', 'delete-account']],
+        ],
+    ];
+}
 
     public static function getArticle(string $categorySlug, string $articleSlug): ?array
     {

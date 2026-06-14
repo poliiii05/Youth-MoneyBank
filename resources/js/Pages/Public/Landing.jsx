@@ -105,7 +105,7 @@ export default function Landing() {
 
             <Footer />
 
-            <FloatingButton isAuthenticated={false} />
+          <FloatingButton isAuthenticated={false} />
             
         </div>
     );

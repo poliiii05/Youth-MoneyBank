@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import Navbar from "../../Components/Common/Navbar";
 import Footer from "../../Components/Common/Footer";
 import { Rocket, Target, Wallet, ShieldCheck, Settings, LifeBuoy, Plus, MessageSquare, Mail } from 'lucide-react';
+import FloatingButton from '../../Components/Support/FloatingButton';
 
 export default function FAQ() {
     const [expandedId, setExpandedId] = useState(null);
@@ -173,7 +174,7 @@ export default function FAQ() {
             </main>
 
             <Footer />
-            <AIChat />
+            <FloatingButton isAuthenticated={false} />
         </div>
     );
 }

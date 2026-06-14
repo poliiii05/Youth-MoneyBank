@@ -7,9 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 class SupportMessage extends Model
 {
     protected $fillable = [
-        'ticket_id', 'sender_id', 'sender_role', 'message',
-        'is_system', 'is_ai_generated',
-        'read_by_user', 'read_by_admin',
+        'ticket_id',
+        'sender_id',
+        'sender_role',
+        'message',
+        'is_system',
+        'is_ai_generated',
+        'read_by_user',
+        'read_by_admin',
     ];
 
     protected $casts = [
@@ -19,6 +24,10 @@ class SupportMessage extends Model
         'read_by_admin' => 'boolean',
     ];
 
+    // ============================================================
+    // RELATIONSHIPS
+    // ============================================================
+
     public function ticket()
     {
         return $this->belongsTo(SupportTicket::class, 'ticket_id');
@@ -27,5 +36,29 @@ class SupportMessage extends Model
     public function sender()
     {
         return $this->belongsTo(User::class, 'sender_id');
+    }
+
+    // ============================================================
+    // HELPERS
+    // ============================================================
+
+    public function isFromUser(): bool
+    {
+        return $this->sender_role === 'user';
+    }
+
+    public function isFromAdmin(): bool
+    {
+        return in_array($this->sender_role, ['admin', 'super_admin']);
+    }
+
+    public function isFromAi(): bool
+    {
+        return $this->sender_role === 'ai';
+    }
+
+    public function isSystemMessage(): bool
+    {
+        return $this->is_system;
     }
 }

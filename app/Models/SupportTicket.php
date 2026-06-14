@@ -8,10 +8,18 @@ use Illuminate\Support\Str;
 class SupportTicket extends Model
 {
     protected $fillable = [
-        'user_id', 'transaction_id', 'public_reference_id',
-        'subject', 'category', 'priority', 'status',
-        'assigned_to', 'assigned_at', 
-        'resolved_at', 'resolved_by',
+        'user_id',
+        'transaction_id',
+        'public_reference_id',
+        'subject',
+        'category',
+        'priority',
+        'status',
+        'assigned_to',
+        'assigned_at',
+        'resolved_at',
+        'resolved_by',
+        'resolution_notes',
         'closed_at',
     ];
 
@@ -22,7 +30,7 @@ class SupportTicket extends Model
     ];
 
     /**
-     * Generate public reference ID on creation.
+     * Auto-generate public_reference_id on creation.
      */
     protected static function booted()
     {
@@ -32,6 +40,10 @@ class SupportTicket extends Model
             }
         });
     }
+
+    // ============================================================
+    // RELATIONSHIPS
+    // ============================================================
 
     public function user()
     {
@@ -63,8 +75,12 @@ class SupportTicket extends Model
         return $this->hasOne(SupportMessage::class, 'ticket_id')->latestOfMany();
     }
 
+    // ============================================================
+    // STATUS HELPERS
+    // ============================================================
+
     /**
-     * Check if ticket is actionable (still open for replies).
+     * Check if ticket is in an actionable state (can receive replies).
      */
     public function isActionable(): bool
     {
@@ -72,15 +88,86 @@ class SupportTicket extends Model
     }
 
     /**
-     * Get unread message count for a given user role.
+     * Check if ticket is closed/resolved.
+     */
+    public function isClosed(): bool
+    {
+        return in_array($this->status, ['resolved', 'closed']);
+    }
+
+    /**
+     * Check if ticket needs admin attention.
+     */
+    public function needsAdminAttention(): bool
+    {
+        return in_array($this->status, ['open', 'in_progress']);
+    }
+
+    // ============================================================
+    // UNREAD COUNT HELPERS
+    // ============================================================
+
+    /**
+     * Count unread messages for a given role.
+     * 
+     * @param string $forRole 'user' or 'admin'
      */
     public function unreadCountFor(string $forRole): int
     {
         if ($forRole === 'user') {
-            return $this->messages()->where('read_by_user', false)
-                ->where('sender_role', '!=', 'user')->count();
+            // Messages NOT from user that user hasn't read
+            return $this->messages()
+                ->where('read_by_user', false)
+                ->where('sender_role', '!=', 'user')
+                ->count();
         }
-        return $this->messages()->where('read_by_admin', false)
-            ->where('sender_role', 'user')->count();
+        
+        // Admin: messages from user that admin hasn't read
+        return $this->messages()
+            ->where('read_by_admin', false)
+            ->where('sender_role', 'user')
+            ->count();
+    }
+
+    /**
+     * Mark all messages as read for a given role.
+     */
+    public function markAsReadFor(string $forRole): int
+    {
+        if ($forRole === 'user') {
+            return $this->messages()
+                ->where('sender_role', '!=', 'user')
+                ->where('read_by_user', false)
+                ->update(['read_by_user' => true]);
+        }
+        
+        return $this->messages()
+            ->where('sender_role', 'user')
+            ->where('read_by_admin', false)
+            ->update(['read_by_admin' => true]);
+    }
+
+    // ============================================================
+    // SCOPES
+    // ============================================================
+
+    public function scopeOpen($query)
+    {
+        return $query->whereIn('status', ['open', 'in_progress', 'awaiting_user']);
+    }
+
+    public function scopeResolved($query)
+    {
+        return $query->where('status', 'resolved');
+    }
+
+    public function scopeClosed($query)
+    {
+        return $query->where('status', 'closed');
+    }
+
+    public function scopeByPriority($query, string $priority)
+    {
+        return $query->where('priority', $priority);
     }
 }

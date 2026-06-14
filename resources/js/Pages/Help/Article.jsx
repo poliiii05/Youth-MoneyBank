@@ -12,7 +12,7 @@ const colorMap = {
     slate: 'bg-slate-700',
 };
 
-export default function HelpArticle({ article, category, relatedArticles = [] }) {
+export default function HelpArticle({ auth, article, category, relatedArticles = [] }) {
     const headerBg = colorMap[category.color] || 'bg-slate-700';
 
     return (
