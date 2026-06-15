@@ -368,6 +368,36 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'not.suspended', 'ro
         ->whereNumber('id')
         ->name('kyc.reject');
 
+    // Customer Support — chat-based support with AI integration
+    Route::prefix('customer-support')->name('customer-support.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\CustomerSupportTicketsController::class, 'index'])
+            ->name('index');
+        
+        Route::get('/{id}', [\App\Http\Controllers\Admin\CustomerSupportTicketsController::class, 'show'])
+            ->whereNumber('id')
+            ->name('show');
+        
+        Route::post('/{id}/reply', [\App\Http\Controllers\Admin\CustomerSupportTicketsController::class, 'reply'])
+            ->whereNumber('id')
+            ->name('reply');
+        
+        Route::post('/{id}/resolve', [\App\Http\Controllers\Admin\CustomerSupportTicketsController::class, 'resolve'])
+            ->whereNumber('id')
+            ->name('resolve');
+        
+        Route::post('/{id}/close', [\App\Http\Controllers\Admin\CustomerSupportTicketsController::class, 'close'])
+            ->whereNumber('id')
+            ->name('close');
+        
+        Route::post('/{id}/reopen', [\App\Http\Controllers\Admin\CustomerSupportTicketsController::class, 'reopen'])
+            ->whereNumber('id')
+            ->name('reopen');
+        
+        Route::post('/{id}/assign', [\App\Http\Controllers\Admin\CustomerSupportTicketsController::class, 'assign'])
+            ->whereNumber('id')
+            ->name('assign');
+    });
+
     // User Management
     Route::get('/users', [\App\Http\Controllers\Admin\UserManagementController::class, 'index'])
         ->name('users.index');
@@ -414,10 +444,6 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'not.suspended', 'ro
     Route::post('/transactions/{id}/manual-credit', [\App\Http\Controllers\Admin\TransactionMonitorController::class, 'manualCredit'])
         ->whereNumber('id')
         ->name('transactions.manual-credit');
-
-    // Customer Support — action queue for CS workflow
-    Route::get('/customer-support', [\App\Http\Controllers\Admin\TransactionMonitorController::class, 'customerSupport'])
-        ->name('customer-support.index');
 
     // SUPER ADMIN ONLY actions
     Route::middleware(['role:super_admin'])->group(function () {

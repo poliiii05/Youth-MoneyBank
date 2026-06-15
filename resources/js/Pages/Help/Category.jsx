@@ -3,6 +3,7 @@ import { Head, Link } from '@inertiajs/react';
 import { 
     ArrowLeft, ArrowRight, FileText, Headphones,
 } from 'lucide-react';
+import FloatingButton from '../../Components/Support/FloatingButton';
 
 const colorMap = {
     blue: 'bg-blue-600',
@@ -12,7 +13,7 @@ const colorMap = {
     slate: 'bg-slate-700',
 };
 
-export default function HelpCategory({ auth, category, articles = [] }) {
+export default function HelpCategory({ auth, category, articles = [], allCategories = [] }) {
     const headerBg = colorMap[category.color] || 'bg-slate-700';
 
     return (
@@ -60,6 +61,11 @@ export default function HelpCategory({ auth, category, articles = [] }) {
                     ))}
                 </div>
             </div>
+
+            <FloatingButton 
+    isAuthenticated={!!auth?.user} 
+    currentUser={auth?.user || null} 
+/>
         </div>
     );
 }

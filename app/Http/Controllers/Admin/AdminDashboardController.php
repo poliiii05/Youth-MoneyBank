@@ -365,8 +365,20 @@ class AdminDashboardController extends Controller
      * Get current pending counts for sidebar badge polling.
      * Returns just the counts for efficiency.
      */
-    public function pendingCounts(Request $request)
+    public function pendingCounts()
     {
-        return response()->json($this->getAdminPendingCounts());
+        return response()->json([
+            'kyc' => \App\Models\KycApplication::where('status', 'pending')->count(),
+            'users_new' => User::where('created_at', '>=', now()->subDays(7))->count(),
+            'cs' => \App\Models\SupportTicket::whereIn('status', ['open', 'in_progress'])
+                ->where(function($q) {
+                    $q->whereNull('assigned_to')
+                    ->orWhereHas('messages', function($q2) {
+                        $q2->where('sender_role', 'user')
+                            ->where('read_by_admin', false);
+                    });
+                })
+                ->count(),
+        ]);
     }
 }

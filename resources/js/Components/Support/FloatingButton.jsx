@@ -1,15 +1,21 @@
 // resources/js/Components/Support/FloatingButton.jsx
-import { useState } from 'react';
 import HelpCenterModal from './HelpCenterModal';
 import ChatModal from './ChatModal';
 import { Headphones } from 'lucide-react';
-
+import { useState, useEffect } from 'react';
 export default function FloatingButton({ isAuthenticated = false, currentUser = null }) {
     const [view, setView] = useState('closed'); // 'closed' | 'help' | 'chat'
 
     const openHelp = () => setView('help');
     const openChat = () => setView('chat');
     const closeAll = () => setView('closed');
+
+    useEffect(() => {
+    window.openYmbChat = () => setView('chat');
+    return () => {
+        delete window.openYmbChat;
+    };
+}, []);
 
     return (
         <>

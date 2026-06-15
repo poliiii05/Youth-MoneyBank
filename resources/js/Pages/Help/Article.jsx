@@ -3,6 +3,7 @@ import { Head, Link } from '@inertiajs/react';
 import { 
     ArrowLeft, ArrowRight, FileText, Headphones, AlertCircle, Info,
 } from 'lucide-react';
+import FloatingButton from '../../Components/Support/FloatingButton';
 
 const colorMap = {
     blue: 'bg-blue-600',
@@ -45,16 +46,31 @@ export default function HelpArticle({ auth, article, category, relatedArticles =
                     ))}
                 </div>
 
-               {/* Compact contact support CTA — centered */}
+             {/* Compact contact support CTA — centered */}
                 <div className="mt-5 flex flex-col items-center gap-2">
                     <p className="text-xs font-bold text-slate-600">Still need help?</p>
-                    <Link
-                        href="/support/new"
-                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black rounded-xl shadow-md cursor-pointer transition-all"
-                    >
-                        <Headphones size={14} strokeWidth={2.5} />
-                        Contact Us
-                    </Link>
+                    {auth?.user ? (
+                        <button
+                            type="button"
+                            onClick={() => {
+                                if (typeof window.openYmbChat === 'function') {
+                                    window.openYmbChat();
+                                }
+                            }}
+                            className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black rounded-xl shadow-md cursor-pointer transition-all"
+                        >
+                            <Headphones size={14} strokeWidth={2.5} />
+                            Contact Us
+                        </button>
+                    ) : (
+                        <Link
+                            href="/login"
+                            className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black rounded-xl shadow-md cursor-pointer transition-all"
+                        >
+                            <Headphones size={14} strokeWidth={2.5} />
+                            Sign in to Contact Us
+                        </Link>
+                    )}
                 </div>
 
                 {/* Related articles */}
@@ -83,6 +99,11 @@ export default function HelpArticle({ auth, article, category, relatedArticles =
                         </div>
                     </div>
                 )}
+
+                <FloatingButton 
+    isAuthenticated={!!auth?.user} 
+    currentUser={auth?.user || null} 
+/>
             </div>
         </div>
     );

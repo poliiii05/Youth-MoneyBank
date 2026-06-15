@@ -10,6 +10,7 @@ export default function ChatModal({ onClose, currentUser = null }) {
     const [error, setError] = useState('');
     const messagesEndRef = useRef(null);
     const pollIntervalRef = useRef(null);
+    const [isAiThinking, setIsAiThinking] = useState(false);
 
     useEffect(() => {
         if (!currentUser) {
@@ -86,6 +87,7 @@ export default function ChatModal({ onClose, currentUser = null }) {
         };
         setMessages(prev => [...prev, optimisticMsg]);
         setInputText('');
+        setIsAiThinking(true);
 
         try {
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
@@ -115,6 +117,7 @@ export default function ChatModal({ onClose, currentUser = null }) {
             setMessages(prev => prev.filter(m => m.id !== optimisticMsg.id));
         } finally {
             setIsSending(false);
+            setIsAiThinking(false);
         }
     };
 
@@ -190,9 +193,29 @@ export default function ChatModal({ onClose, currentUser = null }) {
                             <p className="text-xs text-slate-400 font-medium">No messages yet</p>
                         </div>
                     )}
-                    {!isLoading && !error && messages.length > 0 && messages.map(msg => (
+                   {!isLoading && !error && messages.length > 0 && messages.map(msg => (
                         <MessageBubble key={msg.id} message={msg} />
                     ))}
+                    {isAiThinking && (
+                        <div className="flex gap-2">
+                            <div className="w-7 h-7 bg-purple-100 rounded-full flex items-center justify-center shrink-0">
+                                <Bot size={12} className="text-purple-700" strokeWidth={2.5} />
+                            </div>
+                            <div className="flex flex-col items-start">
+                                <div className="flex items-center gap-1.5 mb-0.5 px-1">
+                                    <span className="text-[10px] font-black text-purple-700">AI Assistant</span>
+                                    <span className="text-[8px] font-bold uppercase tracking-widest text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200">AI</span>
+                                </div>
+                                <div className="rounded-2xl rounded-tl-md px-3 py-2 bg-purple-50 border border-purple-200">
+                                    <div className="flex items-center gap-1">
+                                        <span className="w-1.5 h-1.5 bg-purple-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                                        <span className="w-1.5 h-1.5 bg-purple-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                                        <span className="w-1.5 h-1.5 bg-purple-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                     <div ref={messagesEndRef} />
                 </div>
 
@@ -321,7 +344,7 @@ function MessageBubble({ message }) {
                 {!isUserMessage && (
                     <div className="flex items-center gap-1.5 mb-0.5 px-1">
                         <span className={'text-[10px] font-black ' + (isAdmin ? 'text-blue-700' : (isAi ? 'text-purple-700' : 'text-slate-700'))}>
-                            {message.sender?.name || 'System'}
+                            {isAi ? 'YMB Assistant' : (isAdmin ? (message.sender?.name + ' (Agent)') : (message.sender?.name || 'System'))}
                         </span>
                         {isAdmin && (
                             <span className="text-[8px] font-bold uppercase tracking-widest text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200">Agent</span>

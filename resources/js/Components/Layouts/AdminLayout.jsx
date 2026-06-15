@@ -50,8 +50,7 @@ export default function AdminLayout({ user, header = 'Dashboard', actions = null
         }
     }, [flash?.success, flash?.error]);
 
-    useEffect(() => {
-        // Poll every 30 seconds for fresh counts
+        useEffect(() => {
         const interval = setInterval(async () => {
             try {
                 const response = await fetch('/admin/api/pending-counts', {
@@ -64,23 +63,6 @@ export default function AdminLayout({ user, header = 'Dashboard', actions = null
                 if (response.ok) {
                     const data = await response.json();
                     setLivePendingCounts(data);
-                    
-                    // Toast notification kapag may bagong CS case
-                    if (data.cs > previousCsCount) {
-                        const newCases = data.cs - previousCsCount;
-                        toast(`${newCases} new customer support case${newCases > 1 ? 's' : ''}`, {
-                            icon: '🔔',
-                            duration: 4000,
-                            style: {
-                                background: '#1e293b',
-                                color: '#fff',
-                                fontWeight: 'bold',
-                                fontSize: '12px',
-                            },
-                        });
-                    }
-                    
-                    setPreviousCsCount(data.cs);
                 }
             } catch (e) {
                 console.error('Polling failed:', e);
@@ -88,7 +70,7 @@ export default function AdminLayout({ user, header = 'Dashboard', actions = null
         }, 30000); // 30 seconds
 
         return () => clearInterval(interval);
-    }, [previousCsCount]);
+    }, []);
     
     const handleLogout = () => {
         if (confirm('Logout from admin panel?')) {

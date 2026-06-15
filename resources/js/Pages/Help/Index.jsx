@@ -1,6 +1,7 @@
 // resources/js/Pages/Help/Index.jsx
 import { Head, Link } from '@inertiajs/react';
 import { Headphones, ArrowRight, ArrowLeft } from 'lucide-react';
+import FloatingButton from '../../Components/Support/FloatingButton';
 
 const colorMap = {
     blue: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
@@ -62,6 +63,12 @@ export default function HelpIndex({ auth, categories = [] }) {
                     })}
                 </div>
             </div>
+            
+            <FloatingButton 
+    isAuthenticated={!!auth?.user} 
+    currentUser={auth?.user || null} 
+/>
         </div>
+
     );
 }

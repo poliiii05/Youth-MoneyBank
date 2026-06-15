@@ -7,6 +7,7 @@ use App\Models\SupportMessage;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use App\Services\GeminiService;
 
 class SupportController extends Controller
 {
@@ -37,15 +38,46 @@ class SupportController extends Controller
             ]);
 
             // System welcome message
-            SupportMessage::create([
-                'ticket_id' => $ticket->id,
-                'sender_id' => $user->id,
-                'sender_role' => 'system',
-                'message' => "Welcome to Youth MoneyBank Customer Service! How can we help you today?",
-                'is_system' => true,
-                'read_by_user' => true,
-                'read_by_admin' => false,
-            ]);
+                SupportMessage::create([
+                    'ticket_id' => $ticket->id,
+                    'sender_id' => $user->id,
+                    'sender_role' => 'system',
+                    'message' => "You're now connected to Customer Service.",
+                    'is_system' => true,
+                    'read_by_user' => true,
+                    'read_by_admin' => false,
+                ]);
+
+                // AI personalized greeting
+                try {
+                    $gemini = app(GeminiService::class);
+                    $greeting = $gemini->generateResponse($user, [
+                        ['sender_role' => 'system', 'message' => 'Generate a brief friendly Taglish greeting for ' . $user->name . ' and ask how you can help today. Keep it under 30 words.'],
+                    ]);
+
+                    SupportMessage::create([
+                        'ticket_id' => $ticket->id,
+                        'sender_id' => $user->id,
+                        'sender_role' => 'ai',
+                        'message' => $greeting['response'],
+                        'is_system' => false,
+                        'is_ai_generated' => true,
+                        'read_by_user' => false,
+                        'read_by_admin' => false,
+                    ]);
+                } catch (\Exception $e) {
+                    // Fallback if AI fails
+                    SupportMessage::create([
+                        'ticket_id' => $ticket->id,
+                        'sender_id' => $user->id,
+                        'sender_role' => 'ai',
+                        'message' => "Hi {$user->name}! Kamusta? I'm the YMB AI assistant. Paano kita matutulungan today?",
+                        'is_system' => false,
+                        'is_ai_generated' => true,
+                        'read_by_user' => false,
+                        'read_by_admin' => false,
+                    ]);
+                }
 
             $isNew = true;
         }
@@ -118,17 +150,42 @@ class SupportController extends Controller
 
         // TODO Batch 2: Call AI service for response
 
-        // For Batch 1: Mock auto-reply (system) so user knows message received
-        SupportMessage::create([
-            'ticket_id' => $ticket->id,
-            'sender_id' => $user->id,
-            'sender_role' => 'system',
-            'message' => "Message received! Our team has been notified and will respond shortly. (AI integration coming in next phase.)",
-            'is_system' => true,
-            'read_by_user' => false,
-            'read_by_admin' => false,
-        ]);
+       // Check if agent was already requested — skip AI in that case
+        $agentRequested = $ticket->messages()
+            ->where('is_system', true)
+            ->where('message', 'like', '%requested to speak with a support agent%')
+            ->exists();
 
+        if (!$agentRequested) {
+            // Call Gemini AI for response
+            $conversationHistory = $ticket->messages()
+                ->orderBy('created_at')
+                ->get(['sender_role', 'message'])
+                ->toArray();
+
+            $gemini = app(GeminiService::class);
+            $aiResult = $gemini->generateResponse($user, $conversationHistory);
+
+            // Save AI response as message
+            SupportMessage::create([
+                'ticket_id' => $ticket->id,
+                'sender_id' => $user->id, // Use user's id as placeholder for AI's sender
+                'sender_role' => 'ai',
+                'message' => $aiResult['response'],
+                'is_system' => false,
+                'is_ai_generated' => true,
+                'read_by_user' => false,
+                'read_by_admin' => false,
+            ]);
+
+            // Log AI usage
+            \Log::info('Gemini AI response generated', [
+                'ticket_id' => $ticket->id,
+                'user_id' => $user->id,
+                'tokens' => $aiResult['tokens_used'],
+                'escalation_suggested' => $aiResult['should_escalate'],
+            ]);
+        }
         return response()->json([
             'success' => true,
             'message_id' => $message->id,
@@ -219,16 +276,35 @@ class SupportController extends Controller
         ];
     }
 
-    private function formatMessages($messages): array
+     private function formatMessages($messages): array
     {
         return $messages->map(function ($m) {
-            return [
-                'id' => $m->id,
-                'sender' => $m->sender ? [
+            // Determine display name based on role
+            if ($m->sender_role === 'ai') {
+                $senderData = [
+                    'id' => 'ai',
+                    'name' => 'YMB Assistant',
+                    'profile_picture' => null,
+                ];
+            } elseif ($m->sender_role === 'system') {
+                $senderData = [
+                    'id' => 'system',
+                    'name' => 'System',
+                    'profile_picture' => null,
+                ];
+            } elseif ($m->sender) {
+                $senderData = [
                     'id' => $m->sender->id,
                     'name' => $m->sender->name,
                     'profile_picture' => $m->sender->profile_picture,
-                ] : ['name' => 'System'],
+                ];
+            } else {
+                $senderData = ['id' => null, 'name' => 'Unknown', 'profile_picture' => null];
+            }
+
+            return [
+                'id' => $m->id,
+                'sender' => $senderData,
                 'sender_role' => $m->sender_role,
                 'message' => $m->message,
                 'is_system' => $m->is_system,
