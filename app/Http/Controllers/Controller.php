@@ -6,7 +6,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Routing\Controller as BaseController;
 use App\Models\KycApplication;
-use App\Models\Transaction;
+use App\Models\SupportTicket;
 
 class Controller extends BaseController
 {
@@ -20,9 +20,15 @@ class Controller extends BaseController
     {
         return [
             'kyc' => KycApplication::where('status', 'pending')->count(),
-            'cs' => Transaction::where(function ($q) {
-                $q->whereIn('status', ['failed', 'pending'])->orWhere('is_flagged', true);
-            })->where('is_resolved', false)->count(),
+            'cs' => SupportTicket::whereIn('status', ['open', 'in_progress'])
+                ->where(function ($q) {
+                    $q->whereNull('assigned_to')
+                      ->orWhereHas('messages', function ($q2) {
+                          $q2->where('sender_role', 'user')
+                             ->where('read_by_admin', false);
+                      });
+                })
+                ->count(),
         ];
     }
 }

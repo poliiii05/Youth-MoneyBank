@@ -433,8 +433,7 @@ class CustomerSupportTicketsController extends Controller
     protected function getAdminPendingCounts(): array
     {
         return [
-            'kyc' => \App\Models\KycApplication::where('status', 'pending')->count() ?? 0,
-            'users_new' => 0, // Optional: implement if needed
+            'kyc' => \App\Models\KycApplication::where('status', 'pending')->count(),
             'cs' => SupportTicket::whereIn('status', ['open', 'in_progress'])
                 ->where(function($q) {
                     $q->whereNull('assigned_to')

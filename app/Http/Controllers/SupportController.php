@@ -82,12 +82,19 @@ class SupportController extends Controller
             $isNew = true;
         }
 
-        return response()->json([
-            'ticket' => $this->formatTicket($ticket),
-            'messages' => $this->formatMessages($ticket->messages()->orderBy('created_at')->get()),
-            'is_new' => $isNew,
-        ]);
-    }
+       $messages = $ticket->messages()
+        ->orderBy('created_at', 'desc')
+        ->limit(20)
+        ->get()
+        ->reverse()
+        ->values();
+
+    return response()->json([
+        'ticket' => $this->formatTicket($ticket),
+        'messages' => $this->formatMessages($messages),
+        'is_new' => $isNew,
+    ]);
+        }
 
     /**
      * Get messages for a conversation (used for polling).

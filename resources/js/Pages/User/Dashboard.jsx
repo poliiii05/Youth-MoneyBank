@@ -2,7 +2,7 @@
 import { Head, Link } from '@inertiajs/react';
 import { useState } from 'react';
 import UserLayout from '../../Components/Layouts/UserLayout';
-import { Wallet, Target, ArrowRight, Lightbulb, ChevronRight, Headphones } from 'lucide-react';
+import { Wallet, Target, ArrowRight, Lightbulb, ChevronRight, Headphones, Send, HandCoins, Landmark, Gift } from 'lucide-react';
 import AddMoneyModal from '../../Components/Wallet/AddMoneyModal';
 import RecentTransactionsCard from '../../Components/Transactions/RecentTransactionsCard';
 
@@ -213,36 +213,65 @@ export default function Dashboard({ auth, finances, active_goal, kyc_tier, recen
                 </div>
             </div>
 
-            {/* 4. QUICK ACTIONS */}
-                <div className="bg-white rounded-[1.5rem] shadow-sm border border-gray-100 p-5 mb-5">
-                    <h2 className="text-[11px] font-semibold text-gray-500 mb-4 uppercase tracking-widest">Quick Actions</h2>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                        <Link href="/transactions" className="flex flex-col items-center gap-2 group cursor-pointer">
-                            <div className="w-14 h-14 md:w-16 md:h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center transition-all duration-300 group-hover:bg-blue-500 group-hover:text-white group-hover:-translate-y-1 group-hover:shadow-lg group-hover:shadow-blue-200 group-hover:ring-4 ring-blue-50">
-                                <ArrowRight size={24} strokeWidth={1.5} />
-                            </div>
-                            <span className="font-semibold text-[10px] text-gray-600 uppercase tracking-wide group-hover:text-blue-600 transition-colors">Transactions</span>
-                        </Link>
-                        <Link href="/goals" className="flex flex-col items-center gap-2 group cursor-pointer">
-                            <div className="w-14 h-14 md:w-16 md:h-16 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center transition-all duration-300 group-hover:bg-emerald-500 group-hover:text-white group-hover:-translate-y-1 group-hover:shadow-lg group-hover:shadow-emerald-200 group-hover:ring-4 ring-emerald-50">
-                                <Target size={24} strokeWidth={1.5} />
-                            </div>
-                            <span className="font-semibold text-[10px] text-gray-600 uppercase tracking-wide group-hover:text-emerald-600 transition-colors">Goals</span>
-                        </Link>
-                        <button onClick={() => setIsAddMoneyOpen(true)} className="flex flex-col items-center gap-2 group cursor-pointer">
-                            <div className="w-14 h-14 md:w-16 md:h-16 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center transition-all duration-300 group-hover:bg-purple-500 group-hover:text-white group-hover:-translate-y-1 group-hover:shadow-lg group-hover:shadow-purple-200 group-hover:ring-4 ring-purple-50">
-                                <Wallet size={24} strokeWidth={1.5} />
-                            </div>
-                            <span className="font-semibold text-[10px] text-gray-600 uppercase tracking-wide group-hover:text-purple-600 transition-colors">Add Money</span>
-                        </button>
-                        <Link href="/support" className="flex flex-col items-center gap-2 group cursor-pointer">
-                            <div className="w-14 h-14 md:w-16 md:h-16 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center transition-all duration-300 group-hover:bg-orange-500 group-hover:text-white group-hover:-translate-y-1 group-hover:shadow-lg group-hover:shadow-orange-200 group-hover:ring-4 ring-orange-50">
-                                <Headphones size={24} strokeWidth={1.5} />
-                            </div>
-                            <span className="font-semibold text-[10px] text-gray-600 uppercase tracking-wide group-hover:text-orange-600 transition-colors">Get Help</span>
-                        </Link>
+           {/* 4. QUICK ACTIONS — Roadmap features (all coming soon) */}
+            <div className="bg-white rounded-[1.5rem] shadow-sm border border-gray-100 p-5 mb-5">
+                <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-[11px] font-semibold text-gray-500 uppercase tracking-widest">Quick Actions</h2>
+                    <span className="text-[9px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200 uppercase tracking-widest">
+                        Coming Soon
+                    </span>
+                </div>
+                
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                    {/* Send Money */}
+                    <div className="flex flex-col items-center gap-2 cursor-not-allowed relative opacity-75 group">
+                        <span className="absolute -top-1 right-2 text-[8px] font-black uppercase tracking-widest text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded border border-amber-200 z-10">
+                            Soon
+                        </span>
+                        <div className="w-14 h-14 md:w-16 md:h-16 bg-blue-50 text-blue-400 rounded-2xl flex items-center justify-center">
+                            <Send size={24} strokeWidth={1.5} />
+                        </div>
+                        <span className="font-semibold text-[10px] text-slate-500 uppercase tracking-wide">Send Money</span>
+                    </div>
+
+                    {/* Request Money */}
+                    <div className="flex flex-col items-center gap-2 cursor-not-allowed relative opacity-75 group">
+                        <span className="absolute -top-1 right-2 text-[8px] font-black uppercase tracking-widest text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded border border-amber-200 z-10">
+                            Soon
+                        </span>
+                        <div className="w-14 h-14 md:w-16 md:h-16 bg-purple-50 text-purple-400 rounded-2xl flex items-center justify-center">
+                            <HandCoins size={24} strokeWidth={1.5} />
+                        </div>
+                        <span className="font-semibold text-[10px] text-slate-500 uppercase tracking-wide">Request</span>
+                    </div>
+
+                    {/* Bank Transfer */}
+                    <div className="flex flex-col items-center gap-2 cursor-not-allowed relative opacity-75 group">
+                        <span className="absolute -top-1 right-2 text-[8px] font-black uppercase tracking-widest text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded border border-amber-200 z-10">
+                            Soon
+                        </span>
+                        <div className="w-14 h-14 md:w-16 md:h-16 bg-teal-50 text-teal-400 rounded-2xl flex items-center justify-center">
+                            <Landmark size={24} strokeWidth={1.5} />
+                        </div>
+                        <span className="font-semibold text-[10px] text-slate-500 uppercase tracking-wide">Transfer</span>
+                    </div>
+
+                    {/* Earn Rewards */}
+                    <div className="flex flex-col items-center gap-2 cursor-not-allowed relative opacity-75 group">
+                        <span className="absolute -top-1 right-2 text-[8px] font-black uppercase tracking-widest text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded border border-amber-200 z-10">
+                            Soon
+                        </span>
+                        <div className="w-14 h-14 md:w-16 md:h-16 bg-orange-50 text-orange-400 rounded-2xl flex items-center justify-center">
+                            <Gift size={24} strokeWidth={1.5} />
+                        </div>
+                        <span className="font-semibold text-[10px] text-slate-500 uppercase tracking-wide">Rewards</span>
                     </div>
                 </div>
+                
+                <p className="text-[10px] text-slate-400 font-medium mt-4 text-center italic">
+                    These features are part of our roadmap — stay tuned!
+                </p>
+            </div>
 
            {/* 5. RECENT TRANSACTIONS */}
                 <RecentTransactionsCard 

@@ -365,11 +365,13 @@ class AdminDashboardController extends Controller
      * Get current pending counts for sidebar badge polling.
      * Returns just the counts for efficiency.
      */
-    public function pendingCounts()
+        public function pendingCounts()
     {
         return response()->json([
+            // KYC needs admin action (pending review)
             'kyc' => \App\Models\KycApplication::where('status', 'pending')->count(),
-            'users_new' => User::where('created_at', '>=', now()->subDays(7))->count(),
+            
+            // CS needs admin action (unassigned OR unread user messages)
             'cs' => \App\Models\SupportTicket::whereIn('status', ['open', 'in_progress'])
                 ->where(function($q) {
                     $q->whereNull('assigned_to')
@@ -379,6 +381,8 @@ class AdminDashboardController extends Controller
                     });
                 })
                 ->count(),
+            
+            // Users count REMOVED — not an actionable metric (informational only)
         ]);
     }
 }

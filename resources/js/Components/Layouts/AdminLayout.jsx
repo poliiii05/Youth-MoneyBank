@@ -22,56 +22,31 @@ export default function AdminLayout({ user, header = 'Dashboard', actions = null
     const { flash, maintenanceMode } = usePage().props;
 
     useEffect(() => {
-        if (flash?.success) {
-            toast.success(flash.success, {
-                duration: 4000,
-                position: 'top-right',
-                style: {
-                    background: '#059669',
-                    color: '#fff',
-                    fontWeight: 'bold',
-                    fontSize: '12px',
-                    padding: '12px 16px',
-                    borderRadius: '8px',
+    // Fetch immediately on mount (don't wait 30s)
+    const fetchCounts = async () => {
+        try {
+            const response = await fetch('/admin/api/pending-counts', {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
                 },
             });
-        }
-        if (flash?.error) {
-            toast.error(flash.error, {
-                duration: 5000,
-                position: 'top-right',
-                style: {
-                    fontSize: '12px',
-                    fontWeight: 'bold',
-                    padding: '12px 16px',
-                    borderRadius: '8px',
-                },
-            });
-        }
-    }, [flash?.success, flash?.error]);
-
-        useEffect(() => {
-        const interval = setInterval(async () => {
-            try {
-                const response = await fetch('/admin/api/pending-counts', {
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                    },
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    setLivePendingCounts(data);
-                }
-            } catch (e) {
-                console.error('Polling failed:', e);
+            if (response.ok) {
+                const data = await response.json();
+                setLivePendingCounts(data);
             }
-        }, 30000); // 30 seconds
+        } catch (e) {
+            console.error('Polling failed:', e);
+        }
+    };
 
-        return () => clearInterval(interval);
-    }, []);
-    
+    fetchCounts(); // Immediate
+
+    const interval = setInterval(fetchCounts, 30000); // Then every 30s
+
+    return () => clearInterval(interval);
+}, []);
+
     const handleLogout = () => {
         if (confirm('Logout from admin panel?')) {
             window.location.href = '/';

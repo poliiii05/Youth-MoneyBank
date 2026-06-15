@@ -151,28 +151,31 @@ export default function AdminSidebar({ user, pendingCounts = {}, maintenanceMode
         <aside className={`fixed lg:sticky top-0 left-0 z-30 h-screen w-60 bg-slate-900 text-slate-200 border-r border-slate-800 transform transition-transform lg:transform-none flex flex-col ${
             sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}>
-            {/* TOP: Brand */}
-            <div className="p-4 pb-3 border-b border-slate-800/80">
-                <div className="flex items-center justify-between">
-                    <Link 
-                        href="/admin" 
-                        className="flex items-center gap-2.5 hover:opacity-90 transition-opacity cursor-pointer"
-                    >
-                        <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-md">
-                            <Shield size={17} className="text-white" strokeWidth={2.5} />
-                        </div>
-                        <div>
-                            <p className="text-sm font-black text-white tracking-tight leading-none">Youth Money</p>
-                            <p className="text-[9px] font-bold text-blue-400 uppercase tracking-widest mt-0.5">Bank</p>
-                        </div>
-                    </Link>
-                    
-                    {/* Mobile close button */}
-                    <button onClick={onClose} className="lg:hidden text-slate-400 hover:text-white p-1 cursor-pointer">
-                        <X size={18} />
-                    </button>
+         {/* TOP: Brand */}
+                <div className="p-4 pb-3 border-b border-slate-800/80">
+                    <div className="flex items-center justify-between">
+                        <Link 
+                            href="/admin" 
+                            className="flex items-center hover:opacity-90 transition-opacity cursor-pointer"
+                        >
+                            <div className="bg-white pl-2 pr-3 py-1.5 rounded-xl flex items-center gap-2 shadow-lg">
+                                <img 
+                                    src="/images/YMB_HeaderLogo.png" 
+                                    alt="YMB"
+                                    className="h-7 w-auto"
+                                />
+                                <p className="text-xs font-black text-blue-700 tracking-tight whitespace-nowrap">
+                                    Youth Money Bank
+                                </p>
+                            </div>
+                        </Link>
+                        
+                        {/* Mobile close button */}
+                        <button onClick={onClose} className="lg:hidden text-slate-400 hover:text-white p-1 cursor-pointer">
+                            <X size={18} />
+                        </button>
+                    </div>
                 </div>
-            </div>
 
             {/* Role + Nickname */}
             <div className="px-4 py-3 border-b border-slate-800/80">
