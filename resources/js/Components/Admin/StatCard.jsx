@@ -12,6 +12,7 @@ export default function StatCard({
     color = 'slate', 
     trend = null, 
     onClick = null,
+    subText = null,
 }) {
     const colorMap = {
         blue: { 
@@ -98,6 +99,13 @@ export default function StatCard({
                 </div>
                 <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">{label}</p>
                 <p className="text-2xl font-black text-slate-900 mt-1 tracking-tight">{value}</p>
+                {subText && (
+                    <p className={`text-[10px] font-bold mt-1 ${
+                        subText.startsWith('+') ? 'text-emerald-700' : 'text-slate-500'
+                    }`}>
+                        {subText}
+                    </p>
+                )}
             </div>
         </Wrapper>
     );

@@ -113,4 +113,16 @@ class SettingsController extends Controller
             ],
         ];
     }
+
+    public function completeOnboarding(Request $request)
+{
+    $user = $request->user();
+    
+    if (!$user->onboarded_at) {
+        $user->onboarded_at = now();
+        $user->save();
+    }
+    
+    return response()->json(['success' => true]);
+}
 }

@@ -18,24 +18,41 @@ class AdminDashboardController extends Controller
         $today = now()->startOfDay();
 
         // ====================================================
-        // KPI STATS
+        // KPI STATS — with period-based deltas
         // ====================================================
+        $startOfWeek = $today->copy()->startOfWeek(Carbon::MONDAY);
+        $startOfMonth = $today->copy()->startOfMonth();
+
+        // Total Users + weekly delta (resets Monday)
         $totalUsers = User::whereNull('admin_role')->count();
-        
-        $activeToday = User::whereNull('admin_role')
-            ->whereDate('updated_at', $today)
+        $usersThisWeek = User::whereNull('admin_role')
+            ->where('created_at', '>=', $startOfWeek)
             ->count();
 
+        // Total Volume + monthly delta (resets 1st of month)
         $totalVolumeCents = Transaction::whereIn('status', ['completed', 'success'])
             ->sum('amount_cents');
+        $volumeThisMonthCents = Transaction::whereIn('status', ['completed', 'success'])
+            ->where('created_at', '>=', $startOfMonth)
+            ->sum('amount_cents');
 
+        // Pending KYC — real-time count (no delta)
         $pendingKyc = KycApplication::where('status', 'pending')->count();
+
+        // Active Goals + weekly delta (NEW metric)
+        $activeGoals = \App\Models\SavingsGoal::where('status', '!=', 'deleted')->count();
+        $goalsThisWeek = \App\Models\SavingsGoal::where('status', '!=', 'deleted')
+            ->where('created_at', '>=', $startOfWeek)
+            ->count();
 
         $stats = [
             'total_users' => $totalUsers,
-            'active_today' => $activeToday,
+            'users_this_week' => $usersThisWeek,
             'total_volume' => $totalVolumeCents / 100,
+            'volume_this_month' => $volumeThisMonthCents / 100,
             'pending_kyc' => $pendingKyc,
+            'active_goals' => $activeGoals,
+            'goals_this_week' => $goalsThisWeek,
         ];
 
         // ====================================================

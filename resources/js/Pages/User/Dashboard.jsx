@@ -5,9 +5,11 @@ import UserLayout from '../../Components/Layouts/UserLayout';
 import { Wallet, Target, ArrowRight, Lightbulb, ChevronRight, Headphones, Send, HandCoins, Landmark, Gift } from 'lucide-react';
 import AddMoneyModal from '../../Components/Wallet/AddMoneyModal';
 import RecentTransactionsCard from '../../Components/Transactions/RecentTransactionsCard';
+import WelcomeModal from '../../Components/Modals/WelcomeModal';
 
-export default function Dashboard({ auth, finances, active_goal, kyc_tier, recent_transactions = [] }) {
+export default function Dashboard({ auth, finances, active_goal, kyc_tier, recent_transactions = [], is_new_user = false }) {
     const user = auth?.user;
+    const [showWelcome, setShowWelcome] = useState(is_new_user);
 
     // --- MODAL STATES ---
     const [isAddMoneyOpen, setIsAddMoneyOpen] = useState(false);
@@ -213,64 +215,50 @@ export default function Dashboard({ auth, finances, active_goal, kyc_tier, recen
                 </div>
             </div>
 
-           {/* 4. QUICK ACTIONS — Roadmap features (all coming soon) */}
+          {/* 4. QUICK ACTIONS — Roadmap features (all coming soon) */}
             <div className="bg-white rounded-[1.5rem] shadow-sm border border-gray-100 p-5 mb-5">
-                <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-[11px] font-semibold text-gray-500 uppercase tracking-widest">Quick Actions</h2>
-                    <span className="text-[9px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200 uppercase tracking-widest">
+                {/* Header with "Coming Soon" text-only badge */}
+                <div className="flex items-center justify-between mb-5">
+                    <h2 className="text-base font-bold text-slate-900 tracking-tight">Quick Actions</h2>
+                    <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200 uppercase tracking-widest">
                         Coming Soon
                     </span>
                 </div>
                 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                {/* 4 action grid — grayed out placeholder style */}
+                <div className="grid grid-cols-4 gap-3">
                     {/* Send Money */}
-                    <div className="flex flex-col items-center gap-2 cursor-not-allowed relative opacity-75 group">
-                        <span className="absolute -top-1 right-2 text-[8px] font-black uppercase tracking-widest text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded border border-amber-200 z-10">
-                            Soon
-                        </span>
-                        <div className="w-14 h-14 md:w-16 md:h-16 bg-blue-50 text-blue-400 rounded-2xl flex items-center justify-center">
-                            <Send size={24} strokeWidth={1.5} />
+                    <div className="flex flex-col items-center gap-2 cursor-not-allowed select-none">
+                        <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center">
+                            <Send size={22} className="text-slate-400" strokeWidth={2} />
                         </div>
-                        <span className="font-semibold text-[10px] text-slate-500 uppercase tracking-wide">Send Money</span>
+                        <span className="text-[11px] font-semibold text-slate-400">Send Money</span>
                     </div>
 
                     {/* Request Money */}
-                    <div className="flex flex-col items-center gap-2 cursor-not-allowed relative opacity-75 group">
-                        <span className="absolute -top-1 right-2 text-[8px] font-black uppercase tracking-widest text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded border border-amber-200 z-10">
-                            Soon
-                        </span>
-                        <div className="w-14 h-14 md:w-16 md:h-16 bg-purple-50 text-purple-400 rounded-2xl flex items-center justify-center">
-                            <HandCoins size={24} strokeWidth={1.5} />
+                    <div className="flex flex-col items-center gap-2 cursor-not-allowed select-none">
+                        <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center">
+                            <HandCoins size={22} className="text-slate-400" strokeWidth={2} />
                         </div>
-                        <span className="font-semibold text-[10px] text-slate-500 uppercase tracking-wide">Request</span>
+                        <span className="text-[11px] font-semibold text-slate-400">Request</span>
                     </div>
 
                     {/* Bank Transfer */}
-                    <div className="flex flex-col items-center gap-2 cursor-not-allowed relative opacity-75 group">
-                        <span className="absolute -top-1 right-2 text-[8px] font-black uppercase tracking-widest text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded border border-amber-200 z-10">
-                            Soon
-                        </span>
-                        <div className="w-14 h-14 md:w-16 md:h-16 bg-teal-50 text-teal-400 rounded-2xl flex items-center justify-center">
-                            <Landmark size={24} strokeWidth={1.5} />
+                    <div className="flex flex-col items-center gap-2 cursor-not-allowed select-none">
+                        <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center">
+                            <Landmark size={22} className="text-slate-400" strokeWidth={2} />
                         </div>
-                        <span className="font-semibold text-[10px] text-slate-500 uppercase tracking-wide">Transfer</span>
+                        <span className="text-[11px] font-semibold text-slate-400">Transfer</span>
                     </div>
 
                     {/* Earn Rewards */}
-                    <div className="flex flex-col items-center gap-2 cursor-not-allowed relative opacity-75 group">
-                        <span className="absolute -top-1 right-2 text-[8px] font-black uppercase tracking-widest text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded border border-amber-200 z-10">
-                            Soon
-                        </span>
-                        <div className="w-14 h-14 md:w-16 md:h-16 bg-orange-50 text-orange-400 rounded-2xl flex items-center justify-center">
-                            <Gift size={24} strokeWidth={1.5} />
+                    <div className="flex flex-col items-center gap-2 cursor-not-allowed select-none">
+                        <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center">
+                            <Gift size={22} className="text-slate-400" strokeWidth={2} />
                         </div>
-                        <span className="font-semibold text-[10px] text-slate-500 uppercase tracking-wide">Rewards</span>
+                        <span className="text-[11px] font-semibold text-slate-400">Rewards</span>
                     </div>
                 </div>
-                
-                <p className="text-[10px] text-slate-400 font-medium mt-4 text-center italic">
-                    These features are part of our roadmap — stay tuned!
-                </p>
             </div>
 
            {/* 5. RECENT TRANSACTIONS */}
@@ -284,6 +272,11 @@ export default function Dashboard({ auth, finances, active_goal, kyc_tier, recen
                 onClose={() => setIsAddMoneyOpen(false)} 
             />
 
-        </UserLayout>
+            <WelcomeModal 
+            isOpen={showWelcome} 
+            onClose={() => setShowWelcome(false)} 
+            />
+
+            </UserLayout>
     );
 }

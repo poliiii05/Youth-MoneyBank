@@ -71,83 +71,22 @@ Route::post('/signup', function (Request $request) {
 Route::middleware(['auth', 'not.suspended', 'user.only', 'check.maintenance'])->group(function () {
     
     // ====================================================
+    // NEW USERS ENTER THE SYSTEM
+    // ====================================================
+    Route::post('/api/onboarding/complete', [\App\Http\Controllers\User\SettingsController::class, 'completeOnboarding'])
+        ->name('api.onboarding.complete');
+    // ====================================================
     // DASHBOARD
     // ====================================================
-    Route::get('/dashboard', function () {
-        $user = auth()->user();
+    Route::get('/dashboard', [\App\Http\Controllers\User\DashboardController::class, 'index'])
+    ->name('dashboard');
 
-        if ($user->isAdmin()) {
-            return redirect('/admin');
-        }
-    
-        $wallet = $user->wallet;
+    Route::get('/insights', [\App\Http\Controllers\User\DashboardController::class, 'insights'])
+        ->name('insights');
 
-        $mainBalanceCents = $wallet ? $wallet->balance_cents : 0;
-        $unallocatedSavingsCents = $wallet ? $wallet->savings_balance_cents : 0;
-        $allocatedGoalsCents = $user->savingsGoals()
-            ->where('status', '!=', 'deleted')
-            ->sum('current_amount_cents');
-        $totalSavingsCents = $unallocatedSavingsCents + $allocatedGoalsCents;
-
-        $tier = (int) ($user->kyc_tier ?? 1);
-        $maxLimitCents = \App\Services\TierLimitService::getMaxBalanceCents($tier);
-        $totalHoldingsCents = \App\Services\TierLimitService::getTotalHoldingsCents($user);
-        $remainingCapacityCents = \App\Services\TierLimitService::getRemainingCapacityCents($user);
-
-        $activeGoal = $user->savingsGoals()
-            ->where('status', '!=', 'deleted')
-            ->where('current_amount_cents', '>', 0)
-            ->orderBy('current_amount_cents', 'desc')
-            ->first();
-
-        if (!$activeGoal) {
-            $activeGoal = $user->savingsGoals()
-                ->where('status', '!=', 'deleted')
-                ->orderBy('target_amount_cents', 'asc')
-                ->first();
-        }
-
-        return Inertia::render('User/Dashboard', [
-            'auth' => ['user' => $user],
-            'finances' => [
-                'main_balance' => (float) ($mainBalanceCents / 100),
-                'total_savings' => (float) ($totalSavingsCents / 100),
-                'max_limit' => (float) ($maxLimitCents / 100),
-                'main_balance_cents' => $mainBalanceCents,
-                'max_limit_cents' => $maxLimitCents,
-                'unallocated_savings' => (float) ($unallocatedSavingsCents / 100),
-                'allocated_to_goals' => (float) ($allocatedGoalsCents / 100),
-                'total_holdings' => (float) ($totalHoldingsCents / 100),
-                'remaining_capacity' => (float) ($remainingCapacityCents / 100),
-            ],
-            'active_goal' => $activeGoal ? [
-                'id' => $activeGoal->id,
-                'title' => $activeGoal->title,
-                'icon_name' => $activeGoal->icon_name,
-                'current_amount' => (float) $activeGoal->current_amount_pesos,
-                'target_amount' => (float) $activeGoal->target_amount_pesos,
-            ] : null,
-            'kyc_tier' => $tier,
-            'recent_transactions' => $user->transactions()
-                ->latest()
-                ->take(5)
-                ->get()
-                ->map(function ($t) {
-                    return [
-                        'id' => $t->id,
-                        'title' => $t->title,
-                        'type' => $t->type,
-                        'amount' => (float) $t->amount_pesos,
-                        'is_positive' => $t->is_positive,
-                        'status' => $t->status,
-                        'public_reference_id' => $t->public_reference_id,
-                        'created_at' => $t->created_at,
-                    ];
-                }),
-        ]);
-    })->name('dashboard');
-
-    // ====================================================
+    Route::get('/api/insights/monthly', [\App\Http\Controllers\User\DashboardController::class, 'monthlyStreak'])
+    ->name('api.insights.monthly');
+    // ==================================================   ==
     // Customer Support — API endpoints for ChatModal
     // ====================================================
    

@@ -246,7 +246,20 @@ export default function ViewDetailsModal({ isOpen, onClose, goalId, onAddFunds, 
                                     </p>
                                 </div>
                             </div>
+                            {/* SAVINGS PACE CALCULATOR — only if goal not complete */}
+                            {!isComplete && goal.current_amount < goal.target_amount && (
+                                <div>
+                                    <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                                        <TrendingUp size={11} className="text-blue-600" strokeWidth={2.5} />
+                                        Savings Pace
+                                    </h4>
+                                    <SavingsPaceSection 
+                                        remaining={goal.target_amount - goal.current_amount} 
+                                    />
+                                </div>
+                            )}
 
+                                            
                             {/* TRANSACTION HISTORY */}
                             <div>
                                 <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
@@ -323,6 +336,95 @@ export default function ViewDetailsModal({ isOpen, onClose, goalId, onAddFunds, 
                         </div>
                     )}
                 </div>
+            </div>
+        </div>
+    );
+}
+
+function SavingsPaceSection({ remaining }) {
+    // 4 pace options
+    const paces = [500, 1000, 2000, 5000];
+    
+    const calculateCompletion = (weeklyAmount) => {
+        const weeksNeeded = Math.ceil(remaining / weeklyAmount);
+        const targetDate = new Date();
+        targetDate.setDate(targetDate.getDate() + (weeksNeeded * 7));
+        
+        return {
+            weeks: weeksNeeded,
+            years: weeksNeeded / 52,
+            label: targetDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+        };
+    };
+
+    return (
+        <div className="space-y-1.5">
+            <p className="text-[10px] text-slate-500 font-medium italic mb-2">
+                Pick a weekly savings pace to see your timeline:
+            </p>
+            
+            {paces.map((amount, idx) => {
+                const completion = calculateCompletion(amount);
+                const isFastest = idx === paces.length - 1;
+                const isSlowest = idx === 0;
+                
+                const colorClasses = isFastest 
+                    ? 'bg-emerald-50 border-emerald-200 hover:bg-emerald-100' 
+                    : isSlowest 
+                    ? 'bg-slate-50 border-slate-200 hover:bg-slate-100'
+                    : 'bg-blue-50 border-blue-200 hover:bg-blue-100';
+
+                const textColor = isFastest ? 'text-emerald-900' : isSlowest ? 'text-slate-900' : 'text-blue-900';
+                const labelColor = isFastest ? 'text-emerald-700' : isSlowest ? 'text-slate-600' : 'text-blue-700';
+
+                return (
+                    <div 
+                        key={amount} 
+                        className={`${colorClasses} border rounded-lg p-2.5 transition-colors relative`}
+                    >
+                        <div className="flex items-center justify-between gap-2">
+                            {/* Left: pace amount */}
+                            <div className="flex items-center gap-2 min-w-0">
+                                <Calendar size={12} className={labelColor} strokeWidth={2.5} />
+                                <div className="min-w-0">
+                                    <p className={`text-[12px] font-black ${textColor} leading-tight`}>
+                                        ₱{amount.toLocaleString('en-PH')}
+                                        <span className={`text-[9px] font-bold ${labelColor} ml-0.5`}>/week</span>
+                                    </p>
+                                    <p className={`text-[9px] font-bold ${labelColor}`}>
+                                        {completion.weeks} {completion.weeks === 1 ? 'week' : 'weeks'}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Right: completion date */}
+                            <div className="text-right shrink-0">
+                                <p className={`text-[9px] font-bold ${labelColor} uppercase tracking-widest`}>Reach by</p>
+                                <p className={`text-[12px] font-black ${textColor}`}>{completion.label}</p>
+                                {completion.years >= 1 && (
+                                    <p className={`text-[9px] font-medium ${labelColor}`}>
+                                        ~{completion.years.toFixed(1)} {completion.years < 1.05 ? 'year' : 'years'}
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* Fastest badge */}
+                            {isFastest && (
+                                <div className="absolute -top-1 -right-1 px-1.5 py-0.5 bg-emerald-500 text-white text-[8px] font-black rounded uppercase tracking-widest">
+                                    Fastest
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                );
+            })}
+
+            {/* Pro tip footer */}
+            <div className="flex items-start gap-1.5 mt-2 pt-2 border-t border-slate-100">
+                <Sparkles size={10} className="text-amber-600 mt-0.5 shrink-0" strokeWidth={2.5} />
+                <p className="text-[9px] text-slate-500 font-medium leading-relaxed">
+                    <span className="font-bold text-slate-700">Tip:</span> Even an extra ₱500/week can save you months!
+                </p>
             </div>
         </div>
     );

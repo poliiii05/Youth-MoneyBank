@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import ProfileDropdown from './ProfileDropdown';
-import { Target, CreditCard, Settings, Menu, Home, Sparkles, Star, X } from 'lucide-react';
+import { Target, CreditCard, Settings, Menu, Home, Sparkles, Star, X, TrendingUp } from 'lucide-react';
 import FloatingButton from '../Support/FloatingButton';
 
 export default function UserLayout({ user, header, children }) {
@@ -55,40 +55,57 @@ export default function UserLayout({ user, header, children }) {
                     </div>
                 </div>
 
-                {/* Navigation */}
-                <nav className="px-4 py-2 space-y-1 flex-1 overflow-y-auto">
-                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-4 mb-2">
-                        Menu
-                    </p>
-                    <Link 
-                        href="/dashboard" 
-                        className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all ${isUrlActive('/dashboard') ? 'bg-blue-50 text-blue-700 font-bold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium'}`}
-                    >
-                        <Home className="w-4 h-4" strokeWidth={isUrlActive('/dashboard') ? 2.5 : 2} />
-                        <span className="text-sm">Dashboard</span>
-                    </Link>
-                    <Link 
-                        href="/transactions" 
-                        className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all ${isUrlActive('/transactions') ? 'bg-blue-50 text-blue-700 font-bold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium'}`}
-                    >
-                        <CreditCard className="w-4 h-4" strokeWidth={isUrlActive('/transactions') ? 2.5 : 2} />
-                        <span className="text-sm">Transactions</span>
-                    </Link>
-                    <Link 
-                        href="/goals" 
-                        className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all ${isUrlActive('/goals') ? 'bg-blue-50 text-blue-700 font-bold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium'}`}
-                    >
-                        <Target className="w-4 h-4" strokeWidth={isUrlActive('/goals') ? 2.5 : 2} />
-                        <span className="text-sm">Savings</span>
-                    </Link>
-                    <Link 
-                        href="/settings" 
-                        className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all ${isUrlActive('/settings') ? 'bg-blue-50 text-blue-700 font-bold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium'}`}
-                    >
-                        <Settings className="w-4 h-4" strokeWidth={isUrlActive('/settings') ? 2.5 : 2} />
-                        <span className="text-sm">Settings</span>
-                    </Link>
-                </nav>
+                  {/* Navigation */}
+                    <nav className="px-4 py-2 space-y-1 flex-1 overflow-y-auto">
+                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-4 mb-2">
+                            Menu
+                        </p>
+                        
+                        {/* Dashboard */}
+                        <Link 
+                            href="/dashboard" 
+                            className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all ${isUrlActive('/dashboard') ? 'bg-blue-50 text-blue-700 font-bold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium'}`}
+                        >
+                            <Home className="w-4 h-4" strokeWidth={isUrlActive('/dashboard') ? 2.5 : 2} />
+                            <span className="text-sm">Dashboard</span>
+                        </Link>
+                        
+                        {/* Transactions */}
+                        <Link 
+                            href="/transactions" 
+                            className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all ${isUrlActive('/transactions') ? 'bg-blue-50 text-blue-700 font-bold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium'}`}
+                        >
+                            <CreditCard className="w-4 h-4" strokeWidth={isUrlActive('/transactions') ? 2.5 : 2} />
+                            <span className="text-sm">Transactions</span>
+                        </Link>
+                        
+                        {/* Savings (Goals) */}
+                        <Link 
+                            href="/goals" 
+                            className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all ${isUrlActive('/goals') ? 'bg-blue-50 text-blue-700 font-bold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium'}`}
+                        >
+                            <Target className="w-4 h-4" strokeWidth={isUrlActive('/goals') ? 2.5 : 2} />
+                            <span className="text-sm">Savings</span>
+                        </Link>
+                        
+                        {/* Insights — NEW */}
+                        <Link 
+                            href="/insights" 
+                            className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all ${isUrlActive('/insights') ? 'bg-blue-50 text-blue-700 font-bold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium'}`}
+                        >
+                            <TrendingUp className="w-4 h-4" strokeWidth={isUrlActive('/insights') ? 2.5 : 2} />
+                            <span className="text-sm">Insights</span>
+                        </Link>
+                        
+                        {/* Settings */}
+                        <Link 
+                            href="/settings" 
+                            className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all ${isUrlActive('/settings') ? 'bg-blue-50 text-blue-700 font-bold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium'}`}
+                        >
+                            <Settings className="w-4 h-4" strokeWidth={isUrlActive('/settings') ? 2.5 : 2} />
+                            <span className="text-sm">Settings</span>
+                        </Link>
+                    </nav>
 
                 {/* Footer (optional brand tagline) */}
                 <div className="px-6 pb-6 pt-4 border-t border-slate-200">

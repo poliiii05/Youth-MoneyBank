@@ -7,7 +7,7 @@ import TierDistributionCard from '../../Components/Admin/Dashboard/TierDistribut
 import ActivityAnalyticsCard from '../../Components/Admin/Dashboard/ActivityAnalyticsCard';
 import RecentTransactionsCard from '../../Components/Admin/Dashboard/RecentTransactionsCard';
 import RecentKycCard from '../../Components/Admin/Dashboard/RecentKycCard';
-import { Users, Activity, TrendingUp, Clock, RefreshCw } from 'lucide-react';
+import { Users, Wallet, FileCheck, Target, RefreshCw } from 'lucide-react';
 
 export default function AdminDashboard({ 
     auth, 
@@ -23,8 +23,14 @@ export default function AdminDashboard({
     const [isRefreshing, setIsRefreshing] = useState(false);
 
     const defaultStats = {
-        total_users: 0, active_today: 0, total_volume: 0, pending_kyc: 0,
-    };
+    total_users: 0,
+    users_this_week: 0,
+    total_volume: 0,
+    volume_this_month: 0,
+    pending_kyc: 0,
+    active_goals: 0,
+    goals_this_week: 0,
+};
     const s = stats || defaultStats;
 
     const formatPesoShort = (amount) => {
@@ -79,15 +85,34 @@ export default function AdminDashboard({
             <div className="max-w-7xl space-y-4">
                 {/* ROW 1: KPI Stats Grid */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                    <StatCard label="Total Users" value={s.total_users.toLocaleString()} icon={Users} color="blue" />
-                    <StatCard label="Active Today" value={s.active_today.toLocaleString()} icon={Activity} color="emerald" />
-                    <StatCard label="Total Volume" value={formatPesoShort(s.total_volume)} icon={TrendingUp} color="purple" />
+                    <StatCard 
+                        label="Total Users" 
+                        value={s.total_users.toLocaleString()} 
+                        icon={Users} 
+                        color="blue"
+                        subText={`+${s.users_this_week} this week`}
+                    />
+                    <StatCard 
+                        label="Total Volume" 
+                        value={formatPesoShort(s.total_volume)} 
+                        icon={Wallet} 
+                        color="emerald"
+                        subText={`+${formatPesoShort(s.volume_this_month)} this month`}
+                    />
                     <StatCard 
                         label="Pending KYC" 
                         value={s.pending_kyc.toLocaleString()} 
-                        icon={Clock} 
+                        icon={FileCheck} 
                         color="amber"
+                        subText="Awaiting review"
                         onClick={() => window.location.href = '/admin/kyc?status=pending'}
+                    />
+                    <StatCard 
+                        label="Active Goals" 
+                        value={s.active_goals.toLocaleString()} 
+                        icon={Target} 
+                        color="purple"
+                        subText={`+${s.goals_this_week} this week`}
                     />
                 </div>
 

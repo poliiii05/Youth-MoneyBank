@@ -1,237 +1,183 @@
 // resources/js/Pages/User/Settings/TierUpgrade/EligibleState.jsx
 import { useState } from 'react';
-import { router } from '@inertiajs/react';
-import { Sparkles, ArrowRight, Check, Shield, Image as ImageIcon, FileText } from 'lucide-react';
-import DocumentSlot from './DocumentSlot';
-import { showError } from '../../../../utils/toast';
+import { 
+    Sparkles, Check, ShieldCheck,
+    Sprout, Hammer, Crown,
+} from 'lucide-react';
+import TierUpgradeModal from '../../../../Components/Modals/TierUpgradeModal';
+
+const TIER_DATA = {
+    1: {
+        name: 'Starter',
+        icon: Sprout,
+        limit: 5000,
+        limitLabel: '₱5,000',
+        requires: 'Phone or Google Sign-In',
+        color: {
+            badge: 'bg-teal-100 text-teal-700 border-teal-200',
+            iconBg: 'bg-teal-500',
+            ring: 'ring-teal-200',
+            bg: 'bg-teal-50/40',
+            border: 'border-teal-200',
+        },
+    },
+    2: {
+        name: 'Builder',
+        icon: Hammer,
+        limit: 20000,
+        limitLabel: '₱20,000',
+        requires: 'Student ID required',
+        color: {
+            badge: 'bg-blue-100 text-blue-700 border-blue-200',
+            iconBg: 'bg-blue-500',
+            ring: 'ring-blue-200',
+            bg: 'bg-blue-50/40',
+            border: 'border-blue-200',
+        },
+    },
+    3: {
+        name: 'Achiever',
+        icon: Crown,
+        limit: 100000,
+        limitLabel: '₱100,000',
+        requires: 'Government ID + Age 18+',
+        color: {
+            badge: 'bg-amber-100 text-amber-800 border-amber-200',
+            iconBg: 'bg-gradient-to-br from-amber-400 to-yellow-500',
+            ring: 'ring-amber-200',
+            bg: 'bg-amber-50/40',
+            border: 'border-amber-200',
+        },
+    },
+};
 
 export default function EligibleState({ currentTier, requiredDocs }) {
     const nextTier = currentTier + 1;
-    const required = requiredDocs[nextTier] || [];
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
-    const [documents, setDocuments] = useState({});
-    const [isProcessing, setIsProcessing] = useState(false);
-
-    // Update document selection
-    const handleSelectDoc = (docKey, data) => {
-        setDocuments(prev => ({ ...prev, [docKey]: data }));
-    };
-
-    // Clear document selection
-    const handleClearDoc = (docKey) => {
-        setDocuments(prev => {
-            const next = { ...prev };
-            delete next[docKey];
-            return next;
-        });
-    };
-
-    // Submit application
-    const handleSubmit = () => {
-        // Check all required docs present
-        const missing = required.filter(key => !documents[key]);
-        if (missing.length > 0) {
-            showError(`Please complete all required documents (${missing.length} remaining).`);
-            return;
-        }
-
-        setIsProcessing(true);
-
-        // Build FormData with proper structure
-        const formData = new FormData();
-        formData.append('target_tier', nextTier);
-
-        Object.entries(documents).forEach(([key, data]) => {
-            formData.append(`documents[${key}][type]`, data.type);
-            if (data.type === 'upload' && data.file) {
-                formData.append(`documents[${key}][file]`, data.file);
-            }
-        });
-
-        // Submit via Inertia (supports file uploads natively)
-        router.post('/kyc/submit', formData, {
-            forceFormData: true,
-            onFinish: () => setIsProcessing(false),
-            onError: () => {
-                showError('Submission failed. Please try again.');
-            },
-        });
-    };
+    const currentTierData = TIER_DATA[currentTier];
+    const CurrentIcon = currentTierData.icon;
 
     return (
-        <div className="space-y-6">
-            {/* Tier progress visual */}
-            <div>
-                <h3 className="text-sm font-bold text-slate-900 tracking-tight mb-3">Tier Progress</h3>
-                <TierProgressBar currentTier={currentTier} />
-            </div>
+        <>
+            <div className="space-y-4">
+                
+                {/* SECTION 1: Current Status Hero Banner */}
+                <div className="bg-gradient-to-br from-blue-50 via-blue-50/80 to-indigo-50/50 border border-blue-200 rounded-2xl p-5">
+                    <div className="flex items-center gap-2 mb-2">
+                        <ShieldCheck size={14} className="text-blue-700" strokeWidth={2.5} />
+                        <span className="text-[10px] font-black text-blue-700 uppercase tracking-widest">Current Status</span>
+                    </div>
+                    <div className="flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                            <h2 className="text-2xl font-black text-blue-950 tracking-tight">
+                                Tier {currentTier} — {currentTierData.name}
+                            </h2>
+                            <p className="text-xs text-blue-700 font-semibold mt-0.5">
+                                Balance limit: {currentTierData.limitLabel}
+                            </p>
+                        </div>
+                        <div className={`w-14 h-14 rounded-2xl ${currentTierData.color.iconBg} flex items-center justify-center shadow-md shadow-blue-200/50 shrink-0`}>
+                            <CurrentIcon size={26} className="text-white" strokeWidth={2.5} />
+                        </div>
+                    </div>
+                </div>
 
-            {/* Why upgrade */}
-            <div className="bg-blue-50/30 border border-blue-100 rounded-xl p-4">
-                <h4 className="text-xs font-bold text-blue-900 uppercase tracking-widest mb-3">
-                    Why upgrade to Tier {nextTier}?
-                </h4>
-                <ul className="space-y-2">
-                    {getUpgradeBenefits(nextTier).map((benefit, idx) => (
-                        <li key={idx} className="flex items-start gap-2 text-xs text-slate-700 font-medium">
-                            <Check size={14} className="text-emerald-600 mt-0.5 shrink-0" strokeWidth={2.5} />
-                            <span>{benefit}</span>
-                        </li>
-                    ))}
-                </ul>
-            </div>
-
-            {/* Required documents */}
-            <div>
-                <h3 className="text-sm font-bold text-slate-900 tracking-tight mb-1">
-                    Required Documents for Tier {nextTier}
-                </h3>
-                <p className="text-xs text-slate-500 font-medium mb-4">
-                    Upload your documents or use samples to test the flow
-                </p>
-
+                {/* SECTION 2: Tier List Cards */}
                 <div className="space-y-3">
-                    {required.map((docKey) => {
-                        const docInfo = getDocInfo(docKey);
+                    {[1, 2, 3].map((tier) => {
+                        const isComplete = currentTier > tier;
+                        const isCurrent = currentTier === tier;
+                        const isNext = tier === nextTier;
+                        const tierData = TIER_DATA[tier];
+                        const TierIcon = tierData.icon;
+
                         return (
-                            <DocumentSlot
-                                key={docKey}
-                                doc={docInfo}
-                                selected={documents[docKey]}
-                                onSelect={(data) => handleSelectDoc(docKey, data)}
-                                onClear={() => handleClearDoc(docKey)}
-                            />
+                            <div 
+                                key={tier}
+                                className={`relative rounded-2xl p-4 transition-all ${
+                                    isCurrent
+                                        ? `${tierData.color.bg} border-2 ${tierData.color.border} ring-2 ${tierData.color.ring}`
+                                        : isComplete
+                                        ? 'bg-slate-50 border border-slate-200 opacity-80'
+                                        : isNext
+                                        ? `${tierData.color.bg} border ${tierData.color.border}`
+                                        : 'bg-white border border-slate-200'
+                                }`}
+                            >
+                                <div className="flex items-center justify-between gap-3">
+                                    {/* LEFT: Tier info */}
+                                    <div className="flex items-start gap-3 flex-1 min-w-0">
+                                        <div className={`w-11 h-11 rounded-xl ${tierData.color.iconBg} flex items-center justify-center shadow-sm shrink-0 ${isComplete ? 'opacity-60' : ''}`}>
+                                            <TierIcon size={20} className="text-white" strokeWidth={2.5} />
+                                        </div>
+                                        
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md border ${tierData.color.badge}`}>
+                                                    Tier {tier}
+                                                </span>
+                                                {isCurrent && (
+                                                    <span className="text-[10px] font-black text-blue-700 flex items-center gap-1">
+                                                        <span className="w-1.5 h-1.5 bg-blue-600 rounded-full animate-pulse"></span>
+                                                        Current
+                                                    </span>
+                                                )}
+                                            </div>
+                                            
+                                            <h3 className="text-base font-black text-slate-900 leading-tight">{tierData.name}</h3>
+                                            <p className="text-xs text-slate-600 font-bold mt-0.5">
+                                                Limit: <span className="text-slate-900">{tierData.limitLabel}</span>
+                                            </p>
+                                            <p className="text-[11px] text-slate-500 font-medium mt-1">
+                                                Requires: {tierData.requires}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* RIGHT: Status indicator / CTA */}
+                                    <div className="shrink-0">
+                                        {isComplete && (
+                                            <div className="w-9 h-9 rounded-full bg-emerald-50 border-2 border-emerald-300 flex items-center justify-center">
+                                                <Check size={16} className="text-emerald-600" strokeWidth={3} />
+                                            </div>
+                                        )}
+                                        {isCurrent && (
+                                            <div className="w-9 h-9 rounded-full bg-blue-50 border-2 border-blue-300 flex items-center justify-center">
+                                                <Check size={16} className="text-blue-600" strokeWidth={3} />
+                                            </div>
+                                        )}
+                                        {isNext && (
+                                            <button
+                                                onClick={() => setIsModalOpen(true)}
+                                                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black rounded-xl transition-all shadow-md shadow-blue-200 cursor-pointer flex items-center gap-1.5"
+                                            >
+                                                <Sparkles size={12} strokeWidth={2.5} />
+                                                Upgrade
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
                         );
                     })}
                 </div>
+
+                {/* Helper note sa baba */}
+                <div className="text-center pt-2">
+                    <p className="text-[10px] text-slate-400 font-medium">
+                        Click "Upgrade" to start your Tier {nextTier} application
+                    </p>
+                </div>
             </div>
 
-            {/* Submit button */}
-            <div className="pt-4 border-t border-slate-200">
-                <button
-                    onClick={handleSubmit}
-                    disabled={isProcessing}
-                    className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-500 hover:from-amber-500 hover:via-yellow-600 hover:to-amber-600 text-amber-950 text-sm font-black rounded-xl transition-all shadow-md shadow-amber-200 cursor-pointer disabled:opacity-60"
-                >
-                    {isProcessing ? (
-                        <span>Submitting...</span>
-                    ) : (
-                        <>
-                            <Sparkles size={16} strokeWidth={2.5} />
-                            Submit Tier {nextTier} Application
-                            <ArrowRight size={16} strokeWidth={2.5} />
-                        </>
-                    )}
-                </button>
-                <p className="text-[10px] text-slate-400 text-center mt-2">
-                    Documents are processed securely. Real uploads auto-deleted after 24 hours.
-                </p>
-            </div>
-        </div>
-    );
-}
-
-// Document info helper
-function getDocInfo(docKey) {
-    const docs = {
-        school_id_front: { 
-            label: 'School ID (Front)', 
-            description: 'Clear photo of your student ID front',
-            icon: ImageIcon,
-        },
-        school_id_back: { 
-            label: 'School ID (Back)', 
-            description: 'Clear photo of your student ID back',
-            icon: ImageIcon,
-        },
-        selfie: { 
-            label: 'Selfie with ID', 
-            description: 'Selfie holding your school ID',
-            icon: ImageIcon,
-        },
-        valid_id_front: { 
-            label: 'Government ID (Front)', 
-            description: 'Passport, driver\'s license, or national ID',
-            icon: Shield,
-        },
-        valid_id_back: { 
-            label: 'Government ID (Back)', 
-            description: 'Back of your government-issued ID',
-            icon: Shield,
-        },
-        address_proof: { 
-            label: 'Proof of Address', 
-            description: 'Utility bill or bank statement (within 3 months)',
-            icon: FileText,
-        },
-    };
-    return docs[docKey] || { label: docKey, description: '', icon: FileText };
-}
-
-// Upgrade benefits per tier
-function getUpgradeBenefits(tier) {
-    if (tier === 2) {
-        return [
-            'Balance limit: ₱5,000 → ₱20,000',
-            'Higher transaction limits',
-            'Unlock peer-to-peer transfers',
-            'Access to up to 10 savings goals',
-        ];
-    }
-    if (tier === 3) {
-        return [
-            'Balance limit: ₱20,000 → ₱100,000',
-            'Maximum transaction limits',
-            'Priority customer support',
-            'Unlimited savings goals',
-            'Family allowance features',
-        ];
-    }
-    return [];
-}
-
-// Tier progress visual
-function TierProgressBar({ currentTier }) {
-    const tiers = [
-        { num: 1, name: 'Starter', limit: '₱5K' },
-        { num: 2, name: 'Builder', limit: '₱20K' },
-        { num: 3, name: 'Achiever', limit: '₱100K' },
-    ];
-
-    return (
-        <div className="flex items-center justify-between gap-2">
-            {tiers.map((tier, idx) => {
-                const isComplete = currentTier > tier.num;
-                const isCurrent = currentTier === tier.num;
-                
-                return (
-                    <div key={tier.num} className="flex items-center flex-1 min-w-0">
-                        <div className="flex flex-col items-center flex-1">
-                            <div className={`w-9 h-9 rounded-full flex items-center justify-center font-black text-xs mb-2 transition-all ${
-                                isComplete 
-                                    ? 'bg-emerald-500 text-white shadow-md'
-                                    : isCurrent
-                                    ? 'bg-gradient-to-br from-blue-500 to-indigo-500 text-white shadow-md ring-4 ring-blue-100'
-                                    : 'bg-slate-100 text-slate-400 border-2 border-dashed border-slate-300'
-                            }`}>
-                                {isComplete ? <Check size={14} strokeWidth={3} /> : tier.num}
-                            </div>
-                            <p className={`text-[10px] font-bold ${isCurrent ? 'text-blue-700' : isComplete ? 'text-emerald-700' : 'text-slate-400'}`}>
-                                {tier.name}
-                            </p>
-                            <p className={`text-[9px] font-semibold ${isCurrent ? 'text-blue-600' : isComplete ? 'text-emerald-600' : 'text-slate-400'}`}>
-                                {tier.limit}
-                            </p>
-                            {isCurrent && (
-                                <span className="text-[8px] font-black uppercase tracking-widest text-blue-700 mt-0.5">You</span>
-                            )}
-                        </div>
-                        {idx < tiers.length - 1 && (
-                            <div className={`h-0.5 flex-1 ${currentTier > tier.num ? 'bg-emerald-500' : 'bg-slate-200'} -translate-y-3`}></div>
-                        )}
-                    </div>
-                );
-            })}
-        </div>
+            {/* MODAL */}
+            <TierUpgradeModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                currentTier={currentTier}
+                requiredDocs={requiredDocs}
+            />
+        </>
     );
 }
