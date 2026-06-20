@@ -1,31 +1,31 @@
 // resources/js/Components/Modals/CreateGoalModal.jsx
 import { useForm } from '@inertiajs/react';
 import { useEffect } from 'react';
-import { Target, Smartphone, Gamepad2, Plane, ShoppingBag, PiggyBank, Landmark, Umbrella, GraduationCap, X, Loader2 } from 'lucide-react';
+import { Target, Smartphone, Gamepad2, Plane, ShoppingBag, PiggyBank, Landmark, Umbrella, GraduationCap, ShieldAlert, X, Loader2, Sparkles } from 'lucide-react';
 import { useModalEnterKey } from '../../hooks/useModalEnterKey';
 
-// Template presets para sa Dashboard quick-start
+// Template presets
 const TEMPLATE_PRESETS = {
     'Emergency': {
         title: 'Emergency Fund',
         subtitle: 'For unexpected expenses',
         target_amount: '5000',
         icon_name: 'ShieldAlert',
-        color_theme: 'bg-red-500',
+        color_theme: 'bg-emerald-600',
     },
     'Phone': {
         title: 'New Phone',
         subtitle: 'Saving for an upgrade',
         target_amount: '15000',
         icon_name: 'Smartphone',
-        color_theme: 'bg-blue-500',
+        color_theme: 'bg-emerald-600',
     },
     'Travel': {
         title: 'Travel Fund',
         subtitle: 'Adventure awaits',
         target_amount: '10000',
         icon_name: 'Plane',
-        color_theme: 'bg-purple-500',
+        color_theme: 'bg-emerald-600',
     },
 };
 
@@ -35,10 +35,9 @@ export default function CreateGoalModal({ isOpen, onClose, template = null }) {
         subtitle: '',
         target_amount: '',
         icon_name: 'PiggyBank',
-        color_theme: 'bg-emerald-500',
+        color_theme: 'bg-emerald-600',
     });
     
-    // Apply template when modal opens with a template
     useEffect(() => {
         if (isOpen && template && TEMPLATE_PRESETS[template]) {
             const preset = TEMPLATE_PRESETS[template];
@@ -78,128 +77,225 @@ export default function CreateGoalModal({ isOpen, onClose, template = null }) {
     if (!isOpen) return null;
 
     const icons = [
-        { name: 'PiggyBank', component: <PiggyBank size={24} /> },
-        { name: 'Landmark', component: <Landmark size={24} /> },
-        { name: 'Umbrella', component: <Umbrella size={24} /> },
-        { name: 'Target', component: <Target size={24} /> },
-        { name: 'Smartphone', component: <Smartphone size={24} /> },
-        { name: 'Gamepad2', component: <Gamepad2 size={24} /> },
-        { name: 'Plane', component: <Plane size={24} /> },
-        { name: 'ShoppingBag', component: <ShoppingBag size={24} /> },
-        { name: 'GraduationCap', component: <GraduationCap size={24} /> },
+        { name: 'PiggyBank', component: <PiggyBank size={20} /> },
+        { name: 'Target', component: <Target size={20} /> },
+        { name: 'ShieldAlert', component: <ShieldAlert size={20} /> },
+        { name: 'Smartphone', component: <Smartphone size={20} /> },
+        { name: 'Landmark', component: <Landmark size={20} /> },
+        { name: 'Umbrella', component: <Umbrella size={20} /> },
+        { name: 'Plane', component: <Plane size={20} /> },
+        { name: 'ShoppingBag', component: <ShoppingBag size={20} /> },
+        { name: 'GraduationCap', component: <GraduationCap size={20} /> },
+        { name: 'Gamepad2', component: <Gamepad2 size={20} /> },
     ];
 
+    // ALL EMERALD intensity variations
     const colors = [
-        { value: 'bg-emerald-500', display: 'bg-emerald-500' },
-        { value: 'bg-blue-500', display: 'bg-blue-500' },
-        { value: 'bg-purple-500', display: 'bg-purple-500' },
-        { value: 'bg-amber-500', display: 'bg-amber-500' },
-        { value: 'bg-rose-500', display: 'bg-rose-500' },
+        { value: 'bg-emerald-600', label: 'Default' },
+        { value: 'bg-emerald-700', label: 'Deep' },
+        { value: 'bg-emerald-800', label: 'Darkest' },
+        { value: 'bg-emerald-500', label: 'Bright' },
+        { value: 'bg-emerald-400', label: 'Light' },
     ];
 
     const renderActiveIcon = () => {
         const found = icons.find(i => i.name === data.icon_name);
-        return found ? found.component : <PiggyBank size={24} />;
+        return found ? found.component : <PiggyBank size={20} />;
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-            <div className="bg-slate-50 rounded-[2rem] w-full max-w-5xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] relative animate-in fade-in zoom-in-95 duration-200">
-                <button onClick={() => { reset(); clearErrors(); onClose(); }}
-                    className="absolute top-4 right-4 p-2 bg-white text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-colors z-10 cursor-pointer shadow-sm">
-                    <X size={20} />
-                </button>
-                <div className="flex flex-col lg:flex-row overflow-y-auto">
-                    <div className="flex-1 bg-white p-6 sm:p-8 lg:p-10">
-                        <div>
-                            <h2 className="text-2xl font-black text-slate-900 tracking-tight">Set a New Goal 🚀</h2>
-                            <p className="text-sm text-slate-500 font-medium mt-1 mb-8">What are you saving up for? Define it to achieve it.</p>
-                        </div>
-                        <form onSubmit={submit} className="space-y-6">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                <div className="sm:col-span-2">
-                                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">Goal Name <span className="text-red-500">*</span></label>
-                                    <input type="text" required placeholder="e.g. iPhone 15 Pro, Emergency Fund" value={data.title} onChange={e => setData('title', e.target.value)}
-                                        className={`w-full px-4 py-3 bg-slate-50 border rounded-xl text-sm font-semibold focus:bg-white focus:ring-2 outline-none transition-all ${errors.title ? 'border-red-500 focus:ring-red-500/20' : 'border-slate-200 focus:ring-blue-500/20 focus:border-blue-500'}`} />
-                                    {errors.title && <p className="text-xs text-red-500 mt-1.5 font-semibold flex items-center gap-1">⚠️ {errors.title}</p>}
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">Short Description</label>
-                                    <input type="text" placeholder="e.g. By December 2026" value={data.subtitle} onChange={e => setData('subtitle', e.target.value)}
-                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all" />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">Target Amount (₱) <span className="text-red-500">*</span></label>
-                                   <div className="relative">
-                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-sm text-slate-400 pointer-events-none">₱</span>
-                                        <input 
-                                            type="text" 
-                                            inputMode="numeric"
-                                            required 
-                                            placeholder="5,000" 
-                                            value={data.target_amount ? Number(data.target_amount).toLocaleString('en-US') : ''}
-                                            onChange={e => {
-                                                const raw = e.target.value.replace(/[^0-9]/g, '');
-                                                setData('target_amount', raw);
-                                            }}
-                                            className={`w-full pl-8 pr-4 py-3 bg-slate-50 border rounded-xl text-sm font-black focus:bg-white focus:ring-2 outline-none transition-all ${errors.target_amount ? 'border-red-500 focus:ring-red-500/20' : 'border-slate-200 focus:ring-blue-500/20 focus:border-blue-500'}`} 
-                                        />
-                                    </div>
-                                {errors.target_amount && <p className="text-xs text-red-500 mt-1.5 font-semibold flex items-center gap-1">⚠️ {errors.target_amount}</p>}
-                                </div>
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="bg-white w-full sm:max-w-md sm:rounded-3xl rounded-t-3xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 sm:zoom-in-95 duration-300 relative max-h-[90vh] flex flex-col">
+                
+                {/* HERO HEADER */}
+                <div className="relative overflow-hidden px-5 py-5 bg-gradient-to-br from-emerald-700 via-emerald-800 to-teal-900">
+                    <div className="absolute -top-12 -right-12 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
+                    <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-emerald-300/20 rounded-full blur-xl"></div>
+                    
+                    <div className="relative flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                            <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/20 shadow-inner shrink-0">
+                                <Sparkles size={18} className="text-white" strokeWidth={2.5} />
                             </div>
-                            <div>
-                                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-2">Choose an Icon</label>
-                                <div className="flex flex-wrap gap-3">
-                                    {icons.map((icon) => (
-                                        <button type="button" key={icon.name} onClick={() => setData('icon_name', icon.name)}
-                                            className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all cursor-pointer ${data.icon_name === icon.name ? 'bg-slate-800 text-white shadow-md scale-105' : 'bg-slate-50 text-slate-500 border border-slate-200 hover:bg-slate-100'}`}>
-                                            {icon.component}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-2">Color Theme</label>
-                                <div className="flex flex-wrap gap-3">
-                                    {colors.map((color) => (
-                                        <button type="button" key={color.value} onClick={() => setData('color_theme', color.value)}
-                                            className={`w-10 h-10 rounded-full ${color.display} flex items-center justify-center transition-all border-4 cursor-pointer ${data.color_theme === color.value ? 'border-slate-800 scale-110 shadow-md' : 'border-transparent hover:scale-105'}`}></button>
-                                    ))}
-                                </div>
-                            </div>
-                            <div className="pt-4 flex items-center gap-3">
-                                <button type="button" onClick={() => { reset(); clearErrors(); onClose(); }}
-                                    className="px-6 py-3.5 text-slate-500 font-bold hover:bg-slate-100 rounded-xl transition-colors cursor-pointer">Cancel</button>
-                                <button type="submit" disabled={processing}
-                                    className="flex-1 py-3.5 bg-blue-600 text-white font-bold rounded-xl shadow-md shadow-blue-200 hover:bg-blue-700 transition-all focus:ring-4 focus:ring-blue-100 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2">
-                                    {processing ? <Loader2 size={18} className="animate-spin" /> : 'Create Savings Goal'}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                    <div className="w-full lg:w-96 bg-slate-50 p-6 sm:p-8 lg:p-10 shrink-0 border-l border-slate-100 flex flex-col justify-center">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 text-center lg:text-left">Live Card Preview</p>
-                        <div className="bg-white rounded-[1.5rem] p-6 shadow-xl border border-slate-100 relative overflow-hidden w-full">
-                            <div className="flex justify-between items-start mb-6">
-                                <div className={`p-4 rounded-2xl ${data.color_theme.replace('500', '50')} ${data.color_theme.replace('bg-', 'text-')}`}>
-                                    {renderActiveIcon()}
-                                </div>
-                                <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md bg-slate-100 text-slate-500">0%</span>
-                            </div>
-                            <div>
-                                <h3 className="font-black text-slate-900 text-xl tracking-tight mb-1 truncate">{data.title || "Your Goal Name"}</h3>
-                                <p className="text-xs text-slate-500 font-medium mb-6 truncate">{data.subtitle || "Short description"}</p>
-                                <div className="flex justify-between items-end mb-2">
-                                    <p className="text-3xl font-black text-slate-900 tracking-tight">₱0</p>
-                                </div>
-                                <div className="w-full bg-slate-100 rounded-full h-2 mb-2 overflow-hidden"></div>
-                                <p className="text-[10px] font-bold text-right uppercase tracking-wider text-slate-400">
-                                    Target: ₱{data.target_amount ? Number(data.target_amount).toLocaleString() : '0'}
+                            <div className="min-w-0">
+                                <p className="text-[10px] font-bold text-white/70 uppercase tracking-widest leading-tight">
+                                    Create new
                                 </p>
+                                <h2 className="text-base font-black text-white tracking-tight leading-tight truncate">
+                                    Savings Goal 🎯
+                                </h2>
                             </div>
                         </div>
+                        <button
+                            onClick={() => { reset(); clearErrors(); onClose(); }}
+                            className="w-8 h-8 flex items-center justify-center rounded-full bg-white/15 hover:bg-white/25 text-white transition-all cursor-pointer backdrop-blur-sm active:scale-95 shrink-0"
+                        >
+                            <X size={16} strokeWidth={2.5} />
+                        </button>
                     </div>
+                </div>
+
+                {/* BODY */}
+                <div className="flex-1 overflow-y-auto px-5 py-5">
+                    
+                    {/* Live preview card */}
+                    <div className="mb-5 p-3 bg-gradient-to-br from-slate-50 to-emerald-50/30 rounded-xl border border-slate-200">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Preview</p>
+                        <div className="flex items-center gap-3">
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-sm shrink-0 ${data.color_theme}`}>
+                                {renderActiveIcon()}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                                <p className="text-sm font-bold text-slate-900 truncate">{data.title || 'Your Goal Name'}</p>
+                                <p className="text-[11px] text-slate-500 font-medium truncate">{data.subtitle || 'Short description'}</p>
+                            </div>
+                            <p className="text-sm font-bold text-emerald-700 shrink-0" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                                ₱{data.target_amount ? Number(data.target_amount).toLocaleString('en-US') : '0'}
+                            </p>
+                        </div>
+                    </div>
+
+                    <form onSubmit={submit} className="space-y-4">
+                        {/* Goal Name */}
+                        <div>
+                            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+                                Goal Name <span className="text-red-500">*</span>
+                            </label>
+                            <input 
+                                type="text" 
+                                required 
+                                placeholder="e.g. iPhone 15 Pro, Emergency Fund" 
+                                value={data.title} 
+                                onChange={e => setData('title', e.target.value)}
+                                autoFocus
+                                className={`w-full px-3.5 py-2.5 bg-white border rounded-xl text-sm font-semibold outline-none transition-all ${
+                                    errors.title 
+                                        ? 'border-red-400 focus:ring-4 focus:ring-red-50 text-red-900' 
+                                        : 'border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-50 text-slate-900'
+                                }`} 
+                            />
+                            {errors.title && (
+                                <p className="text-[10px] text-red-500 mt-1 font-semibold">⚠️ {errors.title}</p>
+                            )}
+                        </div>
+
+                        {/* Description */}
+                        <div>
+                            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+                                Short Description
+                            </label>
+                            <input 
+                                type="text" 
+                                placeholder="e.g. By December 2026" 
+                                value={data.subtitle} 
+                                onChange={e => setData('subtitle', e.target.value)}
+                                className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold focus:border-emerald-500 focus:ring-4 focus:ring-emerald-50 outline-none transition-all text-slate-900" 
+                            />
+                        </div>
+
+                        {/* Target Amount */}
+                        <div>
+                            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+                                Target Amount <span className="text-red-500">*</span>
+                            </label>
+                            <div className="relative">
+                                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-black text-lg text-slate-300 pointer-events-none">₱</span>
+                                <input 
+                                    type="text" 
+                                    inputMode="numeric"
+                                    required 
+                                    placeholder="5,000" 
+                                    value={data.target_amount ? Number(data.target_amount).toLocaleString('en-US') : ''}
+                                    onChange={e => {
+                                        const raw = e.target.value.replace(/[^0-9]/g, '');
+                                        setData('target_amount', raw);
+                                    }}
+                                    style={{ fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em' }}
+                                    className={`w-full pl-9 pr-3.5 py-2.5 bg-white border rounded-xl text-base font-bold outline-none transition-all ${
+                                        errors.target_amount 
+                                            ? 'border-red-400 focus:ring-4 focus:ring-red-50 text-red-900' 
+                                            : 'border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-50 text-slate-900'
+                                    }`} 
+                                />
+                            </div>
+                            {errors.target_amount && (
+                                <p className="text-[10px] text-red-500 mt-1 font-semibold">⚠️ {errors.target_amount}</p>
+                            )}
+                            <p className="text-[10px] text-slate-400 font-medium mt-1">Minimum ₱50</p>
+                        </div>
+
+                        {/* Icon picker */}
+                        <div>
+                            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Choose Icon</label>
+                            <div className="grid grid-cols-5 gap-2">
+                                {icons.map((icon) => (
+                                    <button 
+                                        type="button" 
+                                        key={icon.name} 
+                                        onClick={() => setData('icon_name', icon.name)}
+                                        className={`aspect-square rounded-xl flex items-center justify-center transition-all cursor-pointer border-2 active:scale-95 ${
+                                            data.icon_name === icon.name 
+                                                ? 'bg-emerald-700 text-white border-emerald-700 shadow-md shadow-emerald-200 scale-105' 
+                                                : 'bg-white text-slate-500 border-slate-200 hover:border-emerald-400 hover:bg-emerald-50/40 hover:text-emerald-700'
+                                        }`}
+                                    >
+                                        {icon.component}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Color picker — ALL EMERALD intensities */}
+                        <div>
+                            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Color Intensity</label>
+                            <div className="grid grid-cols-5 gap-2">
+                                {colors.map((color) => (
+                                    <button 
+                                        type="button" 
+                                        key={color.value} 
+                                        onClick={() => setData('color_theme', color.value)}
+                                        className={`aspect-square rounded-xl ${color.value} transition-all cursor-pointer active:scale-95 ${
+                                            data.color_theme === color.value 
+                                                ? 'ring-2 ring-offset-2 ring-slate-400 scale-110 shadow-md' 
+                                                : 'hover:scale-105'
+                                        }`}
+                                        title={color.label}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                {/* FOOTER */}
+                <div className="border-t border-slate-200 px-5 py-3 flex items-center gap-3 flex-shrink-0 bg-slate-50/50">
+                    <button 
+                        type="button" 
+                        onClick={() => { reset(); clearErrors(); onClose(); }}
+                        className="px-4 py-2.5 bg-white border border-slate-200 hover:border-slate-300 text-slate-700 text-xs font-bold rounded-xl transition-colors cursor-pointer active:scale-95"
+                    >
+                        Cancel
+                    </button>
+                    <button 
+                        type="button"
+                        onClick={() => submit(null)}
+                        disabled={processing || !isFormValid}
+                        className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-black rounded-xl transition-all cursor-pointer active:scale-[0.98] ${
+                            isFormValid && !processing
+                                ? 'bg-emerald-700 hover:bg-emerald-800 text-white shadow-md shadow-emerald-200'
+                                : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                        }`}
+                    >
+                        {processing ? (
+                            <>
+                                <Loader2 size={14} className="animate-spin" strokeWidth={2.5} /> Creating...
+                            </>
+                        ) : (
+                            <>
+                                <Sparkles size={14} strokeWidth={2.5} /> Create Goal
+                            </>
+                        )}
+                    </button>
                 </div>
             </div>
         </div>
