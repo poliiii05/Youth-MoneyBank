@@ -118,111 +118,13 @@ Route::prefix('api/support')->name('api.support.')->group(function () {
     Route::post('/goals', [SavingsGoalController::class, 'store'])->name('goals.store');
 
     // ====================================================
-    // TRANSACTIONS — list with 30-day filter + pagination
+    // TRANSACTIONS
     // ====================================================
-    Route::get('/transactions', function () {
-        $user = auth()->user();
+    Route::get('/transactions', [\App\Http\Controllers\User\TransactionsController::class, 'index'])
+        ->name('transactions');
 
-        $perPage = 10;
-        $page = (int) request('page', 1);
-        $showAll = request('show_all') === '1';
-
-        $query = $user->transactions()
-            ->with(['ledgerEntries.ledgerAccount'])
-            ->latest();
-
-        if (!$showAll) {
-            $query->where('created_at', '>=', now()->subDays(30));
-        }
-
-        $totalCount = $query->count();
-        $totalPages = max(1, ceil($totalCount / $perPage));
-
-        $transactions = $query
-            ->skip(($page - 1) * $perPage)
-            ->take($perPage)
-            ->get()
-            ->map(function ($t) {
-                return [
-                    'id' => $t->id,
-                    'title' => $t->title,
-                    'type' => $t->type,
-                    'amount' => (float) $t->amount_pesos,
-                    'is_positive' => $t->is_positive,
-                    'status' => $t->status,
-                    'reference_id' => $t->reference_id,
-                    'public_reference_id' => $t->public_reference_id,
-                    'created_at' => $t->created_at,
-                    'ledger_entries_count' => $t->ledgerEntries->count(),
-                ];
-            });
-
-        $hasOlderTransactions = $user->transactions()
-            ->where('created_at', '<', now()->subDays(30))
-            ->exists();
-
-        return inertia('User/Transactions', [
-            'auth' => ['user' => $user],
-            'transactions' => $transactions,
-            'pagination' => [
-                'current_page' => $page,
-                'total_pages' => $totalPages,
-                'total_count' => $totalCount,
-                'per_page' => $perPage,
-                'from' => $totalCount > 0 ? ($page - 1) * $perPage + 1 : 0,
-                'to' => min($page * $perPage, $totalCount),
-            ],
-            'filters' => [
-                'show_all' => $showAll,
-                'has_older' => $hasOlderTransactions,
-            ],
-        ]);
-    })->name('transactions');
-
-    // ====================================================
-    // TRANSACTION DETAIL
-    // ====================================================
-    Route::get('/transactions/{transaction}', function (\App\Models\Transaction $transaction) {
-        $user = auth()->user();
-
-        if ($transaction->user_id !== $user->id) {
-            abort(403, 'You do not have permission to view this transaction.');
-        }
-
-        $transaction->load(['ledgerEntries.ledgerAccount']);
-
-        return inertia('User/TransactionDetail', [
-            'auth' => ['user' => $user],
-            'transaction' => [
-                'id' => $transaction->id,
-                'title' => $transaction->title,
-                'type' => $transaction->type,
-                'amount' => (float) $transaction->amount_pesos,
-                'is_positive' => $transaction->is_positive,
-                'status' => $transaction->status,
-                'description' => $transaction->description,
-                'reference_id' => $transaction->reference_id,
-                'public_reference_id' => $transaction->public_reference_id,
-                'created_at' => $transaction->created_at,
-                'ledger_entries' => $transaction->ledgerEntries
-                    ->sortBy(function ($entry) {
-                        return $entry->direction === 'debit' ? 0 : 1;
-                    })
-                    ->values()
-                    ->map(function ($entry) {
-                        return [
-                            'id' => $entry->id,
-                            'direction' => $entry->direction,
-                            'amount' => (float) ($entry->amount_cents / 100),
-                            'account_name' => $entry->ledgerAccount?->name ?? 'Unknown',
-                            'account_type' => $entry->ledgerAccount?->type ?? 'unknown',
-                            'account_code' => $entry->ledgerAccount?->code ?? null,
-                        ];
-                    }),
-            ],
-        ]);
-    })->name('transactions.show');
-
+    Route::get('/transactions/{transaction}', [\App\Http\Controllers\User\TransactionsController::class, 'show'])
+        ->name('transactions.show');
     // ====================================================
     // USER SETTINGS
     // ====================================================
