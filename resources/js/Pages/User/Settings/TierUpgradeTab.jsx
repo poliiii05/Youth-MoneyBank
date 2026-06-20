@@ -9,7 +9,6 @@ import MaxTierState from './TierUpgrade/MaxTierState';
 export default function TierUpgradeTab({ profile, kyc_status }) {
     const [reapplying, setReapplying] = useState(false);
 
-    // Default kyc_status fallback (for safety)
     const status = kyc_status || {
         current_tier: Number(profile.kyc_tier || 1),
         has_application: false,
@@ -24,14 +23,11 @@ export default function TierUpgradeTab({ profile, kyc_status }) {
     const currentTier = status.current_tier;
     const application = status.application;
 
-    // Determine which state to render
     const renderState = () => {
-        // Max tier (Tier 3)
         if (currentTier === 3) {
             return <MaxTierState />;
         }
 
-        // Re-applying after rejection (user clicked "Re-apply")
         if (reapplying) {
             return (
                 <EligibleState 
@@ -41,7 +37,6 @@ export default function TierUpgradeTab({ profile, kyc_status }) {
             );
         }
 
-        // Has existing application
         if (status.has_application && application) {
             if (application.status === 'pending') {
                 return <PendingState application={application} />;
@@ -54,10 +49,8 @@ export default function TierUpgradeTab({ profile, kyc_status }) {
                     />
                 );
             }
-            // Approved → fall through to eligible state (for next tier upgrade)
         }
 
-        // Default: eligible to submit
         return (
             <EligibleState 
                 currentTier={currentTier} 
@@ -68,11 +61,11 @@ export default function TierUpgradeTab({ profile, kyc_status }) {
 
     return (
         <div className="space-y-6">
-            {/* DEMO MODE BANNER */}
+            {/* DEMO MODE BANNER — amber (informational) */}
             {status.is_demo_mode && currentTier < 3 && (
-                <div className="bg-gradient-to-r from-amber-50 via-yellow-50 to-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
+                <div className="bg-gradient-to-r from-amber-50 to-amber-100/50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
                     <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center shrink-0">
-                        <AlertTriangle size={16} className="text-amber-600" strokeWidth={2.5} />
+                        <AlertTriangle size={16} className="text-amber-700" strokeWidth={2.5} />
                     </div>
                     <div className="min-w-0 flex-1">
                         <p className="text-xs font-black text-amber-900 mb-1">Demo Mode</p>
@@ -83,7 +76,6 @@ export default function TierUpgradeTab({ profile, kyc_status }) {
                 </div>
             )}
 
-            {/* STATE-BASED RENDERING */}
             {renderState()}
         </div>
     );

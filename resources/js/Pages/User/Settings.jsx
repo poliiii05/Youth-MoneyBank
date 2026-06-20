@@ -36,7 +36,7 @@ export default function Settings({ auth, profile, kyc_status, active_tab }) {
 
             <div className="max-w-4xl mx-auto">
                 {/* TABS NAVIGATION */}
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-300 overflow-hidden mb-6">
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-6">
                     <div className="flex overflow-x-auto scrollbar-hide border-b border-slate-200">
                         {TABS.map((tab) => {
                             const Icon = tab.icon;
@@ -45,9 +45,9 @@ export default function Settings({ auth, profile, kyc_status, active_tab }) {
                                 <button
                                     key={tab.id}
                                     onClick={() => switchTab(tab.id)}
-                                    className={`flex items-center gap-2 px-5 py-3 text-xs font-bold transition-all whitespace-nowrap cursor-pointer border-b-2 ${
+                                    className={`flex items-center gap-2 px-5 py-3 text-xs font-bold transition-all whitespace-nowrap cursor-pointer border-b-2 active:scale-95 ${
                                         isActive
-                                            ? 'text-blue-700 border-blue-600 bg-blue-50/30'
+                                            ? 'text-emerald-700 border-emerald-700 bg-emerald-50/40'
                                             : 'text-slate-500 border-transparent hover:text-slate-700 hover:bg-slate-50'
                                     }`}
                                 >

@@ -82,15 +82,24 @@ class KycController extends Controller
         } catch (ValidationException $e) {
             throw $e;
         } catch (\Exception $e) {
-            Log::error('KYC submission error', [
-                'user_id' => $user->id,
-                'error' => $e->getMessage(),
-            ]);
+        Log::error('KYC submission error', [
+            'user_id' => $user->id,
+            'target_tier' => $validated['target_tier'] ?? null,
+            'error' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'trace' => $e->getTraceAsString(),
+        ]);
 
-            return back()->withErrors([
-                'submission' => 'An error occurred. Please try again.',
-            ]);
-        }
+        // In dev/local environment, show actual error
+        $errorMsg = config('app.debug') 
+            ? 'Error: ' . $e->getMessage() 
+            : 'An error occurred. Please try again.';
+
+        return back()->withErrors([
+            'submission' => $errorMsg,
+        ]);
+}
     }
 
     /**

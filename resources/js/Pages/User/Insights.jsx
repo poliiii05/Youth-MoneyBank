@@ -102,10 +102,11 @@ export default function Insights({
     const TipIcon = TIP_ICONS[dynamic_tip?.icon] || Lightbulb;
     const pEmoji = PERSONALITY_EMOJI[personality?.type] || '🌱';
     
+    // PERSONALITY COLORS — all on-palette (emerald + amber + slate only)
     const personalityColors = {
         new: { bg: 'bg-slate-50', border: 'border-slate-200', text: 'text-slate-700', accent: 'text-slate-600' },
         slow_steady: { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-900', accent: 'text-emerald-700' },
-        goal_chaser: { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-900', accent: 'text-blue-700' },
+        goal_chaser: { bg: 'bg-emerald-50', border: 'border-emerald-300', text: 'text-emerald-900', accent: 'text-emerald-700' },
         streak_master: { bg: 'bg-amber-50', border: 'border-amber-300', text: 'text-amber-900', accent: 'text-amber-700' },
     };
     const pColor = personalityColors[personality?.type] || personalityColors.new;
@@ -123,14 +124,16 @@ export default function Insights({
                     
                     {/* ROW 1: Streak (3) + Personality (6) + Best (3) */}
                     
-                    {/* Current Streak — 3 cols */}
-                    <div className="col-span-12 sm:col-span-3 bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-3">
+                    {/* Current Streak — 3 cols (AMBER accent — streaks/achievements) */}
+                    <div className="col-span-12 sm:col-span-3 bg-gradient-to-br from-amber-50 to-amber-100/50 border border-amber-200 rounded-2xl p-3">
                         <div className="flex items-center gap-1.5 mb-1">
-                            <Flame size={11} className="text-amber-700" strokeWidth={2.5} />
+                            <Flame size={11} className="text-amber-700" strokeWidth={2.5} fill="currentColor" />
                             <span className="text-[9px] font-bold text-amber-800 uppercase tracking-widest">Current</span>
                         </div>
                         <div className="flex items-baseline gap-1">
-                            <p className="text-2xl font-black text-amber-900 leading-none">{displayData.current_streak}</p>
+                            <p className="text-2xl font-black text-amber-900 leading-none" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                                {displayData.current_streak}
+                            </p>
                             <p className="text-[10px] text-amber-700 font-bold">days</p>
                         </div>
                         {displayData.saved_today ? (
@@ -161,7 +164,9 @@ export default function Insights({
                             <span className="text-[9px] font-bold text-slate-600 uppercase tracking-widest">Best Ever</span>
                         </div>
                         <div className="flex items-baseline gap-1">
-                            <p className="text-2xl font-black text-slate-900 leading-none">{displayData.best_streak}</p>
+                            <p className="text-2xl font-black text-slate-900 leading-none" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                                {displayData.best_streak}
+                            </p>
                             <p className="text-[10px] text-slate-500 font-bold">days</p>
                         </div>
                         <p className="text-[9px] text-slate-500 font-medium mt-1">All-time</p>
@@ -174,10 +179,10 @@ export default function Insights({
                         <div className="flex items-center justify-between mb-2">
                             <button 
                                 onClick={goToPrevMonth} 
-                                className="w-5 h-5 flex items-center justify-center rounded hover:bg-slate-100 text-slate-600 cursor-pointer"
+                                className="w-6 h-6 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-600 cursor-pointer transition-colors active:scale-95"
                                 aria-label="Previous month"
                             >
-                                <ChevronLeft size={12} strokeWidth={2.5} />
+                                <ChevronLeft size={14} strokeWidth={2.5} />
                             </button>
                             <div className="text-center">
                                 <p className="text-xs font-black text-slate-900">{displayData.month_label || `${currentMonth}/${currentYear}`}</p>
@@ -187,23 +192,23 @@ export default function Insights({
                             </div>
                             <button 
                                 onClick={goToNextMonth} 
-                                className="w-5 h-5 flex items-center justify-center rounded hover:bg-slate-100 text-slate-600 cursor-pointer"
+                                className="w-6 h-6 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-600 cursor-pointer transition-colors active:scale-95"
                                 aria-label="Next month"
                             >
-                                <ChevronRight size={12} strokeWidth={2.5} />
+                                <ChevronRight size={14} strokeWidth={2.5} />
                             </button>
                         </div>
                         
                         {isLoading ? (
                             <div className="h-32 flex items-center justify-center">
-                                <div className="w-5 h-5 border-2 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
+                                <div className="w-5 h-5 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
                             </div>
                         ) : (
                             <MonthlyCalendar cells={displayData.cells} />
                         )}
                     </div>
 
-                    {/* Smart Cards 2x2 — 5 cols */}
+                    {/* Smart Cards 2x2 — 5 cols (ALL EMERALD except Best Month = AMBER for special metric) */}
                     <div className="col-span-12 sm:col-span-5 grid grid-cols-2 gap-2">
                         <SmartCard
                             icon={Wallet}
@@ -214,14 +219,14 @@ export default function Insights({
                         />
                         <SmartCard
                             icon={Calendar}
-                            iconColor="text-blue-700"
+                            iconColor="text-emerald-700"
                             label="Weekly Avg"
                             value={`₱${formatCompact(smart_insights?.weekly_avg || 0)}`}
                             sub="Per week"
                         />
                         <SmartCard
                             icon={Target}
-                            iconColor="text-amber-700"
+                            iconColor="text-emerald-700"
                             label="Goals"
                             value={smart_insights?.total_goals > 0 
                                 ? `${smart_insights?.goals_completed || 0}/${smart_insights?.total_goals}`
@@ -232,16 +237,16 @@ export default function Insights({
                                 : 'No goals yet'
                             }
                         />
-                       <SmartCard
+                        <SmartCard
                             icon={Award}
-                            iconColor="text-purple-700"
+                            iconColor="text-amber-700"
                             label="Best Month"
                             value={smart_insights?.best_month 
                                 ? `₱${formatCompact(smart_insights.best_month.amount)}`
                                 : '—'
                             }
                             sub={smart_insights?.best_month 
-                                ? smart_insights.best_month.label // "June 2026" instead of just "June"
+                                ? smart_insights.best_month.label
                                 : 'No data'
                             }
                         />
@@ -251,10 +256,10 @@ export default function Insights({
                     <div className="col-span-12 bg-white border border-slate-200 rounded-2xl p-3">
                         <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-1.5">
-                                <Trophy size={11} className="text-amber-600" strokeWidth={2.5} />
+                                <Trophy size={11} className="text-amber-700" strokeWidth={2.5} />
                                 <span className="text-[9px] font-bold text-slate-600 uppercase tracking-widest">Achievements</span>
                             </div>
-                            <span className="text-[9px] font-bold text-slate-500">
+                            <span className="text-[9px] font-bold text-slate-500" style={{ fontVariantNumeric: 'tabular-nums' }}>
                                 {unlockedCount}/{achievements.length} unlocked
                             </span>
                         </div>
@@ -265,15 +270,17 @@ export default function Insights({
                             ))}
                         </div>
 
-                        {/* Streak progress bar inline */}
-                        <div className="bg-slate-50 rounded-lg px-2 py-1.5">
+                        {/* Streak progress bar inline — PURE AMBER (no orange) */}
+                        <div className="bg-slate-50 rounded-lg px-2.5 py-2">
                             <div className="flex items-center justify-between mb-1">
                                 <span className="text-[9px] font-bold text-slate-600">Next: {displayData.next_milestone}-day streak</span>
-                                <span className="text-[9px] font-black text-amber-700">{displayData.progress_to_next}%</span>
+                                <span className="text-[9px] font-black text-amber-700" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                                    {displayData.progress_to_next}%
+                                </span>
                             </div>
-                            <div className="w-full bg-slate-200 rounded-full h-1 overflow-hidden">
+                            <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
                                 <div 
-                                    className="h-1 bg-gradient-to-r from-amber-400 to-orange-500 rounded-full transition-all duration-700"
+                                    className="h-1.5 bg-gradient-to-r from-amber-400 to-amber-600 rounded-full transition-all duration-700"
                                     style={{ width: `${displayData.progress_to_next}%` }}
                                 ></div>
                             </div>
@@ -282,8 +289,8 @@ export default function Insights({
 
                     {/* ROW 4: Dynamic Tip — Full width */}
                     <div className="col-span-12 bg-emerald-50 border border-emerald-200 rounded-2xl p-3 flex items-center gap-2.5">
-                        <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center shrink-0 shadow-sm">
-                            <TipIcon size={13} className="text-white" strokeWidth={2.5} />
+                        <div className="w-9 h-9 bg-emerald-700 rounded-xl flex items-center justify-center shrink-0 shadow-sm shadow-emerald-200">
+                            <TipIcon size={14} className="text-white" strokeWidth={2.5} />
                         </div>
                         <div className="flex-1 min-w-0">
                             <p className="text-xs font-black text-emerald-900 leading-tight">{dynamic_tip?.tip || 'Start saving today!'}</p>
@@ -312,7 +319,9 @@ function SmartCard({ icon: Icon, iconColor, label, value, sub }) {
                 <Icon size={10} className={iconColor} strokeWidth={2.5} />
                 <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest truncate">{label}</span>
             </div>
-            <p className="text-sm font-black text-slate-900 leading-tight">{value}</p>
+            <p className="text-sm font-black text-slate-900 leading-tight" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                {value}
+            </p>
             <p className="text-[9px] text-slate-500 font-medium mt-0.5 truncate">{sub}</p>
         </div>
     );
@@ -347,31 +356,32 @@ function MonthlyCalendar({ cells = [] }) {
                         bgClass = 'bg-slate-50';
                         textClass = 'text-slate-400';
                     } else if (isActive) {
-                        bgClass = 'bg-gradient-to-br from-amber-300 to-orange-400';
+                        // PURE AMBER (no orange)
+                        bgClass = 'bg-gradient-to-br from-amber-300 to-amber-500';
                         textClass = 'text-amber-900';
                     }
 
-                  return (
-                    <div
-                        key={idx}
-                        className={`aspect-square rounded-sm relative flex items-center justify-center transition-all ${bgClass} ${
-                            isToday ? 'ring-1 ring-amber-700 ring-offset-1' : ''
-                        } ${isOutOfMonth ? 'opacity-40' : 'cursor-help'}`}
-                        title={isOutOfMonth ? '' : `${cell.month_label} ${cell.day}${isActive ? ' · Saved' : ''}${isToday ? ' · Today' : ''}`}
-                    >
-                        {isActive && !isOutOfMonth && (
-                            <Flame 
-                                size={8} 
-                                className="absolute top-0 right-0 text-amber-800" 
-                                strokeWidth={2.5} 
-                                fill="currentColor"
-                            />
-                        )}
-                        <span className={`text-[8px] font-bold ${textClass}`}>
-                            {cell.day}
-                        </span>
-                    </div>
-                );
+                    return (
+                        <div
+                            key={idx}
+                            className={`aspect-square rounded-sm relative flex items-center justify-center transition-all ${bgClass} ${
+                                isToday ? 'ring-1 ring-amber-700 ring-offset-1' : ''
+                            } ${isOutOfMonth ? 'opacity-40' : 'cursor-help'}`}
+                            title={isOutOfMonth ? '' : `${cell.month_label} ${cell.day}${isActive ? ' · Saved' : ''}${isToday ? ' · Today' : ''}`}
+                        >
+                            {isActive && !isOutOfMonth && (
+                                <Flame 
+                                    size={8} 
+                                    className="absolute top-0 right-0 text-amber-800" 
+                                    strokeWidth={2.5} 
+                                    fill="currentColor"
+                                />
+                            )}
+                            <span className={`text-[8px] font-bold ${textClass}`}>
+                                {cell.day}
+                            </span>
+                        </div>
+                    );
                 })}
             </div>
         </div>
@@ -406,7 +416,6 @@ function AchievementBadge({ achievement }) {
                 }`}>
                     {unlocked ? '✓ Unlocked' : '🔒 Locked'}
                 </div>
-                {/* Arrow */}
                 <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900"></div>
             </div>
         </div>

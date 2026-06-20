@@ -12,12 +12,14 @@ export default function RejectedState({ application, onReApply }) {
 
     return (
         <div className="py-8 flex flex-col items-center text-center">
-            {/* Icon */}
-            <div className="w-20 h-20 bg-gradient-to-br from-red-300 to-red-500 rounded-full flex items-center justify-center shadow-lg shadow-red-200 mb-4">
-                <XCircle size={36} className="text-white" strokeWidth={2.5} />
+            {/* Icon — red (rejection, intentional) */}
+            <div className="relative mb-4">
+                <div className="absolute inset-0 bg-red-200 rounded-full blur-xl"></div>
+                <div className="relative w-20 h-20 bg-gradient-to-br from-red-400 to-red-600 rounded-full flex items-center justify-center shadow-lg shadow-red-200">
+                    <XCircle size={36} className="text-white" strokeWidth={2.5} />
+                </div>
             </div>
 
-            {/* Heading */}
             <h3 className="text-lg font-black text-slate-900 tracking-tight mb-1">
                 Application Rejected
             </h3>
@@ -36,15 +38,15 @@ export default function RejectedState({ application, onReApply }) {
                     </div>
                     <div className="pt-3 border-t border-red-200">
                         <p className="text-[10px] font-bold text-red-800 uppercase tracking-widest mb-1">Reviewed</p>
-                        <p className="text-xs font-bold text-slate-700">{reviewedDate}</p>
+                        <p className="text-xs font-bold text-slate-700" style={{ fontVariantNumeric: 'tabular-nums' }}>{reviewedDate}</p>
                     </div>
                 </div>
             </div>
 
-            {/* Re-apply button */}
+            {/* Re-apply button — emerald (positive action) */}
             <button
                 onClick={onReApply}
-                className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-colors cursor-pointer shadow-md shadow-blue-200"
+                className="flex items-center gap-2 px-5 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold rounded-xl transition-colors cursor-pointer shadow-md shadow-emerald-200 active:scale-95"
             >
                 <RefreshCw size={14} strokeWidth={2.5} />
                 Re-apply for Tier {application.target_tier}

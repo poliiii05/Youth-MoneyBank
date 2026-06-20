@@ -1,4 +1,4 @@
-DocumentSlot.jsx// resources/js/Pages/User/Settings/TierUpgrade/DocumentSlot.jsx
+// resources/js/Pages/User/Settings/TierUpgrade/DocumentSlot.jsx
 import { useState, useRef } from 'react';
 import { Check, Upload, Sparkles, X, FileText, Image as ImageIcon } from 'lucide-react';
 import { showError } from '../../../../utils/toast';
@@ -11,9 +11,8 @@ export default function DocumentSlot({ doc, selected, onSelect, onClear }) {
     const isSample = selected?.type === 'sample';
     const isUpload = selected?.type === 'upload';
 
-    // Validate file
     const validateFile = (file) => {
-        const maxSize = 5 * 1024 * 1024; // 5MB
+        const maxSize = 5 * 1024 * 1024;
         const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
         
         if (file.size > maxSize) {
@@ -27,7 +26,6 @@ export default function DocumentSlot({ doc, selected, onSelect, onClear }) {
         return true;
     };
 
-    // Handle file from picker or drag-drop
     const handleFile = (file) => {
         if (!file) return;
         if (!validateFile(file)) return;
@@ -41,7 +39,6 @@ export default function DocumentSlot({ doc, selected, onSelect, onClear }) {
         });
     };
 
-    // Drag-drop handlers
     const handleDragOver = (e) => {
         e.preventDefault();
         setIsDragging(true);
@@ -59,13 +56,11 @@ export default function DocumentSlot({ doc, selected, onSelect, onClear }) {
         handleFile(file);
     };
 
-    // Click handler — opens file picker
     const handleClick = () => {
-        if (isSelected) return; // Don't re-open if already has file
+        if (isSelected) return;
         fileInputRef.current?.click();
     };
 
-    // Use sample (skips file picker)
     const handleUseSample = (e) => {
         e.stopPropagation();
         onSelect({
@@ -74,7 +69,6 @@ export default function DocumentSlot({ doc, selected, onSelect, onClear }) {
         });
     };
 
-    // Format file size
     const formatSize = (bytes) => {
         if (!bytes) return '';
         if (bytes >= 1048576) return (bytes / 1048576).toFixed(2) + ' MB';
@@ -86,10 +80,10 @@ export default function DocumentSlot({ doc, selected, onSelect, onClear }) {
             isSelected 
                 ? isSample 
                     ? 'bg-emerald-50/30 border-emerald-300'
-                    : 'bg-blue-50/30 border-blue-300'
+                    : 'bg-emerald-50/40 border-emerald-400'
                 : isDragging
-                    ? 'bg-blue-50 border-blue-400 border-dashed'
-                    : 'bg-white border-dashed border-slate-300 hover:border-slate-400'
+                    ? 'bg-emerald-50 border-emerald-400 border-dashed'
+                    : 'bg-white border-dashed border-slate-300 hover:border-emerald-400'
         }`}>
             
             {/* HEADER: Document label */}
@@ -98,7 +92,7 @@ export default function DocumentSlot({ doc, selected, onSelect, onClear }) {
                     isSelected 
                         ? isSample 
                             ? 'bg-emerald-500 text-white'
-                            : 'bg-blue-500 text-white'
+                            : 'bg-emerald-700 text-white'
                         : 'bg-slate-100 text-slate-400'
                 }`}>
                     {isSelected ? <Check size={18} strokeWidth={3} /> : <FileText size={18} />}
@@ -110,7 +104,7 @@ export default function DocumentSlot({ doc, selected, onSelect, onClear }) {
                 {isSelected && (
                     <button
                         onClick={onClear}
-                        className="w-6 h-6 flex items-center justify-center rounded-full bg-slate-200 hover:bg-red-100 hover:text-red-600 text-slate-500 transition-colors cursor-pointer shrink-0"
+                        className="w-6 h-6 flex items-center justify-center rounded-full bg-slate-200 hover:bg-red-100 hover:text-red-600 text-slate-500 transition-colors cursor-pointer shrink-0 active:scale-95"
                         title="Remove"
                     >
                         <X size={12} strokeWidth={2.5} />
@@ -120,26 +114,24 @@ export default function DocumentSlot({ doc, selected, onSelect, onClear }) {
 
             {/* BODY: Selected file or upload area */}
             {isSelected ? (
-                <div className={`mx-4 mb-4 p-3 rounded-lg ${isSample ? 'bg-emerald-100/50' : 'bg-blue-100/50'}`}>
+                <div className={`mx-4 mb-4 p-3 rounded-lg ${isSample ? 'bg-emerald-100/50' : 'bg-emerald-100/40'}`}>
                     <div className="flex items-center gap-2">
                         {isSample ? (
-                            <Sparkles size={14} className="text-emerald-600 shrink-0" />
+                            <Sparkles size={14} className="text-emerald-700 shrink-0" />
                         ) : (
-                            <ImageIcon size={14} className="text-blue-600 shrink-0" />
+                            <ImageIcon size={14} className="text-emerald-700 shrink-0" />
                         )}
                         <div className="min-w-0 flex-1">
-                            <p className={`text-[11px] font-bold truncate ${isSample ? 'text-emerald-900' : 'text-blue-900'}`}>
+                            <p className="text-[11px] font-bold truncate text-emerald-900">
                                 {selected.name}
                             </p>
                             {selected.size && (
-                                <p className="text-[9px] text-blue-700 font-medium">
+                                <p className="text-[9px] text-emerald-700 font-medium" style={{ fontVariantNumeric: 'tabular-nums' }}>
                                     {formatSize(selected.size)}
                                 </p>
                             )}
                         </div>
-                        <span className={`text-[8px] font-bold uppercase tracking-widest shrink-0 ${
-                            isSample ? 'text-emerald-700' : 'text-blue-700'
-                        }`}>
+                        <span className="text-[8px] font-bold uppercase tracking-widest shrink-0 text-emerald-700">
                             {isSample ? 'Sample' : 'Uploaded'}
                         </span>
                     </div>
@@ -154,8 +146,8 @@ export default function DocumentSlot({ doc, selected, onSelect, onClear }) {
                         onDrop={handleDrop}
                         className={`border-2 border-dashed rounded-lg p-4 text-center transition-all cursor-pointer ${
                             isDragging 
-                                ? 'border-blue-500 bg-blue-50'
-                                : 'border-slate-300 hover:border-blue-400 hover:bg-blue-50/30'
+                                ? 'border-emerald-500 bg-emerald-50'
+                                : 'border-slate-300 hover:border-emerald-400 hover:bg-emerald-50/30'
                         }`}
                     >
                         <Upload size={18} className="text-slate-400 mx-auto mb-1.5" strokeWidth={2} />
@@ -170,7 +162,7 @@ export default function DocumentSlot({ doc, selected, onSelect, onClear }) {
                     {/* Use Sample button */}
                     <button
                         onClick={handleUseSample}
-                        className="w-full mt-2 flex items-center justify-center gap-1.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded-lg transition-colors cursor-pointer border border-emerald-200"
+                        className="w-full mt-2 flex items-center justify-center gap-1.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded-lg transition-colors cursor-pointer border border-emerald-200 active:scale-95"
                     >
                         <Sparkles size={11} strokeWidth={2.5} />
                         Or use Sample (for demo)

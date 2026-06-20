@@ -86,13 +86,13 @@ class KycService
         // ====================================================
         // TRANSACTIONAL: Create application + store documents
         // ====================================================
-        $application = DB::transaction(function () use ($user, $targetTier, $documents) {
+        $application = DB::transaction(function () use ($user, $targetTier, $documents, $currentTier) {
             
             // Create the application record
             $application = KycApplication::create([
                 'user_id' => $user->id,
                 'target_tier' => $targetTier,
-                'original_tier' => $currentTier,   
+                'original_tier' => $currentTier,
                 'status' => 'pending',
                 'submitted_at' => now(),
                 'auto_approved' => false, // Will be flipped if auto-approve runs
