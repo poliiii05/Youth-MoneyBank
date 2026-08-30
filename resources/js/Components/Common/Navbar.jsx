@@ -28,7 +28,7 @@ export default function Navbar({ currentPage }) {
     const isActive = (key) => activePage === key;
 
     return (
-        <nav className="flex justify-between items-center px-10 py-4 bg-white shadow-md border-b border-blue-100 sticky top-0 z-50">
+        <nav className="flex justify-between items-center px-10 py-4 bg-card shadow-md border-b border-border sticky top-0 z-50">
 
             {/* LEFT SIDE — LOGO */}
             <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity duration-200">
@@ -55,14 +55,14 @@ export default function Navbar({ currentPage }) {
                             href={link.href}
                             className={`relative px-4 py-2 font-semibold transition-all duration-300 group ${
                                 isActive(link.key)
-                                    ? 'text-blue-700'
-                                    : 'text-gray-700 hover:text-blue-600'
+                                    ? 'text-primary'
+                                    : 'text-muted-foreground hover:text-primary'
                             }`}
                         >
                             {link.name}
                             {/* Animated underline */}
                             <span
-                                className={`absolute bottom-0 left-0 h-1 bg-blue-700 rounded-full transition-all duration-300 ${
+                                className={`absolute bottom-0 left-0 h-1 bg-primary rounded-full transition-all duration-300 ${
                                     isActive(link.key) ? 'w-full' : 'w-0 group-hover:w-full'
                                 }`}
                             />
@@ -73,13 +73,13 @@ export default function Navbar({ currentPage }) {
                 {/* DYNAMIC BUTTON: Added fixed width (w-28) and text-center to prevent shifting */}
                 {activePage === 'login' ? (
                     <Link href="/signup" className="cursor-pointer inline-block">
-                        <button className="w-28 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-md hover:shadow-lg cursor-pointer text-center">
+                        <button className="w-28 py-2 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-colors duration-200 shadow-md hover:shadow-lg cursor-pointer text-center">
                             Sign Up
                         </button>
                     </Link>
                 ) : (
                     <Link href="/login" className="cursor-pointer inline-block">
-                        <button className="w-28 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-md hover:shadow-lg cursor-pointer text-center">
+                        <button className="w-28 py-2 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-colors duration-200 shadow-md hover:shadow-lg cursor-pointer text-center">
                             Login
                         </button>
                     </Link>
