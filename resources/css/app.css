@@ -1,1 +1,137 @@
 @import "tailwindcss";
+
+/*
+ * Design tokens — shadcn/ui convention (CSS variables mapped into Tailwind's
+ * theme via @theme inline). Change a value here once, it updates every
+ * component that uses bg-primary / text-muted-foreground / etc across the
+ * whole app — public pages, dashboard, and admin panel all read from this
+ * single source of truth.
+ *
+ * Palette: emerald-700 primary (trust, banking), amber-500 accent
+ * (gamification: streaks, badges, tier 3).
+ */
+
+@theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+
+    --color-success: var(--success);
+    --color-success-foreground: var(--success-foreground);
+
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+
+    /* KYC tier accents — used on badges, progress bars, tier cards */
+    --color-tier-1: var(--tier-1);
+    --color-tier-2: var(--tier-2);
+    --color-tier-3: var(--tier-3);
+
+    --radius-sm: calc(var(--radius) - 4px);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+    --background: #ffffff;
+    --foreground: #0f172a; /* slate-900 */
+
+    --card: #ffffff;
+    --card-foreground: #0f172a;
+
+    --popover: #ffffff;
+    --popover-foreground: #0f172a;
+
+    --primary: #047857; /* emerald-700 */
+    --primary-foreground: #ffffff;
+
+    --secondary: #f0fdf4; /* emerald-50 tint, quiet secondary surfaces */
+    --secondary-foreground: #065f46; /* emerald-800 */
+
+    --muted: #f1f5f9; /* slate-100 */
+    --muted-foreground: #64748b; /* slate-500 */
+
+    --accent: #f59e0b; /* amber-500 — gamification: streaks, badges, Tier 3 */
+    --accent-foreground: #451a03; /* amber-950 */
+
+    --destructive: #dc2626; /* red-600 */
+    --destructive-foreground: #ffffff;
+
+    --success: #16a34a; /* green-600 */
+    --success-foreground: #ffffff;
+
+    --border: #e2e8f0; /* slate-200 */
+    --input: #e2e8f0;
+    --ring: #047857;
+
+    --tier-1: #10b981; /* emerald-500 — Starter */
+    --tier-2: #047857; /* emerald-700 — Builder */
+    --tier-3: #f59e0b; /* amber-500 — Achiever */
+
+    --radius: 0.75rem;
+}
+
+.dark {
+    --background: #0b1120;
+    --foreground: #f1f5f9;
+
+    --card: #0f172a;
+    --card-foreground: #f1f5f9;
+
+    --popover: #0f172a;
+    --popover-foreground: #f1f5f9;
+
+    --primary: #10b981; /* emerald-500, brighter for dark backgrounds */
+    --primary-foreground: #052e1f;
+
+    --secondary: #132a23;
+    --secondary-foreground: #d1fae5;
+
+    --muted: #1e293b;
+    --muted-foreground: #94a3b8;
+
+    --accent: #fbbf24; /* amber-400 */
+    --accent-foreground: #451a03;
+
+    --destructive: #f87171;
+    --destructive-foreground: #450a0a;
+
+    --success: #4ade80;
+    --success-foreground: #052e16;
+
+    --border: #1e293b;
+    --input: #1e293b;
+    --ring: #10b981;
+}
+
+@layer base {
+    * {
+        border-color: var(--border);
+    }
+    body {
+        background-color: var(--background);
+        color: var(--foreground);
+    }
+}
