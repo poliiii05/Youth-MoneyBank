@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link, usePage } from '@inertiajs/react';
+import YmbLockup from './YmbLockup';
 
 export default function Navbar({ currentPage }) {
     const { url } = usePage();
@@ -31,17 +32,8 @@ export default function Navbar({ currentPage }) {
         <nav className="flex justify-between items-center px-10 py-4 bg-card shadow-md border-b border-border sticky top-0 z-50">
 
             {/* LEFT SIDE — LOGO */}
-            <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity duration-200">
-                <img 
-                    src="/images/YMB_HeaderLogo.png"
-                    alt="Logo Icon"
-                    className="h-12 w-auto object-contain"
-                />
-                <img 
-                    src="/images/YMB_HeaderText.png"
-                    alt="YouthMoneyBank Text Logo"
-                    className="h-8 w-auto object-contain"
-                />
+            <Link href="/" className="flex items-center hover:opacity-80 transition-opacity duration-200">
+                    <YmbLockup size="sm" showTagline={false} />
             </Link>
 
             {/* RIGHT SIDE — NAVIGATION */}
