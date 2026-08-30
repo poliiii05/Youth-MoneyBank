@@ -3,13 +3,15 @@ import { createPortal } from 'react-dom';
 import Navbar from '../../Components/Common/Navbar.jsx';
 import PrivacyPolicyModal from '../../Pages/Public/PrivacyPolicyModal.jsx';
 import TermsAndConditionsModal from '../../Pages/Public/TermsAndConditionsModal.jsx';
-import { Wallet, Target, TrendingUp, ChevronDown, Mail } from 'lucide-react';
+import { Wallet, Target, TrendingUp, ChevronDown, Mail, User, Lock, Eye, EyeOff, Check, X } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import { Card } from '@/Components/ui/card';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const SPECIAL_CHAR_REGEX = /[!@#$%^&*(),.?":{}|<>_\-+=[\]/~`';]/;
+const PASSWORD_MIN_LENGTH = 8;
 
 function GoogleIcon({ className = 'w-4 h-4' }) {
     return (
@@ -106,8 +108,12 @@ function TurnstileOverlay({ isOpen, onSuccess, onError, onClose, email }) {
 }
 
 export default function SignUp() {
+    const [fullName, setFullName] = useState('');
     const [email, setEmail] = useState('');
-    const [userDetails, setUserDetails] = useState({ firstName: '', lastName: '' });
+    const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     // BIRTHDAY PICKER STATES
     const [bMonth, setBMonth] = useState('');
@@ -122,6 +128,11 @@ export default function SignUp() {
     const [showTerms, setShowTerms] = useState(false);
 
     const emailValid = EMAIL_REGEX.test(email);
+    const passwordLongEnough = password.length >= PASSWORD_MIN_LENGTH;
+    const passwordHasSpecialChar = SPECIAL_CHAR_REGEX.test(password);
+    const passwordValid = passwordLongEnough && passwordHasSpecialChar;
+    const confirmTouched = confirmPassword.length > 0;
+    const passwordsMatch = confirmTouched && password === confirmPassword;
 
     // SYNC 3 DROPDOWNS TO 1 DATE STRING
     useEffect(() => {
@@ -165,8 +176,12 @@ export default function SignUp() {
 
     const isFormValid = () => {
         return (
-            userDetails.firstName && userDetails.lastName && birthDate &&
-            emailValid && acceptedTerms
+            fullName.trim().length > 0 &&
+            emailValid &&
+            birthDate &&
+            passwordValid &&
+            passwordsMatch &&
+            acceptedTerms
         );
     };
 
@@ -179,12 +194,12 @@ export default function SignUp() {
                     <div className="flex h-full min-h-[520px]">
 
                         {/* LEFT SIDE */}
-                        <div className="hidden lg:flex w-1/2 flex-col justify-center p-8 lg:p-10 bg-gradient-to-br from-primary via-primary to-emerald-500 text-primary-foreground relative overflow-hidden">
+                        <div className="hidden lg:flex w-1/2 flex-col justify-center p-6 lg:p-8 bg-gradient-to-br from-primary via-primary to-emerald-500 text-primary-foreground relative overflow-hidden">
                             <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
                             <div className="absolute bottom-0 left-0 w-80 h-80 bg-accent/20 rounded-full blur-3xl translate-y-1/3 -translate-x-1/4"></div>
 
                             <div className="relative z-10">
-                                <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-white/10 border border-white/20 mb-5">
+                                <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-white/10 border border-white/20 mb-4">
                                     <span className="text-accent text-[11px] font-bold uppercase tracking-wider">Start Saving Today</span>
                                 </div>
 
@@ -192,7 +207,7 @@ export default function SignUp() {
                                     Join Youth<br />MoneyBank
                                 </h1>
 
-                                <p className="text-sm text-white/90 mb-8 pr-4 leading-relaxed">
+                                <p className="text-sm text-white/90 mb-6 pr-4 leading-relaxed">
                                     Start your financial journey and take control of your future with secure, progressive savings.
                                 </p>
 
@@ -226,7 +241,7 @@ export default function SignUp() {
                                     </div>
                                 </div>
 
-                                <div className="mt-6 pt-4 border-t border-white/20">
+                                <div className="mt-5 pt-3 border-t border-white/20">
                                     <p className="text-sm font-semibold">Built with Bank-Level Security</p>
                                     <p className="text-xs text-white/80 mt-0.5">Simulated Platform. Safe. Secure.</p>
                                 </div>
@@ -234,13 +249,30 @@ export default function SignUp() {
                         </div>
 
                         {/* RIGHT SIDE - FORM */}
-                        <div className="w-full lg:w-1/2 p-6 lg:p-10 flex flex-col justify-center bg-card">
+                        <div className="w-full lg:w-1/2 p-5 lg:p-7 flex flex-col justify-center bg-card overflow-y-auto">
                             <div className="max-w-[400px] mx-auto w-full">
-                                <div className="text-center mb-6">
+                                <div className="text-center mb-4">
                                     <h2 className="text-2xl font-bold text-foreground mb-1">Create Account</h2>
                                     <p className="text-sm text-muted-foreground">Get started in just a few steps</p>
                                 </div>
 
+                                {/* FULL NAME */}
+                                <div className="mb-2.5">
+                                    <Label htmlFor="signup-fullname" className="mb-1 block">Full Name <span className="text-destructive">*</span></Label>
+                                    <div className="relative">
+                                        <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                                        <Input
+                                            id="signup-fullname"
+                                            type="text"
+                                            value={fullName}
+                                            onChange={(e) => setFullName(e.target.value)}
+                                            placeholder="Juan Dela Cruz"
+                                            className="pl-10"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* EMAIL */}
                                 <div className="mb-3">
                                     <Label htmlFor="signup-email" className="mb-1 block">Email Address <span className="text-destructive">*</span></Label>
                                     <div className="relative">
@@ -259,19 +291,8 @@ export default function SignUp() {
                                     )}
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-3 mb-3">
-                                    <div>
-                                        <Label htmlFor="signup-first-name" className="mb-1 block">First Name <span className="text-destructive">*</span></Label>
-                                        <Input id="signup-first-name" type="text" value={userDetails.firstName} onChange={(e) => setUserDetails({ ...userDetails, firstName: e.target.value })} placeholder="Juan" />
-                                    </div>
-                                    <div>
-                                        <Label htmlFor="signup-last-name" className="mb-1 block">Last Name <span className="text-destructive">*</span></Label>
-                                        <Input id="signup-last-name" type="text" value={userDetails.lastName} onChange={(e) => setUserDetails({ ...userDetails, lastName: e.target.value })} placeholder="Dela Cruz" />
-                                    </div>
-                                </div>
-
-                                {/* CUSTOM 3-DROPDOWN DATE OF BIRTH */}
-                                <div className="mb-4">
+                                {/* DATE OF BIRTH — right below email */}
+                                <div className="mb-3">
                                     <Label className="mb-1 block">Date of Birth <span className="text-destructive">*</span></Label>
                                     <div className="grid grid-cols-3 gap-2">
                                         <div className="relative">
@@ -300,8 +321,69 @@ export default function SignUp() {
                                     </div>
                                 </div>
 
+                                {/* PASSWORD */}
+                                <div className="mb-3">
+                                    <Label htmlFor="signup-password" className="mb-1 block">Password <span className="text-destructive">*</span></Label>
+                                    <div className="relative">
+                                        <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                                        <Input
+                                            id="signup-password"
+                                            type={showPassword ? 'text' : 'password'}
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            placeholder="Enter a strong password"
+                                            className="pl-10 pr-10"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                            tabIndex={-1}
+                                        >
+                                            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                        </button>
+                                    </div>
+                                    {password.length > 0 && (
+                                        <div className="mt-1.5 space-y-0.5">
+                                            <p className={`text-xs flex items-center gap-1 ${passwordLongEnough ? 'text-success' : 'text-muted-foreground'}`}>
+                                                {passwordLongEnough ? <Check size={12} /> : <X size={12} />} At least 8 characters
+                                            </p>
+                                            <p className={`text-xs flex items-center gap-1 ${passwordHasSpecialChar ? 'text-success' : 'text-muted-foreground'}`}>
+                                                {passwordHasSpecialChar ? <Check size={12} /> : <X size={12} />} At least 1 special character
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* CONFIRM PASSWORD */}
+                                <div className="mb-3">
+                                    <Label htmlFor="signup-confirm-password" className="mb-1 block">Confirm Password <span className="text-destructive">*</span></Label>
+                                    <div className="relative">
+                                        <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                                        <Input
+                                            id="signup-confirm-password"
+                                            type={showConfirmPassword ? 'text' : 'password'}
+                                            value={confirmPassword}
+                                            onChange={(e) => setConfirmPassword(e.target.value)}
+                                            placeholder="Re-enter your password"
+                                            className="pl-10 pr-10"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                            tabIndex={-1}
+                                        >
+                                            {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                        </button>
+                                    </div>
+                                    {confirmTouched && !passwordsMatch && (
+                                        <p className="text-xs text-destructive mt-1">Password did not match.</p>
+                                    )}
+                                </div>
+
                                 {/* TERMS CHECKBOX */}
-                                <div className="flex items-start gap-2 bg-secondary p-2.5 rounded-lg border border-border mb-5">
+                                <div className="flex items-start gap-2 bg-secondary p-2 rounded-lg border border-border mb-4">
                                     <input type="checkbox" id="terms" checked={acceptedTerms} onChange={(e) => setAcceptedTerms(e.target.checked)} className="mt-0.5 w-3.5 h-3.5 rounded border-input text-primary focus:ring-ring cursor-pointer" />
                                     <label htmlFor="terms" className="text-xs text-secondary-foreground leading-tight cursor-pointer select-none">
                                         I agree to the <button onClick={(e) => { e.preventDefault(); setShowTerms(true); }} className="text-primary hover:underline font-bold">Terms & Conditions</button> and <button onClick={(e) => { e.preventDefault(); setShowPrivacy(true); }} className="text-primary hover:underline font-bold">Privacy Policy</button>
@@ -312,13 +394,13 @@ export default function SignUp() {
                                     {isLoading ? 'Creating Account...' : 'Create Account'}
                                 </Button>
 
-                                <div className="relative my-4">
+                                <div className="relative my-3">
                                     <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border"></div></div>
                                     <div className="relative flex justify-center text-xs"><span className="px-3 bg-card text-muted-foreground font-medium">Or sign up with</span></div>
                                 </div>
 
                                 <a href="/auth/google">
-                                    <Button type="button" variant="outline" size="lg" className="w-full mb-4">
+                                    <Button type="button" variant="outline" size="lg" className="w-full mb-3">
                                         <GoogleIcon />
                                         <span>Sign up with Google</span>
                                     </Button>

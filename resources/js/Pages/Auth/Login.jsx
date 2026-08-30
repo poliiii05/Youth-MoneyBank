@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import Navbar from '../../Components/Common/Navbar.jsx';
 import PrivacyPolicyModal from '../Public/PrivacyPolicyModal.jsx';
 import TermsAndConditionsModal from '../Public/TermsAndConditionsModal.jsx';
-import { Target, ShieldCheck, TrendingUp, Mail, KeyRound } from 'lucide-react';
+import { Target, ShieldCheck, TrendingUp, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
@@ -24,14 +24,15 @@ function GoogleIcon({ className = 'w-4 h-4' }) {
 
 export default function Login() {
     const [email, setEmail] = useState('');
-    const [otp, setOtp] = useState('');
+    const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [isLoadingLogin, setIsLoadingLogin] = useState(false);
-    const [otpSent, setOtpSent] = useState(false);
     const [showPrivacy, setShowPrivacy] = useState(false);
     const [showTerms, setShowTerms] = useState(false);
     const [welcomeText, setWelcomeText] = useState('');
 
     const emailValid = EMAIL_REGEX.test(email);
+    const canSubmit = emailValid && password.length > 0;
 
     useEffect(() => {
         const fullTextArray = [..."Welcome Back!👋"];
@@ -61,16 +62,10 @@ export default function Login() {
         return () => clearTimeout(timerId);
     }, []);
 
-    const handleGetCode = () => {
-        if (!emailValid) return;
-        // TODO: wire to POST /login/otp -> OtpService (mail driver)
-        alert('Test Mode: OTP Sent to your email! (You can type any 6 digits for now)');
-        setOtpSent(true);
-    };
-
     const handleLogin = () => {
-        if (!otp || otp.length !== 6) return;
+        if (!canSubmit) return;
         setIsLoadingLogin(true);
+        // TODO: wire to POST /login -> Auth::attempt(['email' => ..., 'password' => ...])
         setTimeout(() => {
             setIsLoadingLogin(false);
             alert('Login successful!');
@@ -141,7 +136,8 @@ export default function Login() {
                                     <p className="text-sm text-muted-foreground">Enter your credentials to continue</p>
                                 </div>
 
-                                <div className="mb-6">
+                                {/* EMAIL */}
+                                <div className="mb-4">
                                     <Label htmlFor="login-email" className="mb-2 block">Email Address</Label>
                                     <div className="relative">
                                         <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -149,53 +145,52 @@ export default function Login() {
                                             id="login-email"
                                             type="email"
                                             value={email}
-                                            onChange={(e) => {
-                                                setEmail(e.target.value);
-                                                if (otpSent) setOtpSent(false);
-                                            }}
-                                            placeholder="you@example.com"
+                                            onChange={(e) => setEmail(e.target.value)}
+                                            placeholder="Enter your email address"
                                             className="pl-10 py-3"
                                         />
                                     </div>
                                 </div>
 
-                                <div className="mb-8">
-                                    <Label htmlFor="login-otp" className="mb-2 block">OTP Code</Label>
-                                    <div className="flex gap-2">
-                                        <div className="relative flex-1">
-                                            <KeyRound size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                                            <Input
-                                                id="login-otp"
-                                                type="text"
-                                                value={otp}
-                                                onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                                                placeholder="6-digit code"
-                                                disabled={!emailValid || !otpSent}
-                                                className="pl-10 py-3 text-center tracking-widest font-semibold"
-                                            />
-                                        </div>
-                                        <Button
+                                {/* PASSWORD */}
+                                <div className="mb-2">
+                                    <Label htmlFor="login-password" className="mb-2 block">Password</Label>
+                                    <div className="relative">
+                                        <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                                        <Input
+                                            id="login-password"
+                                            type={showPassword ? 'text' : 'password'}
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            placeholder="Enter your password"
+                                            className="pl-10 pr-10 py-3"
+                                        />
+                                        <button
                                             type="button"
-                                            onClick={handleGetCode}
-                                            disabled={!emailValid || otpSent}
-                                            className="px-5"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                            tabIndex={-1}
                                         >
-                                            {otpSent ? 'Sent ✓' : 'Get Code'}
-                                        </Button>
+                                            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                        </button>
                                     </div>
-                                    {email.length > 0 && !emailValid && (
-                                        <p className="text-xs text-destructive mt-2">Please enter a valid email to get your code.</p>
-                                    )}
+                                </div>
+
+                                {/* FORGOT PASSWORD */}
+                                <div className="text-right mb-6">
+                                    <a href="/forgot-password" className="text-xs text-primary hover:text-primary/80 font-medium hover:underline">
+                                        Forgot password?
+                                    </a>
                                 </div>
 
                                 <Button
                                     type="button"
                                     onClick={handleLogin}
-                                    disabled={!emailValid || otp.length !== 6 || isLoadingLogin}
+                                    disabled={!canSubmit || isLoadingLogin}
                                     size="lg"
                                     className="w-full mb-6"
                                 >
-                                    {isLoadingLogin ? 'Logging in...' : 'Login via OTP'}
+                                    {isLoadingLogin ? 'Logging in...' : 'Login'}
                                 </Button>
 
                                 <div className="relative my-6">
@@ -208,7 +203,7 @@ export default function Login() {
                                 </div>
 
                                 <a href="/auth/google">
-                                    <Button type="button" variant="outline" size="lg" className="w-full mb-6 group">
+                                    <Button type="button" variant="outline" size="lg" className="w-full mb-6 group cursor-pointer">
                                         <GoogleIcon className="w-4 h-4 group-hover:scale-110 transition-transform" />
                                         <span>Sign in with Google</span>
                                     </Button>
