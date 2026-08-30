@@ -241,7 +241,7 @@ export default function SignUp() {
                                     </div>
                                 </div>
 
-                                <div className="mt-5 pt-3 border-t border-white/20">
+                                <div className="mt-6 pt-4 border-t border-white/20">
                                     <p className="text-sm font-semibold">Built with Bank-Level Security</p>
                                     <p className="text-xs text-white/80 mt-0.5">Simulated Platform. Safe. Secure.</p>
                                 </div>
@@ -266,7 +266,7 @@ export default function SignUp() {
                                             type="text"
                                             value={fullName}
                                             onChange={(e) => setFullName(e.target.value)}
-                                            placeholder="Juan Dela Cruz"
+                                            placeholder="Enter your name"
                                             className="pl-10"
                                         />
                                     </div>
@@ -282,7 +282,7 @@ export default function SignUp() {
                                             type="email"
                                             value={email}
                                             onChange={(e) => setEmail(e.target.value)}
-                                            placeholder="you@example.com"
+                                            placeholder="Enter your email"
                                             className="pl-10"
                                         />
                                     </div>
@@ -337,7 +337,7 @@ export default function SignUp() {
                                         <button
                                             type="button"
                                             onClick={() => setShowPassword(!showPassword)}
-                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
                                             tabIndex={-1}
                                         >
                                             {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -371,7 +371,7 @@ export default function SignUp() {
                                         <button
                                             type="button"
                                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
                                             tabIndex={-1}
                                         >
                                             {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -386,7 +386,7 @@ export default function SignUp() {
                                 <div className="flex items-start gap-2 bg-secondary p-2 rounded-lg border border-border mb-4">
                                     <input type="checkbox" id="terms" checked={acceptedTerms} onChange={(e) => setAcceptedTerms(e.target.checked)} className="mt-0.5 w-3.5 h-3.5 rounded border-input text-primary focus:ring-ring cursor-pointer" />
                                     <label htmlFor="terms" className="text-xs text-secondary-foreground leading-tight cursor-pointer select-none">
-                                        I agree to the <button onClick={(e) => { e.preventDefault(); setShowTerms(true); }} className="text-primary hover:underline font-bold">Terms & Conditions</button> and <button onClick={(e) => { e.preventDefault(); setShowPrivacy(true); }} className="text-primary hover:underline font-bold">Privacy Policy</button>
+                                        I agree to the <button onClick={(e) => { e.preventDefault(); setShowTerms(true); }} className="text-primary hover:underline font-bold cursor-pointer">Terms & Conditions</button> and <button onClick={(e) => { e.preventDefault(); setShowPrivacy(true); }} className="text-primary hover:underline font-bold cursor-pointer">Privacy Policy</button>
                                     </label>
                                 </div>
 
@@ -400,7 +400,7 @@ export default function SignUp() {
                                 </div>
 
                                 <a href="/auth/google">
-                                    <Button type="button" variant="outline" size="lg" className="w-full mb-3">
+                                    <Button type="button" variant="outline" size="lg" className="w-full mb-3 cursor-pointer">
                                         <GoogleIcon />
                                         <span>Sign up with Google</span>
                                     </Button>
