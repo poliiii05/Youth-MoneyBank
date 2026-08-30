@@ -86,9 +86,13 @@
     --input: #e2e8f0;
     --ring: #047857;
 
-    --tier-1: #10b981; /* emerald-500 — Starter */
-    --tier-2: #047857; /* emerald-700 — Builder */
-    --tier-3: #f59e0b; /* amber-500 — Achiever */
+        /* Tier ramp — matches the logo bars: pale at Starter, deepest at
+       Achiever. Amber is deliberately NOT in this ramp; it stays the
+       gamification accent (streaks, badges) so the two systems read
+       as separate things. */
+    --tier-1: #6ee7b7; /* emerald-300 — Starter */
+    --tier-2: #10b981; /* emerald-500 — Builder */
+    --tier-3: #047857; /* emerald-700 — Achiever */
 
     --radius: 0.75rem;
 }
@@ -124,6 +128,11 @@
     --border: #1e293b;
     --input: #1e293b;
     --ring: #10b981;
+
+    /* Tier ramp inverted for dark surfaces — brightest at Achiever */
+    --tier-1: #a7f3d0; /* emerald-200 — Starter */
+    --tier-2: #34d399; /* emerald-400 — Builder */
+    --tier-3: #10b981; /* emerald-500 — Achiever */
 }
 
 @layer base {
