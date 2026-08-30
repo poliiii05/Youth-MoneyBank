@@ -3,6 +3,7 @@ import Navbar from "../../Components/Common/Navbar";
 import Footer from "../../Components/Common/Footer";
 import FloatingButton from '../../Components/Support/FloatingButton';
 import SavingsShowcase from '../../Components/Public/SavingsShowcase';
+import YmbLockup from '../../Components/Common/YmbLockup';
 import { Button } from '@/Components/ui/button';
 
 export default function Landing() {
@@ -18,11 +19,7 @@ export default function Landing() {
 
                     {/* LEFT SIDE - HERO IMAGE & CTA */}
                     <div className="flex-1 flex flex-col items-start justify-center max-w-xl">
-                        <img
-                            src="/images/YouthMoneyBank.png"
-                            alt="Youth Money Bank"
-                            className="w-full max-w-[400px] object-contain mb-8"
-                        />
+                        <YmbLockup size="lg" className="mb-8" />
 
                         <h1 className="text-3xl font-bold text-foreground leading-tight mb-4">
                             Save Smart While You're Young
