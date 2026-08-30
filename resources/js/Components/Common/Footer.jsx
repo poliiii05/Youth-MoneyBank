@@ -10,55 +10,55 @@ export default function Footer() {
 
     return (
         <>
-            <footer className="bg-gradient-to-r from-blue-50 to-blue-100 border-t-2 border-blue-200 mt-auto">
+            <footer className="bg-gradient-to-r from-secondary to-secondary/60 border-t-2 border-border mt-auto">
                 <div className="max-w-7xl mx-auto px-8 py-5">
                     
-                    {/* Top - Centered Copyright with Icon ito ha */}
+                    {/* Top - Centered Copyright with Icon */}
                     <div className="flex justify-center items-center gap-2 mb-3">
-                        <span className="text-blue-600 text-xl">🏦</span>
-                        <p className="text-sm text-gray-800 font-semibold">
+                        <span className="text-primary text-xl">🏦</span>
+                        <p className="text-sm text-foreground font-semibold">
                             Youth Money Bank © {new Date().getFullYear()} — Empowering Your Future
                         </p>
                     </div>
 
-                    {/* Ito yung Divider na may line na design hehe*/}
+                    {/* Divider line*/}
                     <div className="
-                    border-t border-blue-300 mb-3">
+                    border-t border-border mb-3">
                     </div>
                     
-                    {/* Bottom - Centered Links part nga nito */}
+                    {/* Bottom - Centered Links*/}
                     <div className=
                     "flex flex-wrap justify-center items-center gap-3 text-sm">
             
-                            <span className="text-base"> {/* ito yung start sa babang part, ito yung icon */}
+                            <span className="text-base"> 
                                 ✉️
                             </span> 
 
-                            <span className="text-gray-700 font-medium"> {/* ito yung part ng contact us na text */}
+                            <span className="text-muted-foreground font-medium">
                                 Contact Us:
                             </span>
                             
                             <a href="mailto:help@ymb.com" 
-                            className="text-blue-600 hover:text-blue-800 transition-colors font-medium hover:underline">
+                            className="text-primary hover:text-primary/80 transition-colors font-medium hover:underline">
                            
-                                help@ymb.com</a>   {/* ito yung part ng may link hehe uhmki */}
+                                help@ymb.com</a>   
 
-                        <span className="text-gray-400">•</span> {/* design lang ito yung maliit na dot */}
+                        <span className="text-gray-400">•</span> 
 
 
-                        {/* Privacy Policy Modal yung napipindot */}
+                        {/* Privacy Policy pop up modals */}
                         <button
                             onClick={() => setShowPrivacy(true)}
-                            className="text-gray-700 hover:text-blue-700 transition-colors font-medium cursor-pointer">
+                            className="text-muted-foreground hover:text-primary transition-colors font-medium cursor-pointer">
                             Privacy Policy
                         </button>
 
-                        <span className="text-gray-400">•</span> {/* design lang ito yung maliit na dot */}
+                        <span className="text-gray-400">•</span> {/* design dot */}
 
                         {/* Terms & Conditions Modal Trigger */}
                         <button
                             onClick={() => setShowTerms(true)}
-                            className="text-gray-700 hover:text-blue-700 transition-colors font-medium cursor-pointer">
+                            className="text-muted-foreground hover:text-primary transition-colors font-medium cursor-pointer">
                             Terms & Conditions
                         </button>
                        
