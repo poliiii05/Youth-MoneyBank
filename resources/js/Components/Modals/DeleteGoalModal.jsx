@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { router } from '@inertiajs/react';
 import { X, AlertTriangle, Loader2, Sparkles, PiggyBank, ArrowRight, Trash2 } from 'lucide-react';
-import { useModalEnterKey } from '../../hooks/useModalEnterKey';
+import { useModalEnterKey } from '../../Hooks/useModalEnterKey';
 
 export default function DeleteGoalModal({ isOpen, onClose, goal }) {
     const [isProcessing, setIsProcessing] = useState(false);

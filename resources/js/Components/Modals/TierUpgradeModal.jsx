@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import DocumentSlot from '../../Pages/User/Settings/TierUpgrade/DocumentSlot';
 import { showError } from '../../utils/toast';
-import { useModalEnterKey } from '../../hooks/useModalEnterKey';
+import { useModalEnterKey } from '../../Hooks/useModalEnterKey';
 
 const TIER_ICONS = { 1: Sprout, 2: Hammer, 3: Crown };
 

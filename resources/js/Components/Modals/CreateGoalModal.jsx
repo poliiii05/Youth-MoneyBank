@@ -2,7 +2,7 @@
 import { useForm } from '@inertiajs/react';
 import { useEffect } from 'react';
 import { Target, Smartphone, Gamepad2, Plane, ShoppingBag, PiggyBank, Landmark, Umbrella, GraduationCap, ShieldAlert, X, Loader2, Sparkles } from 'lucide-react';
-import { useModalEnterKey } from '../../hooks/useModalEnterKey';
+import { useModalEnterKey } from '../../Hooks/useModalEnterKey';
 
 // Template presets
 const TEMPLATE_PRESETS = {

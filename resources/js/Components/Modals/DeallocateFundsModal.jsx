@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { router } from '@inertiajs/react';
 import { X, PiggyBank, Target, AlertCircle, Loader2, Sparkles, ArrowRight, MinusCircle } from 'lucide-react';
-import { useModalEnterKey } from '../../hooks/useModalEnterKey';
+import { useModalEnterKey } from '../../Hooks/useModalEnterKey';
 
 const PRESET_AMOUNTS = [10, 50, 100, 500];
 

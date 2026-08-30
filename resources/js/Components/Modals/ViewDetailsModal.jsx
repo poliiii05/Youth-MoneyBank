@@ -6,7 +6,7 @@ import {
     ArrowDownLeft, ArrowUpRight, Trophy, TrendingUp, Hash, Coins, 
     Plus, Minus, Sparkles, Calendar
 } from 'lucide-react';
-import { useModalEnterKey } from '../../hooks/useModalEnterKey';
+import { useModalEnterKey } from '../../Hooks/useModalEnterKey';
 
 const ICON_MAP = {
     Target, ShieldAlert, Smartphone, ShoppingBag, PiggyBank,

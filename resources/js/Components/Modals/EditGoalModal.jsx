@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { router } from '@inertiajs/react';
 import { X, AlertCircle, Loader2, Sparkles, Target, ShieldAlert, Smartphone, ShoppingBag, PiggyBank, Landmark, Umbrella, GraduationCap, Gamepad2, Plane, Edit2, CheckCircle2 } from 'lucide-react';
-import { useModalEnterKey } from '../../hooks/useModalEnterKey';
+import { useModalEnterKey } from '../../Hooks/useModalEnterKey';
 
 const ICON_OPTIONS = [
     { name: 'Target', Component: Target },
