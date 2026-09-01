@@ -20,8 +20,10 @@ createInertiaApp({
         return page;
     },
     setup({ el, App, props }) {
-        // Listen for Inertia navigation — surface Laravel flash messages as toasts
-        router.on('finish', (event) => {
+        // Surface Laravel flash messages as toasts.
+        // Must be the 'success' event: 'finish' carries only detail.visit,
+        // so reading detail.page there silently yields undefined every time.
+        router.on('success', (event) => {
             const flash = event.detail.page?.props?.flash;
             if (flash?.success) showSuccess(flash.success);
             if (flash?.error) showError(flash.error);

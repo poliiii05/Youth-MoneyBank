@@ -1,15 +1,17 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
+import { useForm, Link, router } from '@inertiajs/react';
 import Navbar from '../../Components/Common/Navbar.jsx';
 import PrivacyPolicyModal from '../../Pages/Public/PrivacyPolicyModal.jsx';
 import TermsAndConditionsModal from '../../Pages/Public/TermsAndConditionsModal.jsx';
-import { Wallet, Target, TrendingUp, ChevronDown, Mail, User, Lock, Eye, EyeOff, Check, X } from 'lucide-react';
+import { Wallet, Target, TrendingUp, ChevronDown, Mail, User, Lock, Eye, EyeOff, Check, X, MailCheck } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import { Card } from '@/Components/ui/card';
+import { showError } from '../../utils/toast.jsx';
+import { EMAIL_REGEX, validateEmail } from '../../utils/email.js';
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const SPECIAL_CHAR_REGEX = /[!@#$%^&*(),.?":{}|<>_\-+=[\]/~`';]/;
 const PASSWORD_MIN_LENGTH = 8;
 
@@ -24,94 +26,153 @@ function GoogleIcon({ className = 'w-4 h-4' }) {
     );
 }
 
-function TurnstileOverlay({ isOpen, onSuccess, onError, onClose, email }) {
+/**
+ * Turnstile in "execute" mode.
+ *
+ * The widget renders invisibly and only runs when execute() is called, so
+ * nothing appears on the form until the visitor submits. When Cloudflare
+ * decides a challenge is needed, it shows its own centred overlay — that UI
+ * is Cloudflare's, not ours, which is the point: people trust the check
+ * because they recognise it from other sites.
+ */
+function TurnstileGate({ siteKey, onVerify, onError, registerExecute, active }) {
     const containerRef = useRef(null);
     const widgetIdRef = useRef(null);
-    const hasRenderedRef = useRef(false);
+
+    // turnstile.render() captures its callbacks once, at mount. Reading them
+    // through refs keeps the widget pointed at the current handlers instead
+    // of the ones from the first render, when the form was still empty.
+    const onVerifyRef = useRef(onVerify);
+    const onErrorRef = useRef(onError);
+    onVerifyRef.current = onVerify;
+    onErrorRef.current = onError;
 
     useEffect(() => {
-        if (!isOpen) return;
-        let mounted = true;
+        if (!siteKey) return;
+        let cancelled = false;
 
-        const loadAndRender = () => {
-            if (!mounted || !containerRef.current) return;
-            if (!window.turnstile) { setTimeout(loadAndRender, 100); return; }
-            if (hasRenderedRef.current) return;
-
-            try {
-                widgetIdRef.current = window.turnstile.render(containerRef.current, {
-                    sitekey: '0x4AAAAAACCXzxGBQrb5Aa0c',
-                    callback: async (token) => {
-                        try {
-                            const response = await fetch('/verify-turnstile', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                                body: JSON.stringify({ token, email }),
-                            });
-                            const data = await response.json();
-                            if (data.success) { if (onSuccess) onSuccess(data); }
-                            else {
-                                if (onError) onError(data.message || 'Verification failed');
-                                if (window.turnstile && widgetIdRef.current !== null) window.turnstile.reset(widgetIdRef.current);
-                            }
-                        } catch (error) {
-                            if (onError) onError(error.message);
-                            if (window.turnstile && widgetIdRef.current !== null) window.turnstile.reset(widgetIdRef.current);
-                        }
-                    },
-                    'error-callback': () => { if (onError) onError('Captcha error'); },
-                    'expired-callback': () => { if (onError) onError('Captcha expired'); },
-                    theme: 'light', size: 'normal',
-                });
-                hasRenderedRef.current = true;
-            } catch (error) {
-                if (onError) onError(error.message);
+        const render = () => {
+            if (cancelled || !containerRef.current) return;
+            if (!window.turnstile) {
+                setTimeout(render, 120);
+                return;
             }
+            if (widgetIdRef.current !== null) return;
+
+            widgetIdRef.current = window.turnstile.render(containerRef.current, {
+                sitekey: siteKey,
+                theme: 'light',
+                appearance: 'execute',   // stay hidden until execute() runs
+                execution: 'execute',
+                callback: (token) => onVerifyRef.current(token),
+                'error-callback': () => onErrorRef.current('Verification failed. Please try again.'),
+                'timeout-callback': () => onErrorRef.current('Verification timed out. Please try again.'),
+            });
+
+            // Hand the parent a way to trigger the check, plus a reset for
+            // retries — Turnstile tokens are single-use.
+            registerExecute({
+                run: () => window.turnstile.execute(widgetIdRef.current),
+                reset: () => window.turnstile.reset(widgetIdRef.current),
+            });
         };
 
         if (!document.querySelector('script[src*="turnstile"]')) {
             const script = document.createElement('script');
-            script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
-            script.async = true; script.defer = true; script.onload = loadAndRender;
+            script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+            script.async = true;
+            script.defer = true;
+            script.onload = render;
             document.head.appendChild(script);
-        } else { setTimeout(loadAndRender, 100); }
+        } else {
+            render();
+        }
 
         return () => {
-            mounted = false;
+            cancelled = true;
             if (window.turnstile && widgetIdRef.current !== null) {
                 try {
                     window.turnstile.remove(widgetIdRef.current);
-                    hasRenderedRef.current = false; widgetIdRef.current = null;
-                } catch (e) { console.error('Cleanup error:', e); }
+                } catch {
+                    // already gone
+                }
+                widgetIdRef.current = null;
             }
         };
-    }, [isOpen, onSuccess, onError, email]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [siteKey]);
 
-    if (!isOpen) return null;
-
+    // The widget must stay mounted for its id to stay valid, so it is always
+    // in the tree — hidden until a check is running, then shown centred over
+    // a dimmed page. Cloudflare draws its own UI inside; we only position it.
     return (
         <>
-            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"></div>
+            {active && (
+                <div className="fixed inset-0 z-50 bg-black/40" aria-hidden="true" />
+            )}
+            <div
+                className={
+                    active
+                        ? 'fixed inset-0 z-50 flex items-center justify-center p-4'
+                        : 'hidden'
+                }
+            >
+                <div ref={containerRef} />
+            </div>
+        </>
+    );
+}
+
+/**
+ * Shown once registration succeeds. Deliberately a modal rather than a toast:
+ * the visitor has to acknowledge it, so the instruction to go check their
+ * email can't scroll past unread.
+ */
+function RegistrationSuccessModal({ email }) {
+    return (
+        <>
+            <div className="fixed inset-0 z-50 bg-black/40" aria-hidden="true" />
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                <Card className="p-8 max-w-md w-full shadow-2xl">
-                    <div className="text-center mb-6">
-                        <div className="text-5xl mb-4">🛡️</div>
-                        <h3 className="text-2xl font-bold text-foreground mb-2">Security Verification</h3>
-                        <p className="text-muted-foreground">Please complete the verification below</p>
+                <Card className="w-full max-w-sm p-8 text-center shadow-2xl">
+                    <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-success/10">
+                        <MailCheck size={26} className="text-success" />
                     </div>
-                    <div ref={containerRef} className="flex justify-center mb-6"></div>
-                    <Button type="button" variant="outline" size="lg" className="w-full" onClick={onClose}>Cancel</Button>
+
+                    <h2 className="text-xl font-bold text-foreground mb-2">
+                        Sign up successful!
+                    </h2>
+
+                    <p className="text-sm text-muted-foreground leading-relaxed mb-6">
+                        We sent a verification link to{' '}
+                        <span className="font-medium text-foreground break-all">{email}</span>.
+                        Open it to verify your account, then log in.
+                    </p>
+
+                    <Button
+                        type="button"
+                        size="lg"
+                        className="w-full"
+                        autoFocus
+                        onClick={() => router.visit('/login')}
+                    >
+                        Okay
+                    </Button>
                 </Card>
             </div>
         </>
     );
 }
 
-export default function SignUp() {
-    const [fullName, setFullName] = useState('');
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
+export default function SignUp({ turnstileSiteKey, registeredEmail }) {
+    const { data, setData, post, transform, processing, errors } = useForm({
+        name: '',
+        email: '',
+        birth_date: '',
+        password: '',
+        password_confirmation: '',
+        turnstile_token: '',
+    });
+
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -119,30 +180,37 @@ export default function SignUp() {
     const [bMonth, setBMonth] = useState('');
     const [bDay, setBDay] = useState('');
     const [bYear, setBYear] = useState('');
-    const [birthDate, setBirthDate] = useState('');
 
-    const [showTurnstile, setShowTurnstile] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
     const [acceptedTerms, setAcceptedTerms] = useState(false);
+    const [verifying, setVerifying] = useState(false);
+    const [emailTouched, setEmailTouched] = useState(false);
     const [showPrivacy, setShowPrivacy] = useState(false);
     const [showTerms, setShowTerms] = useState(false);
 
-    const emailValid = EMAIL_REGEX.test(email);
-    const passwordLongEnough = password.length >= PASSWORD_MIN_LENGTH;
-    const passwordHasSpecialChar = SPECIAL_CHAR_REGEX.test(password);
+    const emailValid = EMAIL_REGEX.test(data.email.trim());
+    const { error: emailError, suggestion: emailSuggestion } = validateEmail(data.email, emailTouched);
+    const passwordLongEnough = data.password.length >= PASSWORD_MIN_LENGTH;
+    const passwordHasSpecialChar = SPECIAL_CHAR_REGEX.test(data.password);
     const passwordValid = passwordLongEnough && passwordHasSpecialChar;
-    const confirmTouched = confirmPassword.length > 0;
-    const passwordsMatch = confirmTouched && password === confirmPassword;
+    const passwordsMatch = data.password_confirmation.length > 0
+        && data.password === data.password_confirmation;
+
+    // While the confirmation is still a prefix of the password, the visitor is
+    // simply mid-typing — flagging that as a mismatch is just noise. The error
+    // only appears once what they've typed can no longer become a match.
+    const confirmDiverged = data.password_confirmation.length > 0
+        && !data.password.startsWith(data.password_confirmation);
 
     // SYNC 3 DROPDOWNS TO 1 DATE STRING
     useEffect(() => {
         if (bMonth && bDay && bYear) {
             const formattedMonth = bMonth.padStart(2, '0');
             const formattedDay = bDay.padStart(2, '0');
-            setBirthDate(`${bYear}-${formattedMonth}-${formattedDay}`);
+            setData('birth_date', `${bYear}-${formattedMonth}-${formattedDay}`);
         } else {
-            setBirthDate('');
+            setData('birth_date', '');
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [bMonth, bDay, bYear]);
 
     // OPTIONS DATA
@@ -158,27 +226,56 @@ export default function SignUp() {
     const currentYear = new Date().getFullYear();
     const years = Array.from({ length: 100 }, (_, i) => (currentYear - i).toString());
 
-    const handleCaptchaSuccess = (response) => {
-        setShowTurnstile(false); setIsLoading(false);
-        alert('Verification successful! Account created.');
+    // Filled in by TurnstileGate once its widget is ready.
+    const turnstileRef = useRef(null);
+    const registerExecute = useCallback((api) => {
+        turnstileRef.current = api;
+    }, []);
+
+    // Cloudflare hands back a token — merge it into the payload and submit.
+    // transform() is the supported way to add a field at submit time; passing
+    // `data` through post() options does not reach the request.
+    const handleTurnstileVerify = (token) => {
+        // Cloudflare has just swapped its widget to the green tick — leave the
+        // overlay up briefly so the visitor sees it succeed rather than having
+        // the panel vanish mid-animation.
+        setTimeout(() => {
+            setVerifying(false);
+            transform((current) => ({ ...current, turnstile_token: token }));
+            post('/signup', {
+                onError: () => {
+                    // The token was spent on the failed attempt; the next
+                    // submit needs a fresh one.
+                    turnstileRef.current?.reset();
+                },
+            });
+        }, 900);
     };
 
-    const handleCaptchaError = (error) => {
-        console.error('Captcha error:', error);
-        setShowTurnstile(false); setIsLoading(false);
-        alert(`Verification error: ${error}`);
+    const handleTurnstileError = (message) => {
+        setVerifying(false);
+        showError(message);
+        turnstileRef.current?.reset();
     };
 
     const handleSignUp = () => {
-        if (!isFormValid()) return;
-        setIsLoading(true); setShowTurnstile(true);
+        if (!isFormValid() || processing || verifying) return;
+
+        // No Turnstile configured locally — go straight through.
+        if (!turnstileSiteKey || !turnstileRef.current) {
+            post('/signup');
+            return;
+        }
+
+        setVerifying(true);
+        turnstileRef.current.run();
     };
 
     const isFormValid = () => {
         return (
-            fullName.trim().length > 0 &&
+            data.name.trim().length > 0 &&
             emailValid &&
-            birthDate &&
+            data.birth_date &&
             passwordValid &&
             passwordsMatch &&
             acceptedTerms
@@ -189,9 +286,9 @@ export default function SignUp() {
         <div className="min-h-screen flex flex-col bg-gradient-to-br from-secondary via-background to-secondary">
             <Navbar currentPage="signup" />
 
-            <main className="flex-1 flex items-center justify-center px-4 py-6">
+            <main className="flex-1 flex items-center justify-center px-4 py-4">
                 <Card className="w-full max-w-5xl rounded-3xl shadow-2xl border-border overflow-hidden p-0">
-                    <div className="flex h-full min-h-[520px]">
+                    <div className="flex h-full min-h-[460px]">
 
                         {/* LEFT SIDE */}
                         <div className="hidden lg:flex w-1/2 flex-col justify-center p-6 lg:p-8 bg-gradient-to-br from-primary via-primary to-emerald-500 text-primary-foreground relative overflow-hidden">
@@ -241,7 +338,7 @@ export default function SignUp() {
                                     </div>
                                 </div>
 
-                                <div className="mt-6 pt-4 border-t border-white/20">
+                                <div className="mt-5 pt-3 border-t border-white/20">
                                     <p className="text-sm font-semibold">Built with Bank-Level Security</p>
                                     <p className="text-xs text-white/80 mt-0.5">Simulated Platform. Safe. Secure.</p>
                                 </div>
@@ -264,35 +361,51 @@ export default function SignUp() {
                                         <Input
                                             id="signup-fullname"
                                             type="text"
-                                            value={fullName}
-                                            onChange={(e) => setFullName(e.target.value)}
-                                            placeholder="Enter your name"
+                                            value={data.name}
+                                            onChange={(e) => setData('name', e.target.value)}
+                                            placeholder="Juan Dela Cruz"
                                             className="pl-10"
                                         />
                                     </div>
+                                    {errors.name && <p className="text-xs text-destructive mt-1">{errors.name}</p>}
                                 </div>
 
                                 {/* EMAIL */}
-                                <div className="mb-3">
+                                <div className="mb-2.5">
                                     <Label htmlFor="signup-email" className="mb-1 block">Email Address <span className="text-destructive">*</span></Label>
                                     <div className="relative">
                                         <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                                         <Input
                                             id="signup-email"
                                             type="email"
-                                            value={email}
-                                            onChange={(e) => setEmail(e.target.value)}
-                                            placeholder="Enter your email"
+                                            value={data.email}
+                                            onChange={(e) => setData('email', e.target.value)}
+                                            onBlur={() => setEmailTouched(true)}
+                                            placeholder="you@example.com"
                                             className="pl-10"
                                         />
                                     </div>
-                                    {email.length > 0 && !emailValid && (
-                                        <p className="text-xs text-destructive mt-1">Please enter a valid email address.</p>
+                                    {emailSuggestion && (
+                                        <p className="text-xs text-muted-foreground mt-1">
+                                            Did you mean{' '}
+                                            <button
+                                                type="button"
+                                                onClick={() => { setData('email', emailSuggestion); setEmailTouched(true); }}
+                                                className="text-primary font-semibold hover:underline cursor-pointer"
+                                            >
+                                                {emailSuggestion}
+                                            </button>
+                                            ?
+                                        </p>
                                     )}
+                                    {!emailSuggestion && emailError && (
+                                        <p className="text-xs text-destructive mt-1">{emailError}</p>
+                                    )}
+                                    {errors.email && <p className="text-xs text-destructive mt-1">{errors.email}</p>}
                                 </div>
 
                                 {/* DATE OF BIRTH — right below email */}
-                                <div className="mb-3">
+                                <div className="mb-2.5">
                                     <Label className="mb-1 block">Date of Birth <span className="text-destructive">*</span></Label>
                                     <div className="grid grid-cols-3 gap-2">
                                         <div className="relative">
@@ -322,28 +435,28 @@ export default function SignUp() {
                                 </div>
 
                                 {/* PASSWORD */}
-                                <div className="mb-3">
+                                <div className="mb-2.5">
                                     <Label htmlFor="signup-password" className="mb-1 block">Password <span className="text-destructive">*</span></Label>
                                     <div className="relative">
                                         <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                                         <Input
                                             id="signup-password"
                                             type={showPassword ? 'text' : 'password'}
-                                            value={password}
-                                            onChange={(e) => setPassword(e.target.value)}
+                                            value={data.password}
+                                            onChange={(e) => setData('password', e.target.value)}
                                             placeholder="Enter a strong password"
                                             className="pl-10 pr-10"
                                         />
                                         <button
                                             type="button"
                                             onClick={() => setShowPassword(!showPassword)}
-                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                                             tabIndex={-1}
                                         >
                                             {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                                         </button>
                                     </div>
-                                    {password.length > 0 && (
+                                    {data.password.length > 0 && (
                                         <div className="mt-1.5 space-y-0.5">
                                             <p className={`text-xs flex items-center gap-1 ${passwordLongEnough ? 'text-success' : 'text-muted-foreground'}`}>
                                                 {passwordLongEnough ? <Check size={12} /> : <X size={12} />} At least 8 characters
@@ -363,21 +476,21 @@ export default function SignUp() {
                                         <Input
                                             id="signup-confirm-password"
                                             type={showConfirmPassword ? 'text' : 'password'}
-                                            value={confirmPassword}
-                                            onChange={(e) => setConfirmPassword(e.target.value)}
+                                            value={data.password_confirmation}
+                                            onChange={(e) => setData('password_confirmation', e.target.value)}
                                             placeholder="Re-enter your password"
                                             className="pl-10 pr-10"
                                         />
                                         <button
                                             type="button"
                                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                                             tabIndex={-1}
                                         >
                                             {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                                         </button>
                                     </div>
-                                    {confirmTouched && !passwordsMatch && (
+                                    {confirmDiverged && (
                                         <p className="text-xs text-destructive mt-1">Password did not match.</p>
                                     )}
                                 </div>
@@ -386,12 +499,25 @@ export default function SignUp() {
                                 <div className="flex items-start gap-2 bg-secondary p-2 rounded-lg border border-border mb-4">
                                     <input type="checkbox" id="terms" checked={acceptedTerms} onChange={(e) => setAcceptedTerms(e.target.checked)} className="mt-0.5 w-3.5 h-3.5 rounded border-input text-primary focus:ring-ring cursor-pointer" />
                                     <label htmlFor="terms" className="text-xs text-secondary-foreground leading-tight cursor-pointer select-none">
-                                        I agree to the <button onClick={(e) => { e.preventDefault(); setShowTerms(true); }} className="text-primary hover:underline font-bold cursor-pointer">Terms & Conditions</button> and <button onClick={(e) => { e.preventDefault(); setShowPrivacy(true); }} className="text-primary hover:underline font-bold cursor-pointer">Privacy Policy</button>
+                                        I agree to the <button onClick={(e) => { e.preventDefault(); setShowTerms(true); }} className="text-primary hover:underline font-bold">Terms & Conditions</button> and <button onClick={(e) => { e.preventDefault(); setShowPrivacy(true); }} className="text-primary hover:underline font-bold">Privacy Policy</button>
                                     </label>
                                 </div>
 
-                                <Button type="button" onClick={handleSignUp} disabled={!isFormValid() || isLoading} size="lg" className="w-full mb-4">
-                                    {isLoading ? 'Creating Account...' : 'Create Account'}
+                                {errors.birth_date && <p className="text-xs text-destructive mb-2">{errors.birth_date}</p>}
+
+                                <TurnstileGate
+                                    siteKey={turnstileSiteKey}
+                                    onVerify={handleTurnstileVerify}
+                                    onError={handleTurnstileError}
+                                    registerExecute={registerExecute}
+                                    active={verifying}
+                                />
+                                {errors.turnstile_token && (
+                                    <p className="text-xs text-destructive mb-2 text-center">{errors.turnstile_token}</p>
+                                )}
+
+                                <Button type="button" onClick={handleSignUp} disabled={!isFormValid() || processing || verifying} size="lg" className="w-full mb-3">
+                                    {verifying ? 'Verifying...' : processing ? 'Creating Account...' : 'Create Account'}
                                 </Button>
 
                                 <div className="relative my-3">
@@ -400,14 +526,14 @@ export default function SignUp() {
                                 </div>
 
                                 <a href="/auth/google">
-                                    <Button type="button" variant="outline" size="lg" className="w-full mb-3 cursor-pointer">
+                                    <Button type="button" variant="outline" size="lg" className="w-full mb-3">
                                         <GoogleIcon />
                                         <span>Sign up with Google</span>
                                     </Button>
                                 </a>
 
                                 <div className="text-center text-xs text-muted-foreground">
-                                    Already have an account? <a href="/login" className="text-primary hover:text-primary/80 font-semibold hover:underline">Login here</a>
+                                    Already have an account? <Link href="/login" className="text-primary hover:text-primary/80 font-semibold hover:underline">Login here</Link>
                                 </div>
                             </div>
                         </div>
@@ -415,7 +541,7 @@ export default function SignUp() {
                 </Card>
             </main>
 
-            <TurnstileOverlay isOpen={showTurnstile} onClose={() => setShowTurnstile(false)} onSuccess={handleCaptchaSuccess} onError={handleCaptchaError} email={email} />
+            {registeredEmail && <RegistrationSuccessModal email={registeredEmail} />}
 
             {typeof document !== 'undefined' && createPortal(
                 <>
@@ -425,4 +551,4 @@ export default function SignUp() {
             )}
         </div>
     );
-}
+} 

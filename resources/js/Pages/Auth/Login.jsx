@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { useForm, Link } from '@inertiajs/react';
 import Navbar from '../../Components/Common/Navbar.jsx';
 import PrivacyPolicyModal from '../Public/PrivacyPolicyModal.jsx';
 import TermsAndConditionsModal from '../Public/TermsAndConditionsModal.jsx';
@@ -22,17 +23,20 @@ function GoogleIcon({ className = 'w-4 h-4' }) {
     );
 }
 
-export default function Login() {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
+export default function Login({ status }) {
+    const { data, setData, post, processing, errors } = useForm({
+        email: '',
+        password: '',
+        remember: false,
+    });
+
     const [showPassword, setShowPassword] = useState(false);
-    const [isLoadingLogin, setIsLoadingLogin] = useState(false);
     const [showPrivacy, setShowPrivacy] = useState(false);
     const [showTerms, setShowTerms] = useState(false);
     const [welcomeText, setWelcomeText] = useState('');
 
-    const emailValid = EMAIL_REGEX.test(email);
-    const canSubmit = emailValid && password.length > 0;
+    const emailValid = EMAIL_REGEX.test(data.email);
+    const canSubmit = emailValid && data.password.length > 0;
 
     useEffect(() => {
         const fullTextArray = [..."Welcome Back!👋"];
@@ -62,14 +66,10 @@ export default function Login() {
         return () => clearTimeout(timerId);
     }, []);
 
-    const handleLogin = () => {
-        if (!canSubmit) return;
-        setIsLoadingLogin(true);
-        // TODO: wire to POST /login -> Auth::attempt(['email' => ..., 'password' => ...])
-        setTimeout(() => {
-            setIsLoadingLogin(false);
-            alert('Login successful!');
-        }, 1000);
+    const handleLogin = (e) => {
+        e?.preventDefault();
+        if (!canSubmit || processing) return;
+        post('/login');
     };
 
     return (
@@ -136,6 +136,12 @@ export default function Login() {
                                     <p className="text-sm text-muted-foreground">Enter your credentials to continue</p>
                                 </div>
 
+                                {status && (
+                                    <div className="mb-6 rounded-lg border border-success/30 bg-success/10 px-4 py-3">
+                                        <p className="text-sm text-success font-medium">{status}</p>
+                                    </div>
+                                )}
+
                                 {/* EMAIL */}
                                 <div className="mb-4">
                                     <Label htmlFor="login-email" className="mb-2 block">Email Address</Label>
@@ -144,12 +150,15 @@ export default function Login() {
                                         <Input
                                             id="login-email"
                                             type="email"
-                                            value={email}
-                                            onChange={(e) => setEmail(e.target.value)}
-                                            placeholder="Enter your email address"
+                                            value={data.email}
+                                            onChange={(e) => setData('email', e.target.value)}
+                                            placeholder="you@example.com"
                                             className="pl-10 py-3"
                                         />
                                     </div>
+                                    {errors.email && (
+                                        <p className="text-xs text-destructive mt-1.5">{errors.email}</p>
+                                    )}
                                 </div>
 
                                 {/* PASSWORD */}
@@ -160,8 +169,9 @@ export default function Login() {
                                         <Input
                                             id="login-password"
                                             type={showPassword ? 'text' : 'password'}
-                                            value={password}
-                                            onChange={(e) => setPassword(e.target.value)}
+                                            value={data.password}
+                                            onChange={(e) => setData('password', e.target.value)}
+                                            onKeyDown={(e) => e.key === 'Enter' && handleLogin(e)}
                                             placeholder="Enter your password"
                                             className="pl-10 pr-10 py-3"
                                         />
@@ -176,21 +186,35 @@ export default function Login() {
                                     </div>
                                 </div>
 
-                                {/* FORGOT PASSWORD */}
-                                <div className="text-right mb-6">
-                                    <a href="/forgot-password" className="text-xs text-primary hover:text-primary/80 font-medium hover:underline">
+                                {errors.password && (
+                                    <p className="text-xs text-destructive mt-1.5">{errors.password}</p>
+                                )}
+
+                                {/* REMEMBER ME + FORGOT PASSWORD */}
+                                <div className="flex items-center justify-between mt-3 mb-6">
+                                    <label className="flex items-center gap-2 cursor-pointer select-none">
+                                        <input
+                                            type="checkbox"
+                                            checked={data.remember}
+                                            onChange={(e) => setData('remember', e.target.checked)}
+                                            className="w-3.5 h-3.5 rounded border-input text-primary focus:ring-ring cursor-pointer"
+                                        />
+                                        <span className="text-xs text-muted-foreground">Remember me</span>
+                                    </label>
+
+                                    <Link href="/forgot-password" className="text-xs text-primary hover:text-primary/80 font-medium hover:underline">
                                         Forgot password?
-                                    </a>
+                                    </Link>
                                 </div>
 
                                 <Button
                                     type="button"
                                     onClick={handleLogin}
-                                    disabled={!canSubmit || isLoadingLogin}
+                                    disabled={!canSubmit || processing}
                                     size="lg"
                                     className="w-full mb-6"
                                 >
-                                    {isLoadingLogin ? 'Logging in...' : 'Login'}
+                                    {processing ? 'Logging in...' : 'Login'}
                                 </Button>
 
                                 <div className="relative my-6">
@@ -203,7 +227,7 @@ export default function Login() {
                                 </div>
 
                                 <a href="/auth/google">
-                                    <Button type="button" variant="outline" size="lg" className="w-full mb-6 group cursor-pointer">
+                                    <Button type="button" variant="outline" size="lg" className="w-full mb-6 group">
                                         <GoogleIcon className="w-4 h-4 group-hover:scale-110 transition-transform" />
                                         <span>Sign in with Google</span>
                                     </Button>
@@ -211,7 +235,7 @@ export default function Login() {
 
                                 <div className="text-center text-xs text-muted-foreground mb-4">
                                     Don't have an account?{' '}
-                                    <a href="/signup" className="text-primary hover:text-primary/80 font-semibold hover:underline">Sign up now</a>
+                                    <Link href="/signup" className="text-primary hover:text-primary/80 font-semibold hover:underline">Sign up now</Link>
                                 </div>
 
                                 <div className="border-t border-border pt-4">
