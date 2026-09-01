@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { X, Send, Headphones, Shield, User as UserIcon, Bot, UserCheck, AlertCircle } from 'lucide-react';
 
-export default function ChatModal({ onClose, currentUser = null }) {
+export default function ChatModal({ onClose, currentUser = null, prefillMessage = '' }) {
     const [ticket, setTicket] = useState(null);
     const [messages, setMessages] = useState([]);
-    const [inputText, setInputText] = useState('');
+    const [inputText, setInputText] = useState(prefillMessage || '');
     const [isLoading, setIsLoading] = useState(true);
     const [isSending, setIsSending] = useState(false);
     const [error, setError] = useState('');
