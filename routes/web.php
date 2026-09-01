@@ -11,7 +11,6 @@ use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\SavingsGoalController;
 use App\Http\Controllers\User\WalletController;
 
-
 //---------------------------------------------//
 //   Google OAuth Routes                       //
 //---------------------------------------------//
@@ -161,6 +160,11 @@ Route::prefix('api/support')->name('api.support.')->group(function () {
     // ====================================================
     Route::get('/transactions', [\App\Http\Controllers\User\TransactionsController::class, 'index'])
         ->name('transactions');
+
+    // Registered before the {transaction} route — otherwise "export" is read
+    // as a transaction id and never reaches this handler.
+    Route::get('/transactions/export', [\App\Http\Controllers\User\TransactionsController::class, 'export'])
+        ->name('transactions.export');
 
     Route::get('/transactions/{transaction}', [\App\Http\Controllers\User\TransactionsController::class, 'show'])
         ->name('transactions.show');

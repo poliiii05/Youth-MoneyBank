@@ -21,6 +21,11 @@ class TransactionsController extends Controller
         $page = (int) $request->get('page', 1);
         $showAll = $request->get('show_all') === '1';
 
+        $search = trim((string) $request->get('search', ''));
+        $direction = $request->get('direction', 'all');   // all | in | out
+        $from = $request->get('from');
+        $to = $request->get('to');
+
         // Build query
         $query = $user->transactions()
             ->with(['ledgerEntries.ledgerAccount'])
@@ -28,6 +33,31 @@ class TransactionsController extends Controller
 
         if (!$showAll) {
             $query->where('created_at', '>=', now()->subDays(30));
+        }
+
+        // Filtering happens here rather than in the browser. Doing it client
+        // side only ever searched the ten rows already on screen, so a match on
+        // page three reported "no transactions found" while the record existed.
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('public_reference_id', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        if ($direction === 'in') {
+            $query->where('is_positive', true);
+        } elseif ($direction === 'out') {
+            $query->where('is_positive', false);
+        }
+
+        if ($from) {
+            $query->whereDate('created_at', '>=', $from);
+        }
+
+        if ($to) {
+            $query->whereDate('created_at', '<=', $to);
         }
 
         $totalCount = $query->count();
@@ -68,8 +98,81 @@ class TransactionsController extends Controller
             'filters' => [
                 'show_all' => $showAll,
                 'has_older' => $hasOlderTransactions,
+                'search' => $search,
+                'direction' => $direction,
+                'from' => $from,
+                'to' => $to,
             ],
             'summary' => $this->getMonthlySummary($user),
+        ]);
+    }
+
+    /**
+     * Stream the filtered history as CSV.
+     *
+     * Streamed rather than built in memory: an export is unbounded by design,
+     * and holding every row before sending the first byte is how these endpoints
+     * fall over once an account has real history behind it.
+     */
+    public function export(Request $request)
+    {
+        $user = $request->user();
+
+        $query = $user->transactions()->latest();
+
+        if ($request->get('show_all') !== '1') {
+            $query->where('created_at', '>=', now()->subDays(30));
+        }
+
+        $search = trim((string) $request->get('search', ''));
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('public_reference_id', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        $direction = $request->get('direction', 'all');
+        if ($direction === 'in') {
+            $query->where('is_positive', true);
+        } elseif ($direction === 'out') {
+            $query->where('is_positive', false);
+        }
+
+        if ($from = $request->get('from')) {
+            $query->whereDate('created_at', '>=', $from);
+        }
+        if ($to = $request->get('to')) {
+            $query->whereDate('created_at', '<=', $to);
+        }
+
+        $filename = 'ymb-transactions-' . now()->format('Y-m-d') . '.csv';
+
+        return response()->streamDownload(function () use ($query) {
+            $handle = fopen('php://output', 'w');
+
+            fputcsv($handle, [
+                'Reference ID', 'Date', 'Title', 'Type', 'Direction', 'Amount (PHP)', 'Status',
+            ]);
+
+            $query->chunk(500, function ($rows) use ($handle) {
+                foreach ($rows as $t) {
+                    fputcsv($handle, [
+                        $t->public_reference_id,
+                        $t->created_at->format('Y-m-d H:i:s'),
+                        $t->title,
+                        $t->type,
+                        $t->is_positive ? 'in' : 'out',
+                        number_format($t->amount_cents / 100, 2, '.', ''),
+                        $t->status,
+                    ]);
+                }
+            });
+
+            fclose($handle);
+        }, $filename, [
+            'Content-Type' => 'text/csv',
         ]);
     }
 
