@@ -1,13 +1,15 @@
 // resources/js/Pages/User/Dashboard.jsx
 import { Head, Link } from '@inertiajs/react';
-import { useState } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import UserLayout from '../../Components/Layouts/UserLayout';
-import { Wallet, Target, ArrowRight, Lightbulb, ChevronRight, Send, HandCoins, Landmark, Gift } from 'lucide-react';
+import { Wallet, Target, ArrowRight, Lightbulb, ChevronRight } from 'lucide-react';
 import AddMoneyModal from '../../Components/Wallet/AddMoneyModal';
 import RecentTransactionsCard from '../../Components/Transactions/RecentTransactionsCard';
 import WelcomeModal from '../../Components/Modals/WelcomeModal';
+import SavingsTrendChart from '../../Components/Wallet/SavingsTrendChart';
+import StreakCard from '../../Components/Wallet/StreakCard';
 
-export default function Dashboard({ auth, finances, active_goal, kyc_tier, recent_transactions = [], is_new_user = false }) {
+export default function Dashboard({ auth, finances, active_goal, kyc_tier, recent_transactions = [], streak_preview = null, savings_trend = [], is_new_user = false }) {
     const user = auth?.user;
     const [showWelcome, setShowWelcome] = useState(is_new_user);
 
@@ -30,34 +32,58 @@ export default function Dashboard({ auth, finances, active_goal, kyc_tier, recen
     };
 
     // --- DYNAMIC MONEY TIPS ---
-    const [tipIndex, setTipIndex] = useState(0);
-    const moneyTips = mainBalance === 0 ? [
-        "Start small! Even ₱50 is a great first step. 🌱",
-        "Saving just ₱50 a week gives you ₱2,600 by the end of the year!",
-        "Pay yourself first: Put a portion of your allowance into savings immediately."
+    const moneyTips = useMemo(() => (mainBalance === 0 ? [
+        "Start small. Even ₱50 is a real first step. 🌱",
+        "Saving ₱50 a week adds up to ₱2,600 by the end of the year.",
+        "Pay yourself first — move part of your allowance to savings the day it arrives.",
+        "A goal with a name gets saved for. A goal without one gets spent.",
+        "The habit matters more than the amount. Start where you can.",
     ] : [
-        "Saving just ₱50 a week gives you ₱2,600 by the end of the year!",
-        "Tracking your expenses helps you find 'leaks' in your budget.",
-        "Don't spend out of your main wallet if you can save it instead!"
-    ];
+        "Saving ₱50 a week adds up to ₱2,600 by the end of the year.",
+        "Tracking where your money goes is how you find the leaks.",
+        "Keep spending money and saved money in separate places.",
+        "Round up. Spent ₱85? Move the ₱15 to savings.",
+        "Waiting a day before buying kills most impulse purchases.",
+        "Your streak is worth protecting — even ₱20 keeps it alive.",
+    ]), [mainBalance === 0]);
 
-    const nextTip = () => {
-        setTipIndex((prev) => (prev + 1) % moneyTips.length);
-    };
+    const [tipIndex, setTipIndex] = useState(0);
+    const [tipVisible, setTipVisible] = useState(true);
+
+    const goToTip = useCallback((next) => {
+        // Fade the old line out before swapping the text, so the change reads
+        // as one movement rather than a flicker.
+        setTipVisible(false);
+        setTimeout(() => {
+            setTipIndex(next);
+            setTipVisible(true);
+        }, 250);
+    }, []);
+
+    const nextTip = () => goToTip((tipIndex + 1) % moneyTips.length);
+
+    // Auto-advance. Resets whenever the index changes, so pressing Next gives
+    // a full interval rather than a rushed one.
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            goToTip((tipIndex + 1) % moneyTips.length);
+        }, 6000);
+        return () => clearTimeout(timer);
+    }, [tipIndex, moneyTips.length, goToTip]);
 
     return (
         <UserLayout user={user} header="Dashboard Overview">
             <Head title="Dashboard | Youth MoneyBank" />
 
             {/* 1. WELCOME BANNER */}
-            <div className="bg-white rounded-[1.5rem] shadow-sm border border-teal-100 p-5 mb-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div className="bg-white rounded-[1.5rem] shadow-sm border border-border p-5 mb-4 flex flex-col sm:flex-row justify-between items-center gap-4">
                 <div>
-                    <h2 className="text-xl font-bold text-teal-900 mb-0.5">Hello, {user?.name?.split(' ')[0] || 'User'}! 👋</h2>
-                    <p className="text-teal-600 text-sm font-medium">Let's grow your money today.</p>
+                    <h2 className="text-xl font-bold text-foreground mb-0.5">Hello, {user?.name?.split(' ')[0] || 'User'}! 👋</h2>
+                    <p className="text-primary text-sm font-medium">Let's grow your money today.</p>
                 </div>
                 <button 
                     onClick={() => setIsAddMoneyOpen(true)}
-                    className="px-5 py-2.5 bg-teal-700 text-white font-semibold rounded-xl hover:bg-teal-800 shadow-md shadow-teal-200/50 cursor-pointer transition-all flex items-center gap-2 text-sm"
+                    className="px-5 py-2.5 bg-primary text-white font-semibold rounded-xl hover:bg-primary/90 shadow-md shadow-primary/20 cursor-pointer transition-all flex items-center gap-2 text-sm"
                 >
                     <span className="text-lg leading-none mb-0.5">+</span> Add Money
                 </button>
@@ -69,58 +95,87 @@ export default function Dashboard({ auth, finances, active_goal, kyc_tier, recen
                     <div className="p-1.5 bg-amber-100 text-amber-600 rounded-lg shrink-0">
                         <Lightbulb size={18} />
                     </div>
-                    <div>
+                    <div className="min-w-0">
                         <p className="text-[11px] font-bold text-amber-900/80 uppercase tracking-wider mb-0.5">Money Tip</p>
-                        <p className="text-xs text-amber-800 font-medium transition-all duration-300">
-                            {moneyTips[tipIndex]}
-                        </p>
+                        {/* Fixed height stops the row from jolting as tips of
+                            different lengths swap in. */}
+                        <div className="h-8 flex items-center">
+                            <p
+                                className={`text-xs text-amber-800 font-medium transition-all duration-250 ${
+                                    tipVisible
+                                        ? 'opacity-100 translate-y-0'
+                                        : 'opacity-0 translate-y-1'
+                                }`}
+                            >
+                                {moneyTips[tipIndex]}
+                            </p>
+                        </div>
                     </div>
                 </div>
-                <button 
-                    onClick={nextTip}
-                    className="text-[10px] uppercase tracking-wide font-bold text-amber-700 hover:text-amber-900 flex items-center gap-0.5 bg-amber-100/50 hover:bg-amber-200 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer shrink-0"
-                >
-                    Next <ChevronRight size={12} />
-                </button>
+
+                <div className="flex items-center gap-3 shrink-0">
+                    {/* Position markers — also show that rotation is automatic */}
+                    <div className="hidden sm:flex items-center gap-1">
+                        {moneyTips.map((_, i) => (
+                            <button
+                                key={i}
+                                onClick={() => i !== tipIndex && goToTip(i)}
+                                aria-label={`Tip ${i + 1}`}
+                                className={`h-1.5 rounded-full transition-all cursor-pointer ${
+                                    i === tipIndex
+                                        ? 'w-4 bg-amber-500'
+                                        : 'w-1.5 bg-amber-300 hover:bg-amber-400'
+                                }`}
+                            />
+                        ))}
+                    </div>
+
+                    <button
+                        onClick={nextTip}
+                        className="text-[10px] uppercase tracking-wide font-bold text-amber-700 hover:text-amber-900 flex items-center gap-0.5 bg-amber-100/50 hover:bg-amber-200 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer"
+                    >
+                        Next <ChevronRight size={12} />
+                    </button>
+                </div>
             </div>
 
             {/* 3. OVERVIEW SECTION */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
                 {/* MAIN WALLET — TEAL GRADIENT */}
-                <div className="lg:col-span-2 bg-gradient-to-br from-teal-700 via-teal-800 to-teal-900 rounded-[1.5rem] p-6 text-white shadow-lg relative overflow-hidden flex flex-col justify-between min-h-[180px]">
+                <div className="lg:col-span-2 bg-gradient-to-br from-primary via-primary to-emerald-800 rounded-[1.5rem] p-6 text-white shadow-lg relative overflow-hidden flex flex-col justify-between min-h-[180px]">
                     {/* Decorative blurs */}
                     <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4"></div>
-                    <div className="absolute bottom-0 left-0 w-48 h-48 bg-teal-500/20 rounded-full blur-2xl translate-y-1/3 -translate-x-1/4"></div>
+                    <div className="absolute bottom-0 left-0 w-48 h-48 bg-emerald-400/20 rounded-full blur-2xl translate-y-1/3 -translate-x-1/4"></div>
 
                     <div className="relative z-10 flex justify-between items-start mb-2">
                         <div>
-                            <p className="text-teal-200/70 text-[11px] font-semibold mb-1 uppercase tracking-widest">Main Wallet</p>
+                            <p className="text-white/70 text-[11px] font-semibold mb-1 uppercase tracking-widest">Main Wallet</p>
                             <h3 className="text-4xl md:text-5xl font-black tracking-tight drop-shadow-sm">₱{mainBalance.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</h3>
                         </div>
                         <div className="p-2.5 bg-white/10 rounded-2xl backdrop-blur-md border border-white/10 shadow-inner">
-                            <Wallet size={24} className="text-teal-50" />
+                            <Wallet size={24} className="text-white" />
                         </div>
                     </div>
 
                     <div className="relative z-10 mt-auto bg-white/5 backdrop-blur-md border border-white/10 rounded-xl py-2.5 px-3 space-y-2">
                         {/* Top row: balance ratio + tier ceiling */}
                         <div className="flex justify-between items-center">
-                            <p className="text-[10px] font-semibold text-teal-100/90">
-                                <span className="text-teal-200/60 uppercase tracking-wider text-[9px]">Wallet:</span> 
+                            <p className="text-[10px] font-semibold text-white/90">
+                                <span className="text-white/60 uppercase tracking-wider text-[9px]">Wallet:</span> 
                                 <span className="font-bold text-white ml-1">₱{mainBalance.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</span>
                             </p>
-                            <p className="text-[8px] text-teal-200/60 font-medium uppercase tracking-wider">
-                                <span className="text-teal-100">{getTierName(kyc_tier)}</span> Tier
+                            <p className="text-[8px] text-white/60 font-medium uppercase tracking-wider">
+                                <span className="text-white/80">{getTierName(kyc_tier)}</span> Tier
                             </p>
                         </div>
 
                         {/* Tier capacity row */}
                         <div>
                             <div className="flex justify-between items-center mb-1">
-                                <p className="text-[9px] font-semibold text-teal-200/70 uppercase tracking-wider">
+                                <p className="text-[9px] font-semibold text-white/70 uppercase tracking-wider">
                                     Tier Capacity
                                 </p>
-                                <p className="text-[9px] font-medium text-teal-100/90">
+                                <p className="text-[9px] font-medium text-white/90">
                                     <span className={`font-bold ${remainingCapacity < 500 ? 'text-amber-300' : 'text-white'}`}>
                                         ₱{remainingCapacity.toLocaleString('en-PH')}
                                     </span> remaining
@@ -131,12 +186,12 @@ export default function Dashboard({ auth, finances, active_goal, kyc_tier, recen
                                     className={`h-1.5 rounded-full transition-all duration-1000 ${
                                         tierUsagePercentage >= 90 ? 'bg-red-400' 
                                         : tierUsagePercentage >= 70 ? 'bg-amber-400' 
-                                        : 'bg-teal-300'
+                                        : 'bg-emerald-300'
                                     }`} 
                                     style={{ width: `${Math.min(tierUsagePercentage, 100)}%` }}
                                 ></div>
                             </div>
-                            <p className="text-[8px] text-teal-200/60 font-medium mt-1 text-right uppercase tracking-wider">
+                            <p className="text-[8px] text-white/60 font-medium mt-1 text-right uppercase tracking-wider">
                                 ₱{totalHoldings.toLocaleString('en-PH')} of ₱{maxLimit.toLocaleString('en-PH')} ({tierUsagePercentage.toFixed(0)}% used)
                             </p>
                         </div>
@@ -144,37 +199,37 @@ export default function Dashboard({ auth, finances, active_goal, kyc_tier, recen
                 </div>
 
                 {/* SAVINGS TEASER — TEAL ACCENTS */}
-                <div className="bg-white rounded-[1.5rem] p-5 shadow-sm border border-teal-100 flex flex-col justify-between min-h-[180px]">
+                <div className="bg-white rounded-[1.5rem] p-5 shadow-sm border border-border flex flex-col justify-between min-h-[180px]">
                     <div>
                         <div className="flex items-center gap-2 mb-2">
-                            <div className="p-1.5 bg-teal-50 rounded-lg">
-                                <Target size={16} className="text-teal-600" strokeWidth={2.5} />
+                            <div className="p-1.5 bg-secondary rounded-lg">
+                                <Target size={16} className="text-primary" strokeWidth={2.5} />
                             </div>
-                            <h3 className="text-[11px] font-semibold text-teal-700 uppercase tracking-widest">Total Savings</h3>
+                            <h3 className="text-[11px] font-semibold text-primary uppercase tracking-widest">Total Savings</h3>
                         </div>
                         
                         {finances?.total_savings === 0 ? (
                             <div className="mb-2">
-                                <p className="text-2xl font-black text-teal-900 tracking-tight">₱0.00</p>
+                                <p className="text-2xl font-black text-foreground tracking-tight">₱0.00</p>
                                 <p className="text-[10px] text-slate-500 font-medium mt-0.5">No savings yet. Start with ₱50 🌱</p>
                             </div>
                         ) : (
                             <div className="mb-2">
-                                <p className="text-2xl font-black text-teal-900 tracking-tight">₱{(finances?.total_savings || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</p>
+                                <p className="text-2xl font-black text-foreground tracking-tight">₱{(finances?.total_savings || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</p>
                                 <p className="text-[9px] text-slate-400 font-medium mt-0.5">Includes funds in active goals</p>
                                 
                                 {/* Breakdown */}
-                                <div className="flex justify-between items-center mt-2 pt-2 border-t border-teal-50">
+                                <div className="flex justify-between items-center mt-2 pt-2 border-t border-border">
                                     <div className="flex items-center gap-1.5">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-teal-500"></div>
+                                        <div className="w-1.5 h-1.5 rounded-full bg-primary"></div>
                                         <p className="text-[9px] text-slate-500 font-medium">
-                                            In Goals: <span className="font-bold text-teal-800">₱{allocatedToGoals.toLocaleString('en-PH')}</span>
+                                            In Goals: <span className="font-bold text-foreground">₱{allocatedToGoals.toLocaleString('en-PH')}</span>
                                         </p>
                                     </div>
                                     <div className="flex items-center gap-1.5">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-teal-300"></div>
+                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-300"></div>
                                         <p className="text-[9px] text-slate-500 font-medium">
-                                            Available: <span className="font-bold text-teal-800">₱{unallocatedSavings.toLocaleString('en-PH')}</span>
+                                            Available: <span className="font-bold text-foreground">₱{unallocatedSavings.toLocaleString('en-PH')}</span>
                                         </p>
                                     </div>
                                 </div>
@@ -182,33 +237,33 @@ export default function Dashboard({ auth, finances, active_goal, kyc_tier, recen
                         )}
 
                         {active_goal ? (
-                            <div className="bg-teal-50/60 rounded-xl p-2.5 border border-teal-100 hover:border-teal-300 transition-colors cursor-pointer group mt-1">
-                                <div className="flex justify-between items-center text-xs font-bold text-teal-900 mb-1.5">
-                                    <span className="truncate pr-2 group-hover:text-teal-700 transition-colors">
+                            <div className="bg-secondary rounded-xl p-2.5 border border-border hover:border-primary/40 transition-colors cursor-pointer group mt-1">
+                                <div className="flex justify-between items-center text-xs font-bold text-foreground mb-1.5">
+                                    <span className="truncate pr-2 group-hover:text-primary transition-colors">
                                         {active_goal.title} {active_goal.icon_name === 'Smartphone' ? '📱' : active_goal.icon_name === 'ShoppingBag' ? '🛍️' : '🎯'}
                                     </span>
-                                    <span className="shrink-0 text-teal-600 text-[10px] font-bold">
+                                    <span className="shrink-0 text-primary text-[10px] font-bold">
                                         {((active_goal.current_amount / active_goal.target_amount) * 100).toFixed(0)}%
                                     </span>
                                 </div>
-                                <div className="w-full bg-teal-100 rounded-full h-1.5 mb-1 overflow-hidden">
+                                <div className="w-full bg-muted rounded-full h-1.5 mb-1 overflow-hidden">
                                     <div 
-                                        className="bg-teal-500 h-1.5 rounded-full transition-all duration-700" 
+                                        className="bg-primary h-1.5 rounded-full transition-all duration-700" 
                                         style={{ width: `${Math.min((active_goal.current_amount / active_goal.target_amount) * 100, 100)}%` }}
                                     ></div>
                                 </div>
-                                <p className="text-[8px] text-teal-600/80 font-medium uppercase tracking-wider text-right">
+                                <p className="text-[8px] text-muted-foreground font-medium uppercase tracking-wider text-right">
                                     ₱{Number(active_goal.current_amount).toLocaleString()} / ₱{Number(active_goal.target_amount).toLocaleString()}
                                 </p>
                             </div>
                         ) : (
-                            <div className="mt-3 flex flex-col items-center gap-2 bg-gradient-to-br from-teal-50/60 to-teal-100/30 rounded-xl p-4 border border-dashed border-teal-200">
-                                <span className="text-[11px] font-medium text-teal-700 text-center">
+                            <div className="mt-3 flex flex-col items-center gap-2 bg-gradient-to-br from-secondary to-secondary/40 rounded-xl p-4 border border-dashed border-border">
+                                <span className="text-[11px] font-medium text-primary text-center">
                                     What are you saving for?
                                 </span>
                                 <Link 
                                     href="/goals" 
-                                    className="w-full text-center py-2 bg-teal-600 hover:bg-teal-700 text-white text-[11px] font-bold rounded-lg transition-all shadow-md shadow-teal-200/50 cursor-pointer flex items-center justify-center gap-1.5"
+                                    className="w-full text-center py-2 bg-primary hover:bg-primary text-white text-[11px] font-bold rounded-lg transition-all shadow-md shadow-primary/20 cursor-pointer flex items-center justify-center gap-1.5"
                                 >
                                     <span className="text-sm">+</span> Set Your First Goal
                                 </Link>
@@ -219,7 +274,7 @@ export default function Dashboard({ auth, finances, active_goal, kyc_tier, recen
                     {(active_goal || (finances?.total_savings > 0)) && (
                         <Link 
                             href="/goals" 
-                            className="mt-2 w-full py-2 bg-teal-50 text-teal-700 text-[11px] font-semibold rounded-xl hover:bg-teal-100 transition-colors flex items-center justify-center gap-1.5 border border-teal-100"
+                            className="mt-2 w-full py-2 bg-secondary text-primary text-[11px] font-semibold rounded-xl hover:bg-muted transition-colors flex items-center justify-center gap-1.5 border border-border"
                         >
                             Grow your savings <ArrowRight size={12} />
                         </Link>
@@ -227,50 +282,12 @@ export default function Dashboard({ auth, finances, active_goal, kyc_tier, recen
                 </div>
             </div>
 
-            {/* 4. QUICK ACTIONS — Roadmap features (all coming soon) */}
-            <div className="bg-white rounded-[1.5rem] shadow-sm border border-teal-100 p-5 mb-5">
-                {/* Header with "Coming Soon" text-only badge */}
-                <div className="flex items-center justify-between mb-5">
-                    <h2 className="text-base font-bold text-teal-900 tracking-tight">Quick Actions</h2>
-                    <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200 uppercase tracking-widest">
-                        Coming Soon
-                    </span>
+            {/* 4. SAVINGS TREND + STREAK */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-5">
+                <div className="lg:col-span-2">
+                    <SavingsTrendChart data={savings_trend} />
                 </div>
-                
-                {/* 4 action grid — grayed out placeholder style */}
-                <div className="grid grid-cols-4 gap-3">
-                    {/* Send Money */}
-                    <div className="flex flex-col items-center gap-2 cursor-not-allowed select-none">
-                        <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center">
-                            <Send size={22} className="text-slate-400" strokeWidth={2} />
-                        </div>
-                        <span className="text-[11px] font-semibold text-slate-400">Send Money</span>
-                    </div>
-
-                    {/* Request Money */}
-                    <div className="flex flex-col items-center gap-2 cursor-not-allowed select-none">
-                        <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center">
-                            <HandCoins size={22} className="text-slate-400" strokeWidth={2} />
-                        </div>
-                        <span className="text-[11px] font-semibold text-slate-400">Request</span>
-                    </div>
-
-                    {/* Bank Transfer */}
-                    <div className="flex flex-col items-center gap-2 cursor-not-allowed select-none">
-                        <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center">
-                            <Landmark size={22} className="text-slate-400" strokeWidth={2} />
-                        </div>
-                        <span className="text-[11px] font-semibold text-slate-400">Transfer</span>
-                    </div>
-
-                    {/* Earn Rewards */}
-                    <div className="flex flex-col items-center gap-2 cursor-not-allowed select-none">
-                        <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center">
-                            <Gift size={22} className="text-slate-400" strokeWidth={2} />
-                        </div>
-                        <span className="text-[11px] font-semibold text-slate-400">Rewards</span>
-                    </div>
-                </div>
+                <StreakCard streak={streak_preview} />
             </div>
 
             {/* 5. RECENT TRANSACTIONS */}
