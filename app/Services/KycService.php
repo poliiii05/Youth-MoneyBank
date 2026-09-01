@@ -58,7 +58,27 @@ class KycService
         }
 
         // ====================================================
-        // VALIDATION 4: No pending application allowed
+        // VALIDATION 4: Tier 3 requires the account holder to be 18+
+        // ====================================================
+        // Age is a gate, never a grant — reaching 18 unlocks the ability to
+        // apply for Tier 3; it does not hand anyone a tier. Verification
+        // still happens through documents and admin review.
+        if ($targetTier === 3) {
+            if (blank($user->birth_date)) {
+                throw ValidationException::withMessages([
+                    'target_tier' => 'Please add your date of birth to your profile before applying for Tier 3.',
+                ]);
+            }
+
+            if ($user->birth_date->age < 18) {
+                throw ValidationException::withMessages([
+                    'target_tier' => 'Tier 3 is available to account holders aged 18 and above.',
+                ]);
+            }
+        }
+
+        // ====================================================
+        // VALIDATION 5: No pending application allowed
         // ====================================================
         $existingPending = $user->kycApplications()
             ->where('status', 'pending')
@@ -71,7 +91,7 @@ class KycService
         }
 
         // ====================================================
-        // VALIDATION 5: Required documents present
+        // VALIDATION 6: Required documents present
         // ====================================================
         $requiredDocs = config('kyc.required_documents.' . $targetTier, []);
         $providedDocs = array_keys($documents);
