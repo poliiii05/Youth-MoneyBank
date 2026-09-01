@@ -30,6 +30,7 @@ class DashboardController extends Controller
             'recent_transactions' => $this->getRecentTransactions($user),
             'streak_preview' => $this->getStreakPreview($user),
             'spending_preview' => $this->getSpendingPreview($user),
+            'savings_trend' => $this->getSavingsTrend($user),
             'is_new_user' => is_null($user->onboarded_at),
 
         ]);
@@ -145,6 +146,59 @@ class DashboardController extends Controller
     /**
      * Compact streak preview for Dashboard (last 7 days + current streak).
      */
+    /**
+     * Money added to savings per month, for the last six months.
+     *
+     * Read from the transactions table rather than a stored aggregate, so the
+     * chart can never drift out of step with the ledger it describes. Months
+     * with no activity are still returned as zero — a gap in the line is
+     * information too.
+     */
+    private function getSavingsTrend(User $user): array
+    {
+        $start = now()->subMonths(5)->startOfMonth();
+
+        $rows = Transaction::where('user_id', $user->id)
+            ->where('status', 'completed')
+            ->where('created_at', '>=', $start)
+            ->selectRaw("DATE_FORMAT(created_at, '%Y-%m') as period")
+            ->selectRaw('SUM(CASE WHEN is_positive = 1 THEN amount_cents ELSE 0 END) as inflow')
+            ->selectRaw('SUM(CASE WHEN is_positive = 0 THEN amount_cents ELSE 0 END) as outflow')
+            ->groupBy('period')
+            ->pluck('inflow', 'period')
+            ->all();
+
+        $outflows = Transaction::where('user_id', $user->id)
+            ->where('status', 'completed')
+            ->where('created_at', '>=', $start)
+            ->selectRaw("DATE_FORMAT(created_at, '%Y-%m') as period")
+            ->selectRaw('SUM(amount_cents) as total')
+            ->where('is_positive', false)
+            ->groupBy('period')
+            ->pluck('total', 'period')
+            ->all();
+
+        $series = [];
+        $cursor = $start->copy();
+
+        for ($i = 0; $i < 6; $i++) {
+            $key = $cursor->format('Y-m');
+            $in = (int) ($rows[$key] ?? 0);
+            $out = (int) ($outflows[$key] ?? 0);
+
+            $series[] = [
+                'month' => $cursor->format('M'),
+                'saved' => round(($in - $out) / 100, 2),
+                'in' => round($in / 100, 2),
+                'out' => round($out / 100, 2),
+            ];
+
+            $cursor->addMonth();
+        }
+
+        return $series;
+    }
+
     private function getStreakPreview(User $user): array
     {
         $streak = $this->computeStreak($user, 7);
