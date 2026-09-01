@@ -2,17 +2,19 @@
 
 namespace App\Models;
 
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     use HasFactory, Notifiable;
 
     protected $fillable = [
         'name',
         'email',
+        'birth_date',
         'phone_number',
         'password',
         'google_id',
@@ -41,6 +43,8 @@ class User extends Authenticatable
     ];
 
     protected $casts = [
+         'birth_date' => 'date',
+        'password' => 'hashed',
         'email_verified_at' => 'datetime',
         'phone_verified_at' => 'datetime',
         'admin_role_granted_at' => 'datetime',
@@ -49,9 +53,25 @@ class User extends Authenticatable
         'admin_role_revoked_at' => 'datetime',
     ];
 
+        /**
+     * Generate a unique 10-digit account number.
+     *
+     * Shared by email registration and Google sign-in so both paths produce
+     * the same format and both check for collisions.
+     */
+    public static function generateAccountNumber(): string
+    {
+        do {
+            $accountNum = '00' . date('Y') . str_pad(random_int(0, 99999), 5, '0', STR_PAD_LEFT);
+        } while (static::where('account_number', $accountNum)->exists());
+
+        return $accountNum;
+    }
+
     public function wallet() {
         return $this->hasOne(Wallet::class);
     }
+    
     public function savingsGoals() {
         return $this->hasMany(SavingsGoal::class);
     }
