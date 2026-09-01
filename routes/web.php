@@ -3,18 +3,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
-use App\Http\Controllers\Api\CaptchaController;
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\GoogleAuthController;
+use App\Http\Controllers\Auth\PasswordResetController;
+use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\SavingsGoalController;
 use App\Http\Controllers\User\WalletController;
 
-//---------------------------------------------//
-//   Turnstile verification                    //
-//---------------------------------------------//
-
-Route::post('/verify-turnstile', [CaptchaController::class, 'verify'])
-    ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class])
-    ->name('verify.turnstile');
 
 //---------------------------------------------//
 //   Google OAuth Routes                       //
@@ -47,21 +43,64 @@ Route::get('/faq', function () {
 //   Auth Routes (Login & SignUp)              //
 //---------------------------------------------//
 
-Route::get('/login', function () {
-    return Inertia::render('Auth/Login');
-})->name('login');
+Route::middleware('guest')->group(function () {
 
-Route::get('/signup', function () {
-    return Inertia::render('Auth/SignUp');
-})->name('signup');
+    Route::get('/login', function () {
+        return Inertia::render('Auth/Login', ['status' => session('status')]);
+    })->name('login');
 
-Route::post('/login', function (Request $request) {
-    // Handle phone + OTP login logic here
-})->name('login.store');
+    Route::post('/login', [AuthenticatedSessionController::class, 'store'])
+        ->name('login.store');
 
-Route::post('/signup', function (Request $request) {
-    // Handle signup logic here
-})->name('signup.store');
+    Route::get('/signup', function () {
+        return Inertia::render('Auth/SignUp', [
+            'turnstileSiteKey' => config('services.turnstile.site_key'),
+            'registeredEmail' => session('registered'),
+        ]);
+    })->name('signup');
+
+    Route::post('/signup', [RegisteredUserController::class, 'store'])
+        ->name('signup.store');
+
+    // --- Forgot / reset password ---
+
+    Route::get('/forgot-password', function () {
+        return Inertia::render('Auth/ForgotPassword', ['status' => session('status')]);
+    })->name('password.request');
+
+    Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink'])
+        ->middleware('throttle:6,1')
+        ->name('password.email');
+
+    // Laravel's ResetPassword notification builds its link from this route name.
+    Route::get('/reset-password/{token}', function (string $token, Request $request) {
+        return Inertia::render('Auth/ResetPassword', [
+            'token' => $token,
+            'email' => $request->query('email'),
+        ]);
+    })->name('password.reset');
+
+    Route::post('/reset-password', [PasswordResetController::class, 'resetPassword'])
+        ->name('password.store');
+});
+
+//---------------------------------------------//
+//   Email verification                        //
+//---------------------------------------------//
+
+Route::middleware('auth')->group(function () {
+
+    Route::get('/verify-email', [EmailVerificationController::class, 'notice'])
+        ->name('verification.notice');
+
+    Route::get('/verify-email/{id}/{hash}', [EmailVerificationController::class, 'verify'])
+        ->middleware(['signed', 'throttle:6,1'])
+        ->name('verification.verify');
+
+    Route::post('/email/verification-notification', [EmailVerificationController::class, 'resend'])
+        ->middleware('throttle:6,1')
+        ->name('verification.send');
+});
 
 //---------------------------------------------//
 //   USER PROTECTED ROUTES                     //
