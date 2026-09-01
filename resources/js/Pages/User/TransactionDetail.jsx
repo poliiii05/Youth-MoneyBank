@@ -24,10 +24,10 @@ export default function TransactionDetail({ auth, transaction }) {
 
     // Status indicator
     const getStatusDot = (status) => {
-        if (status === 'success' || status === 'completed') return { color: 'text-emerald-600', bg: 'bg-emerald-500', label: 'Completed' };
-        if (status === 'pending') return { color: 'text-amber-600', bg: 'bg-amber-500', label: 'Pending' };
-        if (status === 'failed' || status === 'cancelled') return { color: 'text-red-600', bg: 'bg-red-500', label: 'Failed' };
-        return { color: 'text-slate-600', bg: 'bg-slate-400', label: status };
+        if (status === 'success' || status === 'completed') return { color: 'text-success', bg: 'bg-success', label: 'Completed' };
+        if (status === 'pending') return { color: 'text-accent-foreground', bg: 'bg-accent', label: 'Pending' };
+        if (status === 'failed' || status === 'cancelled') return { color: 'text-destructive', bg: 'bg-destructive', label: 'Failed' };
+        return { color: 'text-muted-foreground', bg: 'bg-muted-foreground', label: status };
     };
 
     const statusInfo = getStatusDot(transaction.status);
@@ -78,19 +78,19 @@ export default function TransactionDetail({ auth, transaction }) {
                 {/* BACK */}
                 <Link 
                     href="/transactions"
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors mb-4 cursor-pointer"
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors mb-4 cursor-pointer"
                 >
                     <ArrowLeft size={14} strokeWidth={2.5} />
                     Back
                 </Link>
 
                 {/* SINGLE CARD with all info */}
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden">
                     
                     {/* HERO — minimal, centered */}
-                    <div className="px-5 pt-6 pb-5 text-center border-b border-slate-100">
-                        <p className="text-xs font-semibold text-slate-500 mb-2">{transaction.title}</p>
-                        <p className={`text-3xl font-black tracking-tight mb-3 ${isIncome ? 'text-emerald-600' : 'text-slate-900'}`}>
+                    <div className="px-5 pt-6 pb-5 text-center border-b border-border">
+                        <p className="text-xs font-semibold text-muted-foreground mb-2">{transaction.title}</p>
+                        <p className={`text-3xl font-black tracking-tight mb-3 ${isIncome ? 'text-success' : 'text-foreground'}`}>
                             {isIncome ? '+' : '-'}₱{Number(transaction.amount).toLocaleString('en-PH', { minimumFractionDigits: 2 })}
                         </p>
                         <div className="flex items-center justify-center gap-1.5">
@@ -100,7 +100,7 @@ export default function TransactionDetail({ auth, transaction }) {
                     </div>
 
                     {/* DETAILS — line items */}
-                    <div className="divide-y divide-slate-100">
+                    <div className="divide-y divide-border">
                         <DetailRow label="Type" value={getTypeLabel(transaction.type)} />
                         <DetailRow label="Date & Time" value={formattedDateTime} />
                         
@@ -122,33 +122,33 @@ export default function TransactionDetail({ auth, transaction }) {
 
                     {/* LEDGER ENTRIES — collapsible (technical details) */}
                         {hasLedgerEntries && (
-                            <div className="border-t border-slate-100">
+                            <div className="border-t border-border">
                                 <button
                                     onClick={() => setShowLedger(!showLedger)}
-                                    className="w-full px-5 py-3 flex items-center justify-between text-left hover:bg-slate-50 transition-colors cursor-pointer group"
+                                    className="w-full px-5 py-3 flex items-center justify-between text-left hover:bg-muted transition-colors cursor-pointer group"
                                 >
                                     <div>
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                                             {showLedger ? 'Hide technical details' : 'Show technical details'}
                                         </p>
-                                        <p className="text-[9px] text-slate-400 font-medium mt-0.5">Ledger breakdown for audit</p>
+                                        <p className="text-[9px] text-muted-foreground font-medium mt-0.5">Ledger breakdown for audit</p>
                                     </div>
                                     <ChevronDown 
                                         size={14} 
-                                        className={`text-slate-400 transition-transform group-hover:text-slate-600 ${showLedger ? 'rotate-180' : ''}`}
+                                        className={`text-muted-foreground transition-transform group-hover:text-muted-foreground ${showLedger ? 'rotate-180' : ''}`}
                                     />
                                 </button>
 
                                 {showLedger && (
-                                    <div className="px-5 py-4 bg-slate-50/50 border-t border-slate-100 animate-in fade-in slide-in-from-top-2 duration-200">
+                                    <div className="px-5 py-4 bg-muted/50 border-t border-border animate-in fade-in slide-in-from-top-2 duration-200">
                                         <div className="space-y-1.5">
                                             {transaction.ledger_entries.map((entry) => (
                                                 <div key={entry.id} className="flex items-center justify-between text-xs">
                                                     <div className="min-w-0 flex-1">
-                                                        <p className="font-semibold text-slate-700 truncate">{getAccountDisplayName(entry.account_name, entry.account_type)}</p>
-                                                        <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">{entry.direction}</p>
+                                                        <p className="font-semibold text-foreground truncate">{getAccountDisplayName(entry.account_name, entry.account_type)}</p>
+                                                        <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">{entry.direction}</p>
                                                     </div>
-                                                    <p className={`font-bold ml-2 shrink-0 ${entry.direction === 'debit' ? 'text-emerald-600' : 'text-orange-600'}`}>
+                                                    <p className={`font-bold ml-2 shrink-0 ${entry.direction === 'debit' ? 'text-success' : 'text-orange-600'}`}>
                                                         {entry.direction === 'debit' ? '+' : '-'}₱{entry.amount.toLocaleString('en-PH', { minimumFractionDigits: 2 })}
                                                     </p>
                                                 </div>
@@ -161,32 +161,37 @@ export default function TransactionDetail({ auth, transaction }) {
 
                     {/* SYSTEM REF — collapsed at bottom */}
                     {transaction.reference_id && (
-                        <div className="border-t border-slate-100 px-5 py-3">
+                        <div className="border-t border-border px-5 py-3">
                             <div className="flex items-center justify-between gap-2">
                                 <div className="min-w-0 flex-1">
-                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Source Ref.</p>
-                                    <p className="text-[10px] font-mono text-slate-500 truncate">{transaction.reference_id}</p>
+                                    <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Source Ref.</p>
+                                    <p className="text-[10px] font-mono text-muted-foreground truncate">{transaction.reference_id}</p>
                                 </div>
                                 <button 
                                     onClick={() => copyToClipboard(transaction.reference_id, 'internal')}
-                                    className="text-slate-400 hover:text-blue-600 transition-colors cursor-pointer p-1 shrink-0"
+                                    className="text-muted-foreground hover:text-primary transition-colors cursor-pointer p-1 shrink-0"
                                 >
-                                    {copied === 'internal' ? <Check size={12} className="text-emerald-500" /> : <Copy size={12} />}
+                                    {copied === 'internal' ? <Check size={12} className="text-success" /> : <Copy size={12} />}
                                 </button>
                             </div>
                         </div>
                     )}
                 </div>
 
-                {/* SUPPORT FOOTER */}
+                {/* SUPPORT FOOTER — opens the existing chat with the reference
+                    already typed in. The old link pointed at /support/new, a route
+                    that was never registered, so this button 404'd. */}
                     <div className="flex justify-center mt-4 pb-6">
-                        <Link
-                            href={`/support/new?transaction_id=${transaction.id}`}
-                            className="inline-flex items-center gap-2 px-4 py-2 bg-orange-50 hover:bg-orange-100 text-orange-700 text-xs font-black rounded-xl border border-orange-200 cursor-pointer transition-all"
+                        <button
+                            type="button"
+                            onClick={() => window.openYmbChat?.(
+                                `I need help with transaction ${transaction.public_reference_id || transaction.id}. `
+                            )}
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-secondary hover:bg-secondary/70 text-secondary-foreground text-xs font-bold rounded-xl border border-border cursor-pointer transition-colors"
                         >
                             <Headphones size={13} strokeWidth={2.5} />
-                            Get Help with This Transaction
-                        </Link>
+                            Get help with this transaction
+                        </button>
                     </div>
                 
             </div>
@@ -198,17 +203,17 @@ export default function TransactionDetail({ auth, transaction }) {
 function DetailRow({ label, value, mono = false, onCopy, copied }) {
     return (
         <div className="px-5 py-3 flex items-center justify-between gap-3">
-            <p className="text-xs text-slate-500 font-medium shrink-0">{label}</p>
+            <p className="text-xs text-muted-foreground font-medium shrink-0">{label}</p>
             <div className="flex items-center gap-2 min-w-0">
-                <p className={`text-xs font-bold text-slate-900 text-right truncate ${mono ? 'font-mono' : ''}`}>
+                <p className={`text-xs font-bold text-foreground text-right truncate ${mono ? 'font-mono' : ''}`}>
                     {value}
                 </p>
                 {onCopy && (
                     <button 
                         onClick={onCopy}
-                        className="text-slate-400 hover:text-blue-600 transition-colors cursor-pointer shrink-0"
+                        className="text-muted-foreground hover:text-primary transition-colors cursor-pointer shrink-0"
                     >
-                        {copied ? <Check size={12} className="text-emerald-500" /> : <Copy size={12} />}
+                        {copied ? <Check size={12} className="text-success" /> : <Copy size={12} />}
                     </button>
                 )}
             </div>
