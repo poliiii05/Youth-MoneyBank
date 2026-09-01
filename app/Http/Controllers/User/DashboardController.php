@@ -415,14 +415,12 @@ private function computeStreak(User $user, int $days = 30): array
     }
 
     /**
- * Get savings data for a specific month.
- * 
- * @param User $user
- * @param int $year
- * @param int $month
- * @return array Includes month metadata + daily savings map
+ * Savings activity for one month — JSON endpoint behind the Insights calendar.
+ *
+ * Year and month arrive as query parameters and are clamped to a sane range
+ * before use, so a hand-edited URL can't push Carbon into an absurd date.
  */
-public function monthlyStreak(Request $request)
+public function monthlyStreak(Request $request): \Illuminate\Http\JsonResponse
 {
     $user = $request->user();
     
