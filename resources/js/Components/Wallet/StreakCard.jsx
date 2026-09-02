@@ -1,26 +1,22 @@
 import { Link } from '@inertiajs/react';
 import { Flame, ArrowRight } from 'lucide-react';
-
-const DAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+import { cn } from '@/lib/utils';
 
 /**
  * Dashboard streak summary.
  *
- * The controller was already computing streak_preview and the dashboard was
- * discarding it. Streaks are the habit hook in this product, so they belong
- * on the page the user opens daily — not only inside Insights.
+ * Shows the current calendar week, Monday first. The previous version drew a
+ * rolling seven days, so the row began on whatever weekday it happened to be
+ * and the labels shuffled between visits — you could not tell at a glance
+ * which day was which.
  */
 export default function StreakCard({ streak }) {
     const current = streak?.current_streak ?? 0;
     const best = streak?.best_streak ?? 0;
     const nextMilestone = streak?.next_milestone ?? 7;
-    const last7 = streak?.last_7_days ?? [];
+    const week = streak?.this_week ?? [];
 
     const daysToNext = Math.max(nextMilestone - current, 0);
-
-    // Align the labels so the rightmost dot is today.
-    const todayIndex = new Date().getDay();
-    const labels = Array.from({ length: 7 }, (_, i) => DAY_LABELS[(todayIndex - 6 + i + 7) % 7]);
 
     return (
         <div className="bg-card rounded-[1.5rem] shadow-sm border border-border p-5 flex flex-col">
@@ -51,24 +47,36 @@ export default function StreakCard({ streak }) {
                 </p>
             </div>
 
-            {/* Last seven days */}
+            {/* This week, Monday first */}
             <div className="flex justify-between gap-1 mb-3">
-                {labels.map((label, i) => {
-                    const savedThatDay = Boolean(last7[i]);
-                    return (
-                        <div key={i} className="flex flex-col items-center gap-1 flex-1">
-                            <div
-                                className={`h-7 w-full rounded-md transition-colors ${
-                                    savedThatDay ? 'bg-accent' : 'bg-muted'
-                                }`}
-                                title={savedThatDay ? 'Saved' : 'No activity'}
-                            />
-                            <span className="text-[8px] font-bold text-muted-foreground">
-                                {label}
-                            </span>
+                {week.map((day) => (
+                    <div key={day.date} className="flex flex-col items-center gap-1 flex-1">
+                        <div
+                            className={cn(
+                                'h-8 w-full rounded-md flex items-center justify-center transition-colors',
+                                day.saved
+                                    ? 'bg-accent text-accent-foreground'
+                                    // Days that haven't happened read as neutral rather
+                                    // than as missed — you can't miss tomorrow.
+                                    : day.is_future
+                                        ? 'bg-muted/50 border border-dashed border-border'
+                                        : 'bg-muted',
+                                day.is_today && !day.saved && 'ring-2 ring-accent/40'
+                            )}
+                            title={day.saved ? `Saved on ${day.date}` : day.date}
+                        >
+                            {day.saved && <Flame size={13} fill="currentColor" strokeWidth={2.5} />}
                         </div>
-                    );
-                })}
+                        <span
+                            className={cn(
+                                'text-[8px] font-bold',
+                                day.is_today ? 'text-accent-foreground' : 'text-muted-foreground'
+                            )}
+                        >
+                            {day.label}
+                        </span>
+                    </div>
+                ))}
             </div>
 
             {best > 0 && (

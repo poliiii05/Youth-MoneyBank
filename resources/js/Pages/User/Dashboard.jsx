@@ -5,13 +5,94 @@ import UserLayout from '../../Components/Layouts/UserLayout';
 import { Wallet, Target, ArrowRight, Lightbulb, ChevronRight, TrendingUp } from 'lucide-react';
 import AddMoneyModal from '../../Components/Wallet/AddMoneyModal';
 import RecentTransactionsCard from '../../Components/Transactions/RecentTransactionsCard';
-import WelcomeModal from '../../Components/Modals/WelcomeModal';
 import SavingsTrendChart from '../../Components/Wallet/SavingsTrendChart';
 import StreakCard from '../../Components/Wallet/StreakCard';
+import Spotlight from '../../Components/Common/Spotlight';
+
+/**
+ * Coach marks. Targets are matched by data-tour attribute; a step whose
+ * element is not on the page is skipped, so the tour adapts to whatever the
+ * account actually has rather than pointing at gaps.
+ */
+const TOUR_STEPS = [
+    {
+        // No target: renders as a centred intro rather than a coach mark. This
+        // replaced a five-slide welcome modal that repeated what the marks
+        // below already say — seventeen screens before the first click.
+        title: 'Youth MoneyBank',
+        body: 'A savings app for Filipino teens. Set a target, move money towards it, and build the habit. Here is where everything lives.',
+    },
+    // Where things live, then what is on this page. Each line is deliberately
+    // one sentence: a twelve-step tour is only tolerable if every step can be
+    // read at a glance.
+    {
+        target: 'nav-dashboard',
+        title: 'Dashboard',
+        body: 'Your balance, recent activity and progress at a glance.',
+    },
+    {
+        target: 'nav-transactions',
+        title: 'Transactions',
+        body: 'Every movement in and out, searchable and exportable.',
+    },
+    {
+        target: 'nav-savings',
+        title: 'Savings',
+        body: 'Set goals and move money into them from your savings pool.',
+    },
+    {
+        target: 'nav-insights',
+        title: 'Insights',
+        body: 'Your streak calendar, badges and saving patterns.',
+    },
+    {
+        target: 'nav-settings',
+        title: 'Settings',
+        body: 'Your profile, and where you apply to raise your tier.',
+    },
+    {
+        target: 'tier-progress',
+        title: 'Your tier',
+        body: 'Three tiers, each with a higher balance limit. Verify to move up.',
+    },
+    {
+        target: 'wallet',
+        title: 'Your wallet',
+        body: 'Spendable money. Savings you set aside are tracked separately.',
+    },
+    {
+        target: 'add-money',
+        title: 'Add money',
+        body: 'Funds come in through PayPal Sandbox — nothing real is charged.',
+    },
+    {
+        target: 'money-tip',
+        title: 'Money tips',
+        body: 'Short pointers that rotate as you use the app.',
+    },
+    {
+        target: 'savings-trend',
+        title: 'Savings trend',
+        body: 'How much you set aside each month, once you get going.',
+    },
+    {
+        target: 'streak',
+        title: 'Savings streak',
+        body: 'Save on consecutive days to build it. Milestones at 7, 14 and 30.',
+    },
+    {
+        target: 'recent-activity',
+        title: 'Recent activity',
+        body: 'Your latest transactions. Tap any of them for the full record.',
+    },
+];
 
 export default function Dashboard({ auth, finances, active_goal, kyc_tier, recent_transactions = [], streak_preview = null, savings_trend = [], is_new_user = false }) {
     const user = auth?.user;
-    const [showWelcome, setShowWelcome] = useState(is_new_user);
+    // One pass for new users: a branded intro card, then coach marks on the
+    // things that actually exist. The separate welcome modal it replaced was
+    // covering the same ground a second time.
+    const [showTour, setShowTour] = useState(is_new_user);
 
     // --- MODAL STATES ---
     const [isAddMoneyOpen, setIsAddMoneyOpen] = useState(false);
@@ -24,6 +105,24 @@ export default function Dashboard({ auth, finances, active_goal, kyc_tier, recen
     const tierUsagePercentage = maxLimit > 0 ? (totalHoldings / maxLimit) * 100 : 0;
     const allocatedToGoals = finances?.allocated_to_goals ?? 0;
     const unallocatedSavings = finances?.unallocated_savings ?? 0;
+    // Marks onboarding done server-side. Closing without this would bring the
+    // tour back on the next visit with no explanation.
+    const completeTour = async () => {
+        setShowTour(false);
+        try {
+            await fetch('/api/onboarding/complete', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                },
+            });
+        } catch (err) {
+            console.error('Could not save onboarding state:', err);
+        }
+    };
+
     const savedThisMonth = savings_trend?.[savings_trend.length - 1]?.saved ?? 0;
 
     const getTierName = (tier) => {
@@ -83,6 +182,7 @@ export default function Dashboard({ auth, finances, active_goal, kyc_tier, recen
                     <p className="text-primary text-sm font-medium">Let's grow your money today.</p>
                 </div>
                 <button 
+                    data-tour="add-money"
                     onClick={() => setIsAddMoneyOpen(true)}
                     className="px-5 py-2.5 bg-primary text-white font-semibold rounded-xl hover:bg-primary/90 shadow-md shadow-primary/20 cursor-pointer transition-all flex items-center gap-2 text-sm"
                 >
@@ -91,7 +191,7 @@ export default function Dashboard({ auth, finances, active_goal, kyc_tier, recen
             </div>
 
             {/* 2. THE LEARNING LAYER (Interactive Money Tip — amber accent preserved) */}
-            <div className="bg-gradient-to-r from-amber-50 to-amber-100/30 border border-amber-100 rounded-2xl py-3 px-4 mb-4 flex items-center justify-between gap-3 group transition-colors hover:border-amber-200">
+            <div data-tour="money-tip" className="bg-gradient-to-r from-amber-50 to-amber-100/30 border border-amber-100 rounded-2xl py-3 px-4 mb-4 flex items-center justify-between gap-3 group transition-colors hover:border-amber-200">
                 <div className="flex items-center gap-3">
                     <div className="p-1.5 bg-amber-100 text-amber-600 rounded-lg shrink-0">
                         <Lightbulb size={18} />
@@ -148,7 +248,7 @@ export default function Dashboard({ auth, finances, active_goal, kyc_tier, recen
                     <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4"></div>
                     <div className="absolute bottom-0 left-0 w-48 h-48 bg-emerald-400/20 rounded-full blur-2xl translate-y-1/3 -translate-x-1/4"></div>
 
-                    <div className="relative z-10 flex justify-between items-start mb-2">
+                    <div className="relative z-10 flex justify-between items-start mb-2" data-tour="wallet">
                         <div>
                             <p className="text-white/70 text-[11px] font-semibold mb-1 uppercase tracking-widest">Main Wallet</p>
                             <h3 className="text-4xl md:text-5xl font-black tracking-tight drop-shadow-sm">₱{mainBalance.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</h3>
@@ -297,16 +397,18 @@ export default function Dashboard({ auth, finances, active_goal, kyc_tier, recen
 
             {/* 4. SAVINGS TREND + STREAK */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-5">
-                <div className="lg:col-span-2">
+                <div className="lg:col-span-2" data-tour="savings-trend">
                     <SavingsTrendChart data={savings_trend} />
                 </div>
-                <StreakCard streak={streak_preview} />
+                <div data-tour="streak"><StreakCard streak={streak_preview} /></div>
             </div>
 
             {/* 5. RECENT TRANSACTIONS */}
-            <RecentTransactionsCard 
-                transactions={recent_transactions}
-            />
+            <div data-tour="recent-activity">
+                <RecentTransactionsCard 
+                    transactions={recent_transactions}
+                />
+            </div>
 
             {/* MODALS */}
             <AddMoneyModal 
@@ -314,9 +416,10 @@ export default function Dashboard({ auth, finances, active_goal, kyc_tier, recen
                 onClose={() => setIsAddMoneyOpen(false)} 
             />
 
-            <WelcomeModal 
-                isOpen={showWelcome} 
-                onClose={() => setShowWelcome(false)} 
+            <Spotlight
+                isOpen={showTour}
+                onComplete={completeTour}
+                steps={TOUR_STEPS}
             />
 
         </UserLayout>

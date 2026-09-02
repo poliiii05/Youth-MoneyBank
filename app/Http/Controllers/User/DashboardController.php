@@ -161,22 +161,27 @@ class DashboardController extends Controller
     {
         $start = now()->subMonths(5)->startOfMonth();
 
+        // Counts movement into the savings pool only. Summing every
+        // transaction treated wallet-to-savings as an outflow, so setting
+        // money aside pushed the line down — the opposite of what happened.
+        // Goal allocations are excluded too: that money already counted when
+        // it entered the pool, and counting it again would double it.
         $rows = Transaction::where('user_id', $user->id)
             ->where('status', 'completed')
+            ->where('type', 'savings_deposit')
             ->where('created_at', '>=', $start)
             ->selectRaw("DATE_FORMAT(created_at, '%Y-%m') as period")
-            ->selectRaw('SUM(CASE WHEN is_positive = 1 THEN amount_cents ELSE 0 END) as inflow')
-            ->selectRaw('SUM(CASE WHEN is_positive = 0 THEN amount_cents ELSE 0 END) as outflow')
+            ->selectRaw('SUM(amount_cents) as total')
             ->groupBy('period')
-            ->pluck('inflow', 'period')
+            ->pluck('total', 'period')
             ->all();
 
         $outflows = Transaction::where('user_id', $user->id)
             ->where('status', 'completed')
+            ->where('type', 'savings_withdraw')
             ->where('created_at', '>=', $start)
             ->selectRaw("DATE_FORMAT(created_at, '%Y-%m') as period")
             ->selectRaw('SUM(amount_cents) as total')
-            ->where('is_positive', false)
             ->groupBy('period')
             ->pluck('total', 'period')
             ->all();
@@ -204,15 +209,54 @@ class DashboardController extends Controller
 
     private function getStreakPreview(User $user): array
     {
-        $streak = $this->computeStreak($user, 7);
+        $streak = $this->computeStreak($user, 30);
 
         return [
             'current_streak' => $streak['current_streak'],
             'best_streak' => $streak['best_streak'],
             'next_milestone' => $streak['next_milestone'],
             'progress_to_next' => $streak['progress_to_next'],
-            'last_7_days' => $streak['heatmap'], // array of 0/1 for last 7 days
+            'this_week' => $this->getThisWeek($user),
         ];
+    }
+
+    /**
+     * Activity for the current calendar week, Monday through Sunday.
+     *
+     * A rolling seven days meant the row started on a different weekday every
+     * visit, so the labels never sat still and "this week" never matched what
+     * a calendar would call this week.
+     */
+    private function getThisWeek(User $user): array
+    {
+        $startOfWeek = now()->startOfWeek(\Carbon\Carbon::MONDAY);
+        $today = now()->startOfDay();
+
+        $saved = Transaction::where('user_id', $user->id)
+            ->where('type', 'savings_deposit')
+            ->where('status', 'completed')
+            ->where('created_at', '>=', $startOfWeek)
+            ->selectRaw('DATE(created_at) as date')
+            ->distinct()
+            ->pluck('date')
+            ->map(fn ($d) => \Carbon\Carbon::parse($d)->toDateString())
+            ->flip();
+
+        $week = [];
+
+        for ($i = 0; $i < 7; $i++) {
+            $day = $startOfWeek->copy()->addDays($i);
+
+            $week[] = [
+                'label' => $day->format('D')[0],
+                'date' => $day->toDateString(),
+                'saved' => $saved->has($day->toDateString()),
+                'is_today' => $day->isSameDay($today),
+                'is_future' => $day->greaterThan($today),
+            ];
+        }
+
+        return $week;
     }
 
     /**
@@ -541,7 +585,7 @@ private function getSmartInsights(User $user): array
 {
     // Total saved this month
     $thisMonthTotal = Transaction::where('user_id', $user->id)
-        ->whereIn('type', ['savings_deposit', 'savings_transfer', 'goal_allocation'])
+        ->where('type', 'savings_deposit')
         ->where('status', 'completed')
         ->whereMonth('created_at', now()->month)
         ->whereYear('created_at', now()->year)
@@ -558,7 +602,7 @@ private function getSmartInsights(User $user): array
 
     // Deposit count this month
     $thisMonthCount = Transaction::where('user_id', $user->id)
-        ->whereIn('type', ['savings_deposit', 'savings_transfer', 'goal_allocation'])
+        ->where('type', 'savings_deposit')
         ->where('status', 'completed')
         ->whereMonth('created_at', now()->month)
         ->whereYear('created_at', now()->year)

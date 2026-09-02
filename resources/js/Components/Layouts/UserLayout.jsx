@@ -8,11 +8,11 @@ import FloatingButton from '../Support/FloatingButton';
 import { cn } from '@/lib/utils';
 
 const NAV_ITEMS = [
-    { href: '/dashboard', label: 'Dashboard', icon: Home },
-    { href: '/transactions', label: 'Transactions', icon: CreditCard },
-    { href: '/goals', label: 'Savings', icon: Target },
-    { href: '/insights', label: 'Insights', icon: TrendingUp },
-    { href: '/settings', label: 'Settings', icon: Settings },
+    { href: '/dashboard', label: 'Dashboard', icon: Home, tour: 'nav-dashboard' },
+    { href: '/transactions', label: 'Transactions', icon: CreditCard, tour: 'nav-transactions' },
+    { href: '/goals', label: 'Savings', icon: Target, tour: 'nav-savings' },
+    { href: '/insights', label: 'Insights', icon: TrendingUp, tour: 'nav-insights' },
+    { href: '/settings', label: 'Settings', icon: Settings, tour: 'nav-settings' },
 ];
 
 const TIER_NAMES = { 1: 'Starter', 2: 'Builder', 3: 'Achiever' };
@@ -65,12 +65,13 @@ export default function UserLayout({ user, header, children }) {
                         Menu
                     </p>
 
-                    {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+                    {NAV_ITEMS.map(({ href, label, icon: Icon, tour }) => {
                         const active = isUrlActive(href);
                         return (
                             <Link
                                 key={href}
                                 href={href}
+                                data-tour={tour}
                                 className={cn(
                                     'relative w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all',
                                     active
@@ -91,7 +92,7 @@ export default function UserLayout({ user, header, children }) {
 
                 {/* Footer — where the user stands, and how far the ladder goes */}
                 <div className="px-3 pb-5 pt-4 border-t border-border">
-                    <div className="rounded-xl bg-secondary p-3">
+                    <div className="rounded-xl bg-secondary p-3" data-tour="tier-progress">
                         <div className="flex items-baseline justify-between mb-2">
                             <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
                                 Your Tier
