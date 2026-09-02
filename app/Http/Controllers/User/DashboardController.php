@@ -53,6 +53,9 @@ class DashboardController extends Controller
             'auth' => ['user' => $user],
             'streak' => $this->getFullStreak($user),
             'smart_insights' => $smartInsights,
+            // Same series the dashboard chart plots, so the two pages can
+            // never show a different shape for the same months.
+            'savings_trend' => $this->getSavingsTrend($user),
             'personality' => $this->getSavingsPersonality($user),
             'achievements' => $this->getAchievements($user),
             'dynamic_tip' => $this->getDynamicTip($user, $smartInsights),
@@ -544,6 +547,15 @@ private function getSmartInsights(User $user): array
         ->whereYear('created_at', now()->year)
         ->sum('amount_cents') / 100;
 
+    // Same window, one month back — gives "this month" something to be
+    // measured against rather than standing alone.
+    $lastMonthTotal = Transaction::where('user_id', $user->id)
+        ->whereIn('type', ['savings_deposit', 'savings_transfer', 'goal_allocation'])
+        ->where('status', 'completed')
+        ->whereMonth('created_at', now()->subMonth()->month)
+        ->whereYear('created_at', now()->subMonth()->year)
+        ->sum('amount_cents') / 100;
+
     // Deposit count this month
     $thisMonthCount = Transaction::where('user_id', $user->id)
         ->whereIn('type', ['savings_deposit', 'savings_transfer', 'goal_allocation'])
@@ -592,6 +604,10 @@ private function getSmartInsights(User $user): array
         'goals_completed' => $goalsCompleted,
         'total_goals' => $totalGoals,
         'best_month' => $bestMonth,
+        'last_month_total' => $lastMonthTotal,
+        'percent_change' => $lastMonthTotal > 0
+            ? round((($thisMonthTotal - $lastMonthTotal) / $lastMonthTotal) * 100, 1)
+            : null,
     ];
 }
 
