@@ -174,6 +174,9 @@ Route::prefix('api/support')->name('api.support.')->group(function () {
     Route::get('/settings', [\App\Http\Controllers\User\SettingsController::class, 'index'])
         ->name('settings');
 
+    Route::post('/settings/deactivate', [\App\Http\Controllers\User\SettingsController::class, 'deactivate'])
+        ->name('settings.deactivate');
+
     Route::patch('/settings/profile', [\App\Http\Controllers\User\SettingsController::class, 'updateProfile'])
         ->name('settings.profile.update');
 

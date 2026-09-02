@@ -5,59 +5,36 @@ import {
     Sprout, Hammer, Crown,
 } from 'lucide-react';
 import TierUpgradeModal from '../../../../Components/Modals/TierUpgradeModal';
+import { Button } from '@/Components/ui/button';
 
-// PROGRESSIVE EMERALD → AMBER theme
+/**
+ * Tier presentation.
+ *
+ * Colours come from the --tier-N tokens rather than being written out per
+ * tier here, so the ladder on this page, the sidebar indicator and the goal
+ * themes cannot drift apart.
+ */
 const TIER_DATA = {
     1: {
         name: 'Starter',
         icon: Sprout,
-        limit: 5000,
         limitLabel: '₱5,000',
-        requires: 'Phone or Google Sign-In',
-        color: {
-            badge: 'bg-emerald-100 text-emerald-700 border-emerald-200',
-            iconBg: 'bg-emerald-500',
-            ring: 'ring-emerald-200',
-            bg: 'bg-emerald-50/40',
-            border: 'border-emerald-200',
-            text: 'text-emerald-700',
-            textDeep: 'text-emerald-900',
-            dot: 'bg-emerald-500',
-        },
+        requires: 'Email or Google sign-in',
+        var: 'var(--tier-1)',
     },
     2: {
         name: 'Builder',
         icon: Hammer,
-        limit: 20000,
         limitLabel: '₱20,000',
-        requires: 'Student ID required',
-        color: {
-            badge: 'bg-emerald-100 text-emerald-800 border-emerald-300',
-            iconBg: 'bg-emerald-700',
-            ring: 'ring-emerald-300',
-            bg: 'bg-emerald-50/50',
-            border: 'border-emerald-300',
-            text: 'text-emerald-800',
-            textDeep: 'text-emerald-950',
-            dot: 'bg-emerald-700',
-        },
+        requires: 'Verified student ID',
+        var: 'var(--tier-2)',
     },
     3: {
         name: 'Achiever',
         icon: Crown,
-        limit: 100000,
         limitLabel: '₱100,000',
-        requires: 'Government ID + Age 18+',
-        color: {
-            badge: 'bg-amber-100 text-amber-800 border-amber-200',
-            iconBg: 'bg-gradient-to-br from-amber-400 to-amber-600',
-            ring: 'ring-amber-200',
-            bg: 'bg-amber-50/40',
-            border: 'border-amber-200',
-            text: 'text-amber-700',
-            textDeep: 'text-amber-900',
-            dot: 'bg-amber-500',
-        },
+        requires: 'Government ID · age 18+',
+        var: 'var(--tier-3)',
     },
 };
 
@@ -72,26 +49,33 @@ export default function EligibleState({ currentTier, requiredDocs }) {
         <>
             <div className="space-y-4">
                 
-                {/* SECTION 1: Current Status Hero Banner */}
-                <div className={`bg-gradient-to-br ${
-                    currentTier === 3
-                        ? 'from-amber-50 via-amber-50/80 to-amber-100/50 border-amber-200'
-                        : 'from-emerald-50 via-emerald-50/80 to-emerald-100/50 border-emerald-200'
-                } border rounded-2xl p-5`}>
-                    <div className="flex items-center gap-2 mb-2">
-                        <ShieldCheck size={14} className={currentTierData.color.text} strokeWidth={2.5} />
-                        <span className={`text-[10px] font-black ${currentTierData.color.text} uppercase tracking-widest`}>Current Status</span>
-                    </div>
-                    <div className="flex items-center justify-between gap-3">
+                {/* CURRENT STATUS */}
+                <div className="relative overflow-hidden rounded-2xl border border-border bg-muted/40 p-5">
+                    <span
+                        className="absolute inset-y-0 left-0 w-1"
+                        style={{ backgroundColor: currentTierData.var }}
+                    />
+
+                    <div className="flex items-center justify-between gap-3 pl-2">
                         <div className="min-w-0">
-                            <h2 className={`text-2xl font-black ${currentTierData.color.textDeep} tracking-tight`} style={{ fontVariantNumeric: 'tabular-nums' }}>
+                            <p className="text-[10px] font-semibold text-muted-foreground mb-1">
+                                Current status
+                            </p>
+                            <h2 className="text-2xl font-black text-foreground tracking-tight">
                                 Tier {currentTier} — {currentTierData.name}
                             </h2>
-                            <p className={`text-xs ${currentTierData.color.text} font-semibold mt-0.5`}>
-                                Balance limit: <span style={{ fontVariantNumeric: 'tabular-nums' }}>{currentTierData.limitLabel}</span>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                                Balance limit{' '}
+                                <span className="font-bold text-foreground tabular-nums">
+                                    {currentTierData.limitLabel}
+                                </span>
                             </p>
                         </div>
-                        <div className={`w-14 h-14 rounded-2xl ${currentTierData.color.iconBg} flex items-center justify-center shadow-md shadow-emerald-200/50 shrink-0`}>
+
+                        <div
+                            className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-md shrink-0"
+                            style={{ backgroundColor: currentTierData.var }}
+                        >
                             <CurrentIcon size={26} className="text-white" strokeWidth={2.5} />
                         </div>
                     </div>
@@ -109,66 +93,72 @@ export default function EligibleState({ currentTier, requiredDocs }) {
                         return (
                             <div 
                                 key={tier}
-                                className={`relative rounded-2xl p-4 transition-all ${
+                                className={`relative overflow-hidden rounded-2xl border p-4 transition-all ${
                                     isCurrent
-                                        ? `${tierData.color.bg} border-2 ${tierData.color.border} ring-2 ${tierData.color.ring}`
+                                        ? 'border-primary/40 bg-secondary/50 shadow-sm'
                                         : isComplete
-                                        ? 'bg-slate-50 border border-slate-200 opacity-80'
+                                        ? 'border-border bg-muted/40'
                                         : isNext
-                                        ? `${tierData.color.bg} border ${tierData.color.border}`
-                                        : 'bg-white border border-slate-200'
+                                        ? 'border-border bg-card hover:border-primary/40'
+                                        : 'border-border bg-card opacity-60'
                                 }`}
                             >
-                                <div className="flex items-center justify-between gap-3">
-                                    {/* LEFT: Tier info */}
+                                {/* Tier colour as an edge, not a wash — three tinted
+                                    blocks stacked made the ladder hard to read. */}
+                                <span
+                                    className="absolute inset-y-0 left-0 w-1"
+                                    style={{ backgroundColor: tierData.var, opacity: isComplete ? 0.4 : 1 }}
+                                />
+
+                                <div className="flex items-center justify-between gap-3 pl-2">
                                     <div className="flex items-start gap-3 flex-1 min-w-0">
-                                        <div className={`w-11 h-11 rounded-xl ${tierData.color.iconBg} flex items-center justify-center shadow-sm shrink-0 ${isComplete ? 'opacity-60' : ''}`}>
+                                        <div
+                                            className={`w-11 h-11 rounded-xl flex items-center justify-center shadow-sm shrink-0 ${isComplete ? 'opacity-60' : ''}`}
+                                            style={{ backgroundColor: tierData.var }}
+                                        >
                                             <TierIcon size={20} className="text-white" strokeWidth={2.5} />
                                         </div>
                                         
                                         <div className="min-w-0 flex-1">
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md border ${tierData.color.badge}`} style={{ fontVariantNumeric: 'tabular-nums' }}>
-                                                    Tier {tier}
-                                                </span>
+                                            <div className="flex items-center gap-2 mb-0.5">
+                                                <h3 className="text-base font-bold text-foreground leading-tight">
+                                                    {tierData.name}
+                                                </h3>
                                                 {isCurrent && (
-                                                    <span className={`text-[10px] font-black ${tierData.color.text} flex items-center gap-1`}>
-                                                        <span className={`w-1.5 h-1.5 ${tierData.color.dot} rounded-full animate-pulse`}></span>
+                                                    <span className="text-[10px] font-bold text-primary flex items-center gap-1">
+                                                        <span className="w-1.5 h-1.5 bg-primary rounded-full" />
                                                         Current
                                                     </span>
                                                 )}
                                             </div>
-                                            
-                                            <h3 className="text-base font-black text-slate-900 leading-tight">{tierData.name}</h3>
-                                            <p className="text-xs text-slate-600 font-bold mt-0.5">
-                                                Limit: <span className="text-slate-900" style={{ fontVariantNumeric: 'tabular-nums' }}>{tierData.limitLabel}</span>
+
+                                            <p className="text-xs text-muted-foreground">
+                                                Up to{' '}
+                                                <span className="font-bold text-foreground tabular-nums">
+                                                    {tierData.limitLabel}
+                                                </span>
                                             </p>
-                                            <p className="text-[11px] text-slate-500 font-medium mt-1">
-                                                Requires: {tierData.requires}
+                                            <p className="text-[11px] text-muted-foreground mt-0.5">
+                                                {tierData.requires}
                                             </p>
                                         </div>
                                     </div>
 
-                                    {/* RIGHT: Status indicator / CTA */}
                                     <div className="shrink-0">
                                         {isComplete && (
-                                            <div className="w-9 h-9 rounded-full bg-emerald-50 border-2 border-emerald-300 flex items-center justify-center">
-                                                <Check size={16} className="text-emerald-700" strokeWidth={3} />
+                                            <div className="w-9 h-9 rounded-full bg-success/10 flex items-center justify-center">
+                                                <Check size={16} className="text-success" strokeWidth={3} />
                                             </div>
                                         )}
                                         {isCurrent && (
-                                            <div className={`w-9 h-9 rounded-full bg-white border-2 ${tierData.color.border} flex items-center justify-center`}>
-                                                <Check size={16} className={tierData.color.text} strokeWidth={3} />
+                                            <div className="w-9 h-9 rounded-full bg-secondary border border-primary/30 flex items-center justify-center">
+                                                <Check size={16} className="text-primary" strokeWidth={3} />
                                             </div>
                                         )}
                                         {isNext && (
-                                            <button
-                                                onClick={() => setIsModalOpen(true)}
-                                                className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-black rounded-xl transition-all shadow-md shadow-emerald-200 cursor-pointer flex items-center gap-1.5 active:scale-95"
-                                            >
-                                                <Sparkles size={12} strokeWidth={2.5} />
-                                                Upgrade
-                                            </button>
+                                            <Button size="sm" onClick={() => setIsModalOpen(true)}>
+                                                <Sparkles size={12} strokeWidth={2.5} /> Upgrade
+                                            </Button>
                                         )}
                                     </div>
                                 </div>
@@ -177,11 +167,9 @@ export default function EligibleState({ currentTier, requiredDocs }) {
                     })}
                 </div>
 
-                <div className="text-center pt-2">
-                    <p className="text-[10px] text-slate-400 font-medium">
-                        Click "Upgrade" to start your Tier {nextTier} application
-                    </p>
-                </div>
+                <p className="text-[11px] text-muted-foreground text-center pt-1">
+                    Upgrading takes a document upload and an admin review.
+                </p>
             </div>
 
             <TierUpgradeModal

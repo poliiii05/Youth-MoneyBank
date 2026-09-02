@@ -1,45 +1,34 @@
 // resources/js/Pages/User/Settings/ProfileTab.jsx
 import { useState, useEffect } from 'react';
 import { router } from '@inertiajs/react';
-import { Lock, Check, AlertCircle, Loader2, Phone } from 'lucide-react';
+import { Lock, Check, AlertCircle, MailCheck, MailWarning, UserX, ShieldCheck } from 'lucide-react';
+import { Card } from '@/Components/ui/card';
+import { Button } from '@/Components/ui/button';
+import { Input } from '@/Components/ui/input';
+import { Label } from '@/Components/ui/label';
+import { cn } from '@/lib/utils';
+
+const TIER_NAMES = { 1: 'Starter', 2: 'Builder', 3: 'Achiever' };
 
 export default function ProfileTab({ profile }) {
     const [name, setName] = useState(profile.name || '');
-    const [phoneNumber, setPhoneNumber] = useState(profile.phone_number || '');
+    const [birthDate, setBirthDate] = useState(profile.birth_date || '');
     const [isProcessing, setIsProcessing] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
     const [errors, setErrors] = useState({});
-    
-    const validatePhone = (phone) => {
-        if (!phone || phone.length === 0) return { error: null, helper: 'Optional · Format: 09XX or +63 9XX' };
-        
-        if (phone.startsWith('09')) {
-            if (phone.length < 11) return { error: null, helper: `${11 - phone.length} digit${11 - phone.length === 1 ? '' : 's'} remaining (need 11 total)`, warning: true };
-            if (phone.length === 11) return { error: null, helper: '✓ Valid Philippine mobile format' };
-            return { error: 'Too long — 09 format must be exactly 11 digits', helper: '' };
-        }
-        
-        if (phone.startsWith('+63')) {
-            if (phone.length < 13) return { error: null, helper: `${13 - phone.length} digit${13 - phone.length === 1 ? '' : 's'} remaining (need 13 total)`, warning: true };
-            if (phone.length === 13) return { error: null, helper: '✓ Valid Philippine mobile format' };
-            return { error: 'Too long — +63 format must be exactly 13 characters', helper: '' };
-        }
-        
-        return { error: 'Must start with 09 or +63', helper: '' };
-    };
+    const [resending, setResending] = useState(false);
+    const [avatarFailed, setAvatarFailed] = useState(false);
+    const [confirming, setConfirming] = useState(false);
+    const [confirmText, setConfirmText] = useState('');
+    const [deactivating, setDeactivating] = useState(false);
 
-    const phoneValidation = validatePhone(phoneNumber);
-    const phoneError = errors.phone_number || phoneValidation.error;
-    const phoneHelperText = phoneError ? '' : phoneValidation.helper;
-    const phoneCounterColor = phoneValidation.warning 
-        ? 'text-amber-600' 
-        : phoneValidation.helper?.startsWith('✓') 
-            ? 'text-emerald-600' 
-            : 'text-slate-400';
-            
-    const hasChanges = 
-        name !== (profile.name || '') || 
-        phoneNumber !== (profile.phone_number || '');
+    // Birth date can only be set while empty, so it counts as a change only
+    // on the pass where it is being filled in for the first time.
+    const canSetBirthDate = !profile.birth_date;
+    const hasChanges =
+        name !== (profile.name || '')
+        || (canSetBirthDate && birthDate !== '');
+    const tier = Number(profile.kyc_tier || 1);
 
     useEffect(() => {
         if (isSuccess) {
@@ -50,7 +39,7 @@ export default function ProfileTab({ profile }) {
 
     const handleDiscard = () => {
         setName(profile.name || '');
-        setPhoneNumber(profile.phone_number || '');
+        setBirthDate(profile.birth_date || '');
         setErrors({});
     };
 
@@ -63,211 +52,313 @@ export default function ProfileTab({ profile }) {
 
         router.patch('/settings/profile', {
             name: name.trim(),
-            phone_number: phoneNumber.trim() || null,
+            ...(canSetBirthDate && birthDate ? { birth_date: birthDate } : {}),
         }, {
             preserveScroll: true,
-            onSuccess: () => {
-                setIsProcessing(false);
-                setIsSuccess(true);
-            },
-            onError: (errs) => {
-                setIsProcessing(false);
-                setErrors(errs);
-            }
+            onSuccess: () => { setIsProcessing(false); setIsSuccess(true); },
+            onError: (errs) => { setIsProcessing(false); setErrors(errs); },
+        });
+    };
+
+    const resendVerification = () => {
+        setResending(true);
+        router.post('/email/verification-notification', {}, {
+            preserveScroll: true,
+            onFinish: () => setResending(false),
+        });
+    };
+
+    const hasBalance = Number(profile.total_holdings || 0) > 0;
+
+    const deactivate = () => {
+        setDeactivating(true);
+        setErrors({});
+        router.post('/settings/deactivate', { confirmation: confirmText.trim().toUpperCase() }, {
+            preserveScroll: true,
+            onError: (errs) => { setDeactivating(false); setErrors(errs); },
+            onFinish: () => setDeactivating(false),
         });
     };
 
     const userInitial = (profile.name || 'U').charAt(0).toUpperCase();
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="space-y-4">
 
-            {/* SUCCESS BANNER */}
             {isSuccess && (
-                <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                    <Check size={16} className="text-emerald-700" strokeWidth={2.5} />
-                    <p className="text-xs font-semibold text-emerald-700">Profile updated successfully!</p>
+                <div className="rounded-xl border border-success/30 bg-success/10 p-3 flex items-center gap-2">
+                    <Check size={16} className="text-success" strokeWidth={2.5} />
+                    <p className="text-xs font-semibold text-success">Profile updated.</p>
                 </div>
             )}
 
-            {/* PERSONAL INFORMATION SECTION */}
-            <div>
-                <div className="mb-4">
-                    <h3 className="text-sm font-bold text-slate-900 tracking-tight">Personal Information</h3>
-                </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
 
-                {/* AVATAR DISPLAY — emerald themed */}
-                <div className="flex items-center gap-4 p-5 bg-gradient-to-br from-emerald-50/60 via-white to-emerald-50/30 rounded-2xl border border-slate-200 mb-6">
-                    <div className="relative shrink-0">
-                        {profile.profile_picture ? (
-                            <img 
-                                src={profile.profile_picture} 
-                                alt={profile.name}
-                                className="w-16 h-16 rounded-full shadow-md border-2 border-white object-cover"
-                            />
-                        ) : (
-                            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white font-black text-xl shadow-md">
-                                {userInitial}
-                            </div>
-                        )}
-                        <div className="absolute -inset-1 rounded-full bg-gradient-to-br from-emerald-400/30 to-emerald-600/30 blur-sm -z-10"></div>
-                    </div>
-                    <div className="min-w-0 flex-1">
-                        <p className="text-base font-black text-slate-900 truncate tracking-tight">{profile.name}</p>
-                        <p className="text-[11px] text-slate-500 font-semibold mt-0.5 truncate">{profile.email}</p>
-                        <p className="text-[9px] text-slate-400 font-medium mt-1 uppercase tracking-widest">
-                            {profile.profile_picture ? '✓ Synced from Google' : 'Default avatar'}
-                        </p>
-                    </div>
-                </div>
-
-                {/* FORM FIELDS */}
+                {/* LEFT COLUMN */}
                 <div className="space-y-4">
 
-                    {/* Full Name */}
-                    <div>
-                        <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wide mb-1.5">
-                            Full Name <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                            type="text"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            placeholder="Your full name"
-                            maxLength={100}
-                            className={`w-full px-3 py-2.5 border rounded-xl text-sm font-medium outline-none transition-all ${
-                                errors.name 
-                                    ? 'bg-red-50/20 border-red-400 focus:ring-4 focus:ring-red-50 text-red-900' 
-                                    : 'bg-white border-slate-300 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-50 text-slate-900'
-                            }`}
-                        />
-                        {errors.name && (
-                            <p className="text-[11px] font-semibold text-red-500 mt-1 flex items-center gap-1">
-                                <AlertCircle size={12} /> {errors.name}
-                            </p>
-                        )}
-                    </div>
+                    {/* PERSONAL PROFILE */}
+                    <Card className="p-5">
+                        <h3 className="text-sm font-bold text-foreground mb-4">Personal Profile</h3>
 
-                    {/* Phone Number */}
-                    <div>
-                        <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wide mb-1.5">
-                            Phone Number
-                            {profile.phone_verified && (
-                                <span className="ml-2 text-[9px] text-emerald-700 font-bold uppercase">Verified ✓</span>
+                        <div className="flex items-center gap-3 mb-5">
+                            {/* Google avatar URLs expire and can be refused without
+                                the right referrer. Without the error fallback a dead
+                                URL left a broken-image icon, because the field was
+                                still set and the initial avatar never rendered. */}
+                            {profile.profile_picture && !avatarFailed ? (
+                                <img
+                                    src={profile.profile_picture}
+                                    alt={profile.name}
+                                    referrerPolicy="no-referrer"
+                                    onError={() => setAvatarFailed(true)}
+                                    className="w-14 h-14 rounded-full border-2 border-card shadow-md object-cover shrink-0"
+                                />
+                            ) : (
+                                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-emerald-700 flex items-center justify-center text-white font-black text-lg shadow-md shrink-0">
+                                    {userInitial}
+                                </div>
                             )}
-                        </label>
-                        <div className="relative">
-                            <Phone size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                            <input
-                                type="tel"
-                                value={phoneNumber}
-                                onChange={(e) => {
-                                    let value = e.target.value;
-                                    value = value.replace(/[^\d+]/g, '');
-                                    if (value.startsWith('+')) {
-                                        value = '+' + value.slice(1).replace(/\+/g, '');
-                                    }
-                                    const maxLength = value.startsWith('+63') ? 13 : 11;
-                                    if (value.length > maxLength) {
-                                        value = value.slice(0, maxLength);
-                                    }
-                                    setPhoneNumber(value);
-                                }}
-                                placeholder="09XX XXX XXXX or +639XX..."
-                                maxLength={13}
-                                style={{ fontVariantNumeric: 'tabular-nums' }}
-                                className={`w-full pl-9 pr-3 py-2.5 border rounded-xl text-sm font-medium outline-none transition-all ${
-                                    phoneError 
-                                        ? 'bg-red-50/30 border-red-400 focus:ring-4 focus:ring-red-50 text-red-900' 
-                                        : 'bg-white border-slate-300 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-50 text-slate-900'
-                                }`}
+
+                            <div className="min-w-0">
+                                <p className="text-base font-bold text-foreground truncate">{profile.name}</p>
+                                <p className="text-xs text-muted-foreground truncate">{profile.email}</p>
+
+                                <span className={cn(
+                                    'inline-flex items-center gap-1 mt-1.5 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ring-1',
+                                    profile.email_verified
+                                        ? 'bg-success/10 text-success ring-success/25'
+                                        : 'bg-accent/10 text-accent-foreground ring-accent/30'
+                                )}>
+                                    {profile.email_verified
+                                        ? <><ShieldCheck size={10} strokeWidth={2.5} /> Verified</>
+                                        : <><MailWarning size={10} strokeWidth={2.5} /> Unverified</>}
+                                </span>
+                            </div>
+                        </div>
+
+                        <form onSubmit={handleSubmit}>
+                            <Label htmlFor="profile-name" className="mb-1.5 block">
+                                Display name <span className="text-destructive">*</span>
+                            </Label>
+                            <Input
+                                id="profile-name"
+                                type="text"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                placeholder="Your full name"
+                                maxLength={100}
+                                className={cn(errors.name && 'border-destructive')}
                             />
-                        </div>
-                        {phoneError ? (
-                            <p className="text-[11px] font-semibold text-red-500 mt-1 flex items-center gap-1">
-                                <AlertCircle size={12} /> {phoneError}
-                            </p>
-                        ) : (
-                            <p className={`text-[10px] mt-1 font-medium ${phoneCounterColor}`}>
-                                {phoneHelperText}
-                            </p>
-                        )}
-                    </div>
-                </div>
-            </div>
-
-            {/* ACCOUNT INFORMATION SECTION (read-only) */}
-            <div className="pt-6 border-t border-slate-200">
-                <div className="mb-4">
-                    <h3 className="text-sm font-bold text-slate-900 tracking-tight">Account Information</h3>
-                </div>
-
-                <div className="space-y-3">
-                    {/* Email (read-only) */}
-                    <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200">
-                        <div className="min-w-0 flex-1">
-                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-0.5">Email Address</p>
-                            <p className="text-sm font-bold text-slate-900 truncate">{profile.email}</p>
-                            {profile.email_verified && (
-                                <p className="text-[10px] text-emerald-700 font-bold uppercase mt-0.5">Verified ✓</p>
+                            {errors.name && (
+                                <p className="text-[11px] font-semibold text-destructive mt-1 flex items-center gap-1">
+                                    <AlertCircle size={12} /> {errors.name}
+                                </p>
                             )}
-                        </div>
-                        <Lock size={14} className="text-slate-400 shrink-0 ml-3" />
-                    </div>
 
-                    {/* Account Number (read-only) */}
-                    <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200">
-                        <div className="min-w-0 flex-1">
-                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-0.5">Account Number</p>
-                            <p className="text-sm font-mono font-bold text-slate-900 tracking-tight" style={{ fontVariantNumeric: 'tabular-nums' }}>
-                                {profile.account_number}
-                            </p>
-                        </div>
-                        <Lock size={14} className="text-slate-400 shrink-0 ml-3" />
-                    </div>
+                            {canSetBirthDate && (
+                                <div className="mt-4">
+                                    <Label htmlFor="profile-birthdate" className="mb-1.5 block">
+                                        Date of birth
+                                    </Label>
+                                    <Input
+                                        id="profile-birthdate"
+                                        type="date"
+                                        value={birthDate}
+                                        onChange={(e) => setBirthDate(e.target.value)}
+                                        max={new Date().toISOString().split('T')[0]}
+                                        className={cn(errors.birth_date && 'border-destructive')}
+                                    />
+                                    <p className="text-[10px] text-muted-foreground mt-1 leading-relaxed">
+                                        Needed before you can apply for Tier 3, which requires
+                                        account holders to be 18 or older. This can only be set
+                                        once — contact support if you need it corrected.
+                                    </p>
+                                    {errors.birth_date && (
+                                        <p className="text-[11px] font-semibold text-destructive mt-1 flex items-center gap-1">
+                                            <AlertCircle size={12} /> {errors.birth_date}
+                                        </p>
+                                    )}
+                                </div>
+                            )}
 
-                    {/* Member Since */}
-                    <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200">
-                        <div className="min-w-0 flex-1">
-                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-0.5">Member Since</p>
-                            <p className="text-sm font-bold text-slate-900">{profile.member_since}</p>
+                            <div className="flex gap-2 justify-end mt-4">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handleDiscard}
+                                    disabled={!hasChanges || isProcessing}
+                                >
+                                    Discard
+                                </Button>
+                                <Button type="submit" size="sm" disabled={!hasChanges || isProcessing}>
+                                    {isProcessing ? 'Saving…' : 'Save Changes'}
+                                </Button>
+                            </div>
+                        </form>
+                    </Card>
+
+                    {/* ACCOUNT DETAILS — read-only facts, so they are listed rather
+                        than dressed as form fields nobody can edit. */}
+                    <Card className="p-5">
+                        <h3 className="text-sm font-bold text-foreground mb-4">Account Details</h3>
+
+                        <dl className="divide-y divide-border">
+                            <Row label="Account number" mono>{profile.account_number}</Row>
+                            <Row label="Email address" locked>{profile.email}</Row>
+                            {profile.birth_date && (
+                                <Row label="Date of birth" locked>
+                                    {new Date(profile.birth_date + 'T00:00:00').toLocaleDateString('en-PH', {
+                                        year: 'numeric', month: 'long', day: 'numeric',
+                                    })}
+                                </Row>
+                            )}
+                            <Row label="Member since">{profile.member_since}</Row>
+                            <Row label="Current tier">
+                                <span className="text-primary">
+                                    Tier {tier} · {TIER_NAMES[tier] || 'Starter'}
+                                </span>
+                            </Row>
+                        </dl>
+                    </Card>
+                </div>
+
+                {/* RIGHT COLUMN */}
+                <div className="space-y-4">
+
+                    {/* SECURITY — only what the app actually does. No biometric or
+                        2FA switches: a toggle that changes nothing is worse than
+                        an absent one. */}
+                    <Card className="p-5">
+                        <h3 className="text-sm font-bold text-foreground mb-4">Security</h3>
+
+                        <div className="rounded-xl border border-border p-3.5">
+                            <div className="flex items-start gap-3">
+                                <div className={cn(
+                                    'w-9 h-9 rounded-xl flex items-center justify-center shrink-0',
+                                    profile.email_verified ? 'bg-success/10' : 'bg-accent/10'
+                                )}>
+                                    {profile.email_verified
+                                        ? <MailCheck size={16} className="text-success" strokeWidth={2.5} />
+                                        : <MailWarning size={16} className="text-accent-foreground" strokeWidth={2.5} />}
+                                </div>
+
+                                <div className="min-w-0 flex-1">
+                                    <p className="text-xs font-bold text-foreground">Email verification</p>
+                                    <p className="text-[11px] text-muted-foreground leading-relaxed mt-0.5">
+                                        {profile.email_verified
+                                            ? 'Your email address is confirmed. Password resets go here.'
+                                            : 'Confirm your email so you can recover your account if you lose your password.'}
+                                    </p>
+
+                                    {!profile.email_verified && (
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={resendVerification}
+                                            disabled={resending}
+                                            className="mt-2.5"
+                                        >
+                                            {resending ? 'Sending…' : 'Resend verification email'}
+                                        </Button>
+                                    )}
+                                </div>
+                            </div>
                         </div>
-                    </div>
+
+                        <p className="text-[10px] text-muted-foreground leading-relaxed mt-3">
+                            Passwords are hashed with bcrypt and sessions are encrypted.
+                            To change your password, use the “Forgot password?” link on
+                            the login page.
+                        </p>
+                    </Card>
+
+                    {/* DEACTIVATE — signing out lives in the profile menu; a
+                        red panel here is for the decision that actually needs
+                        weighing. */}
+                    <Card className="p-5 border-destructive/25">
+                        <h3 className="text-sm font-bold text-foreground mb-1">Deactivate account</h3>
+                        <p className="text-[11px] text-muted-foreground leading-relaxed mb-3">
+                            Closes your account and ends your session. Your transaction
+                            history is kept for the audit trail rather than erased, and
+                            support can reopen the account later.
+                        </p>
+
+                        {hasBalance ? (
+                            <div className="rounded-xl border border-accent/30 bg-accent/10 p-3">
+                                <p className="text-[11px] text-accent-foreground leading-relaxed">
+                                    <span className="font-bold">
+                                        ₱{Number(profile.total_holdings).toLocaleString('en-PH', { minimumFractionDigits: 2 })}
+                                    </span>{' '}
+                                    is still in your account. Withdraw it before
+                                    deactivating so nothing is left behind a closed login.
+                                </p>
+                            </div>
+                        ) : !confirming ? (
+                            <Button
+                                variant="outline"
+                                onClick={() => setConfirming(true)}
+                                className="w-full border-destructive/40 text-destructive hover:bg-destructive/5"
+                            >
+                                <UserX size={15} strokeWidth={2.5} /> Deactivate account
+                            </Button>
+                        ) : (
+                            <div className="space-y-2.5">
+                                <Label htmlFor="deactivate-confirm" className="block">
+                                    Type <span className="font-black text-destructive">DEACTIVATE</span> to confirm
+                                </Label>
+                                <Input
+                                    id="deactivate-confirm"
+                                    value={confirmText}
+                                    onChange={(e) => setConfirmText(e.target.value)}
+                                    placeholder="DEACTIVATE"
+                                    autoComplete="off"
+                                    autoFocus
+                                    className="font-bold tracking-widest uppercase"
+                                />
+                                {errors.confirmation && (
+                                    <p className="text-[11px] font-semibold text-destructive flex items-start gap-1">
+                                        <AlertCircle size={12} className="mt-0.5 shrink-0" /> {errors.confirmation}
+                                    </p>
+                                )}
+                                <div className="flex gap-2">
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => { setConfirming(false); setConfirmText(''); setErrors({}); }}
+                                        className="flex-1"
+                                    >
+                                        Cancel
+                                    </Button>
+                                    <Button
+                                        variant="destructive"
+                                        onClick={deactivate}
+                                        disabled={confirmText.trim().toUpperCase() !== 'DEACTIVATE' || deactivating}
+                                        className="flex-1"
+                                    >
+                                        {deactivating ? 'Closing…' : 'Deactivate'}
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+                    </Card>
                 </div>
             </div>
+        </div>
+    );
+}
 
-            {/* ACTION BUTTONS */}
-            <div className="pt-4 border-t border-slate-200 flex flex-col sm:flex-row gap-2 justify-end">
-                <button
-                    type="button"
-                    onClick={handleDiscard}
-                    disabled={!hasChanges || isProcessing}
-                    className={`px-5 py-2.5 text-xs font-bold rounded-xl transition-all border active:scale-95 ${
-                        hasChanges && !isProcessing
-                            ? 'bg-white border-slate-300 hover:bg-slate-50 text-slate-700 cursor-pointer'
-                            : 'bg-slate-50 border-slate-200 text-slate-400 cursor-not-allowed'
-                    }`}
-                >
-                    Discard Changes
-                </button>
-                <button
-                    type="submit"
-                    disabled={!hasChanges || isProcessing}
-                    className={`px-5 py-2.5 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2 min-w-[140px] active:scale-[0.98] ${
-                        hasChanges && !isProcessing
-                            ? 'bg-emerald-700 hover:bg-emerald-800 text-white shadow-md shadow-emerald-200 cursor-pointer'
-                            : 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                    }`}
-                >
-                    {isProcessing ? (
-                        <>
-                            <Loader2 size={14} className="animate-spin" /> Saving...
-                        </>
-                    ) : (
-                        'Save Changes'
-                    )}
-                </button>
-            </div>
-        </form>
+function Row({ label, children, mono = false, locked = false }) {
+    return (
+        <div className="flex items-center justify-between gap-3 py-2.5">
+            <dt className="text-xs text-muted-foreground shrink-0">{label}</dt>
+            <dd className={cn(
+                'text-xs font-bold text-foreground text-right truncate tabular-nums',
+                mono && 'font-mono'
+            )}>
+                {children}
+                {locked && <Lock size={11} className="inline ml-1.5 text-muted-foreground align-middle" />}
+            </dd>
+        </div>
     );
 }

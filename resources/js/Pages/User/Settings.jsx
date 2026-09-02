@@ -34,10 +34,11 @@ export default function Settings({ auth, profile, kyc_status, active_tab }) {
         <UserLayout user={user} header="Settings">
             <Head title="Settings | Youth MoneyBank" />
 
-            <div className="max-w-4xl mx-auto">
-                {/* TABS NAVIGATION */}
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-6">
-                    <div className="flex overflow-x-auto scrollbar-hide border-b border-slate-200">
+            <div className="max-w-5xl mx-auto">
+                {/* TABS — the panels below are separate cards now, so the tab
+                    strip sits on its own rather than wrapping everything in one
+                    box that fought the two-column layout inside it. */}
+                <div className="flex overflow-x-auto scrollbar-hide border-b border-border mb-5">
                         {TABS.map((tab) => {
                             const Icon = tab.icon;
                             const isActive = activeTab === tab.id;
@@ -47,8 +48,8 @@ export default function Settings({ auth, profile, kyc_status, active_tab }) {
                                     onClick={() => switchTab(tab.id)}
                                     className={`flex items-center gap-2 px-5 py-3 text-xs font-bold transition-all whitespace-nowrap cursor-pointer border-b-2 active:scale-95 ${
                                         isActive
-                                            ? 'text-emerald-700 border-emerald-700 bg-emerald-50/40'
-                                            : 'text-slate-500 border-transparent hover:text-slate-700 hover:bg-slate-50'
+                                            ? 'text-primary border-primary'
+                                            : 'text-muted-foreground border-transparent hover:text-foreground'
                                     }`}
                                 >
                                     <Icon size={14} strokeWidth={isActive ? 2.5 : 2} />
@@ -56,14 +57,11 @@ export default function Settings({ auth, profile, kyc_status, active_tab }) {
                                 </button>
                             );
                         })}
-                    </div>
-
-                    {/* TAB CONTENT */}
-                    <div className="p-5 sm:p-6">
-                        {activeTab === 'profile' && <ProfileTab profile={profile} />}
-                        {activeTab === 'upgrade' && <TierUpgradeTab profile={profile} kyc_status={kyc_status} />}
-                    </div>
                 </div>
+
+                {/* TAB CONTENT */}
+                {activeTab === 'profile' && <ProfileTab profile={profile} />}
+                {activeTab === 'upgrade' && <TierUpgradeTab profile={profile} kyc_status={kyc_status} />}
             </div>
         </UserLayout>
     );

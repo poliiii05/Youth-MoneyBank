@@ -15,6 +15,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'name',
         'email',
         'birth_date',
+        'deactivated_at',
         'phone_number',
         'password',
         'google_id',
@@ -43,7 +44,8 @@ class User extends Authenticatable implements MustVerifyEmail
     ];
 
     protected $casts = [
-         'birth_date' => 'date',
+        'birth_date' => 'date',
+        'deactivated_at' => 'datetime',
         'password' => 'hashed',
         'email_verified_at' => 'datetime',
         'phone_verified_at' => 'datetime',
@@ -53,7 +55,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'admin_role_revoked_at' => 'datetime',
     ];
 
-        /**
+    /**
      * Generate a unique 10-digit account number.
      *
      * Shared by email registration and Google sign-in so both paths produce
@@ -71,7 +73,6 @@ class User extends Authenticatable implements MustVerifyEmail
     public function wallet() {
         return $this->hasOne(Wallet::class);
     }
-    
     public function savingsGoals() {
         return $this->hasMany(SavingsGoal::class);
     }

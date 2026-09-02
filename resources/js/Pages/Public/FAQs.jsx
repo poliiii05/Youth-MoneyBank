@@ -75,7 +75,7 @@ export default function FAQ() {
                 { id: 'st1', q: 'How do I get help?', a: 'Open the support chat from the button in the corner of any page. It answers common questions from the help articles first, falls back to an AI assistant, and can escalate to a human agent if your question needs one.' },
                 { id: 'st2', q: 'What do I do if I forget my password?', a: 'Use the "Forgot password?" link on the login page. A reset link is sent to your registered email address.' },
                 { id: 'st3', q: 'What if I signed up with Google?', a: 'Accounts created through Google sign-in do not have a password of their own — just use the "Sign in with Google" button again rather than the email and password form.' },
-                { id: 'st4', q: 'Can I delete my account?', a: 'You can request account deletion through Account Settings. Note that in this demo environment, test accounts and uploaded files may also be reset periodically by the developer.' }
+                { id: 'st4', q: 'Can I close my account?', a: 'Yes — Settings has a deactivate option. You need to withdraw any remaining balance first, so nothing is left behind a closed login. Your transaction history is kept rather than erased, because the ledger has to stay complete, and support can reopen the account later.' }
             ]
         }
     ];

@@ -35,17 +35,25 @@ export default function ProfileDropdown({ user }) {
         }
     }, [isOpen]);
 
+    // Reads the same --tier-N tokens as the sidebar and the upgrade ladder, so
+    // the three places that show a tier cannot disagree about its colour.
     const getTierDetails = (tier) => {
         const current = Number(tier || 1);
-        if (current === 3) return { name: 'Achiever', level: 'Tier 3', color: 'text-indigo-600', bg: 'bg-indigo-50', dot: 'bg-indigo-500' };
-        if (current === 2) return { name: 'Builder', level: 'Tier 2', color: 'text-emerald-600', bg: 'bg-emerald-50', dot: 'bg-emerald-500' };
-        return { name: 'Starter', level: 'Tier 1', color: 'text-blue-600', bg: 'bg-blue-50', dot: 'bg-blue-500' };
+        const names = { 1: 'Starter', 2: 'Builder', 3: 'Achiever' };
+        return {
+            name: names[current] || 'Starter',
+            level: `Tier ${current}`,
+            dotStyle: { backgroundColor: `var(--tier-${current})` },
+        };
     };
 
     const tier = getTierDetails(user?.kyc_tier);
     const userName = user?.name || 'User';
     const userInitial = userName.charAt(0).toUpperCase();
-    const profilePic = user?.profile_picture;
+    // One flag for both avatars in this component — if the URL is dead in the
+    // trigger it is dead in the panel too, and Google's avatar URLs do expire.
+    const [avatarFailed, setAvatarFailed] = useState(false);
+    const profilePic = !avatarFailed ? user?.profile_picture : null;
 
     //Logout
         const openSignOutModal = (e) => {
@@ -77,72 +85,76 @@ export default function ProfileDropdown({ user }) {
             {/* Trigger button (avatar + chevron) */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className={`flex items-center gap-2 p-1 pr-2 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer ${isOpen ? 'bg-slate-100' : ''}`}
+                className={`flex items-center gap-2 p-1 pr-2 rounded-xl hover:bg-muted transition-colors cursor-pointer ${isOpen ? 'bg-muted' : ''}`}
             >
                 {profilePic ? (
                     <img 
                         src={profilePic} 
-                        alt={userName} 
-                        className="w-8 h-8 rounded-full shadow-sm border border-slate-200 object-cover"
+                        alt={userName}
+                        referrerPolicy="no-referrer"
+                        onError={() => setAvatarFailed(true)} 
+                        className="w-8 h-8 rounded-full shadow-sm border border-border object-cover"
                     />
                 ) : (
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white font-bold text-xs shadow-sm">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center text-white font-bold text-xs shadow-sm">
                         {userInitial}
                     </div>
                 )}
                 <ChevronDown 
                     size={14} 
-                    className={`text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                    className={`text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`}
                 />
             </button>
 
             {/* Dropdown panel */}
             {isOpen && (
-                <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                <div className="absolute right-0 mt-2 w-64 bg-popover rounded-2xl shadow-xl border border-border overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-150">
                     
                     {/* User info section */}
-                    <div className="p-4 border-b border-slate-100">
+                    <div className="p-4 border-b border-border">
                         <div className="flex items-center gap-3 mb-3">
                             {profilePic ? (
                                 <img 
                                     src={profilePic} 
                                     alt={userName}
-                                    className="w-10 h-10 rounded-full shadow-sm border border-slate-200 object-cover shrink-0"
+                        referrerPolicy="no-referrer"
+                        onError={() => setAvatarFailed(true)}
+                                    className="w-10 h-10 rounded-full shadow-sm border border-border object-cover shrink-0"
                                 />
                             ) : (
-                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white font-bold shadow-sm shrink-0">
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center text-white font-bold shadow-sm shrink-0">
                                     {userInitial}
                                 </div>
                             )}
                             <div className="min-w-0 flex-1">
-                                <p className="font-bold text-sm text-slate-900 truncate" title={userName}>
+                                <p className="font-bold text-sm text-foreground truncate" title={userName}>
                                     {userName}
                                 </p>
-                                <p className="text-[10px] font-mono text-slate-500 mt-0.5 tracking-tight">
+                                <p className="text-[10px] font-mono text-muted-foreground mt-0.5 tracking-tight">
                                     UID: {user?.account_number || '—'}
                                 </p>
                             </div>
                         </div>
                         
                         {/* Tier badge */}
-                        <div className={`flex items-center justify-between px-3 py-2 rounded-lg ${tier.bg}`}>
+                        <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-muted">
                             <div className="flex items-center gap-2">
-                                <div className={`w-1.5 h-1.5 rounded-full ${tier.dot}`}></div>
-                                <span className={`text-[11px] font-bold ${tier.color}`}>
+                                <div className="w-1.5 h-1.5 rounded-full" style={tier.dotStyle}></div>
+                                <span className="text-[11px] font-bold text-foreground">
                                     {tier.name} Account
                                 </span>
                             </div>
-                            <span className={`text-[9px] font-bold uppercase tracking-widest ${tier.color}`}>
+                            <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
                                 {tier.level}
                             </span>
                         </div>
                     </div>
 
                     {/* Sign out */}
-                    <div className="border-t border-slate-100 py-1">
+                    <div className="border-t border-border py-1">
                         <button 
                             onClick={openSignOutModal}
-                            className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                            className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-semibold text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
                         >
                             <LogOut size={14} />
                             Sign out

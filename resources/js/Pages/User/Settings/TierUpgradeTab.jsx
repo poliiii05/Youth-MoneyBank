@@ -63,13 +63,13 @@ export default function TierUpgradeTab({ profile, kyc_status }) {
         <div className="space-y-6">
             {/* DEMO MODE BANNER — amber (informational) */}
             {status.is_demo_mode && currentTier < 3 && (
-                <div className="bg-gradient-to-r from-amber-50 to-amber-100/50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
-                    <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center shrink-0">
-                        <AlertTriangle size={16} className="text-amber-700" strokeWidth={2.5} />
+                <div className="bg-gradient-to-r from-accent/10 to-accent/5 border border-accent/30 rounded-xl p-4 flex items-start gap-3">
+                    <div className="w-8 h-8 bg-accent/15 rounded-lg flex items-center justify-center shrink-0">
+                        <AlertTriangle size={16} className="text-accent-foreground" strokeWidth={2.5} />
                     </div>
                     <div className="min-w-0 flex-1">
-                        <p className="text-xs font-black text-amber-900 mb-1">Demo Mode</p>
-                        <p className="text-[11px] text-amber-800 leading-relaxed">
+                        <p className="text-xs font-black text-foreground mb-1">Demo Mode</p>
+                        <p className="text-[11px] text-accent-foreground leading-relaxed">
                             Applications are auto-approved in this portfolio deployment. Use the <strong>Sample Documents</strong> below to test the KYC flow without uploading real personal IDs. Real uploads are auto-deleted within 24 hours.
                         </p>
                     </div>

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
@@ -35,6 +36,19 @@ class AuthenticatedSessionController extends Controller
 
         /** @var \App\Models\User $user */
         $user = Auth::user();
+
+        // A deactivated account is closed by its owner, so the session ends
+        // here rather than at the suspension check below — the two are
+        // different situations and deserve different wording.
+        if ($user->deactivated_at) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            throw ValidationException::withMessages([
+                'email' => 'This account has been deactivated. Contact support if you want it reopened.',
+            ]);
+        }
 
         // Suspension only applies to regular users; admins are managed separately.
         if ($user->is_suspended && $user->isRegularUser()) {
