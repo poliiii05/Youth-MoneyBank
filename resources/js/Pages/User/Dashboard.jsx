@@ -2,7 +2,7 @@
 import { Head, Link } from '@inertiajs/react';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import UserLayout from '../../Components/Layouts/UserLayout';
-import { Wallet, Target, ArrowRight, Lightbulb, ChevronRight } from 'lucide-react';
+import { Wallet, Target, ArrowRight, Lightbulb, ChevronRight, TrendingUp } from 'lucide-react';
 import AddMoneyModal from '../../Components/Wallet/AddMoneyModal';
 import RecentTransactionsCard from '../../Components/Transactions/RecentTransactionsCard';
 import WelcomeModal from '../../Components/Modals/WelcomeModal';
@@ -24,6 +24,7 @@ export default function Dashboard({ auth, finances, active_goal, kyc_tier, recen
     const tierUsagePercentage = maxLimit > 0 ? (totalHoldings / maxLimit) * 100 : 0;
     const allocatedToGoals = finances?.allocated_to_goals ?? 0;
     const unallocatedSavings = finances?.unallocated_savings ?? 0;
+    const savedThisMonth = savings_trend?.[savings_trend.length - 1]?.saved ?? 0;
 
     const getTierName = (tier) => {
         if (Number(tier) === 3) return 'Achiever';
@@ -151,6 +152,18 @@ export default function Dashboard({ auth, finances, active_goal, kyc_tier, recen
                         <div>
                             <p className="text-white/70 text-[11px] font-semibold mb-1 uppercase tracking-widest">Main Wallet</p>
                             <h3 className="text-4xl md:text-5xl font-black tracking-tight drop-shadow-sm">₱{mainBalance.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</h3>
+
+                            {/* Net movement this month, read off the same series the
+                                trend chart plots — so the headline figure and the
+                                chart can never disagree. */}
+                            {savedThisMonth !== 0 && (
+                                <div className="flex items-center gap-1.5 mt-1.5 text-xs text-white/90">
+                                    <TrendingUp size={13} className={savedThisMonth < 0 ? 'rotate-180' : ''} />
+                                    <span className="font-medium tabular-nums">
+                                        {savedThisMonth > 0 ? '+' : '−'}₱{Math.abs(savedThisMonth).toLocaleString('en-PH')} this month
+                                    </span>
+                                </div>
+                            )}
                         </div>
                         <div className="p-2.5 bg-white/10 rounded-2xl backdrop-blur-md border border-white/10 shadow-inner">
                             <Wallet size={24} className="text-white" />
