@@ -86,7 +86,7 @@
     --input: #e2e8f0;
     --ring: #047857;
 
-        /* Tier ramp — matches the logo bars: pale at Starter, deepest at
+    /* Tier ramp — matches the logo bars: pale at Starter, deepest at
        Achiever. Amber is deliberately NOT in this ramp; it stays the
        gamification accent (streaks, badges) so the two systems read
        as separate things. */
@@ -142,5 +142,65 @@
     body {
         background-color: var(--background);
         color: var(--foreground);
+    }
+}
+
+/*
+ * Motion primitives.
+ *
+ * Written here rather than pulled in as a plugin: it is a handful of keyframes,
+ * and the Radix data-state selectors that drive them are easier to reason about
+ * when they sit beside the tokens they animate.
+ */
+
+@keyframes ymb-fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes ymb-fade-out {
+    from { opacity: 1; }
+    to   { opacity: 0; }
+}
+
+@keyframes ymb-zoom-in {
+    from { opacity: 0; transform: scale(0.95); }
+    to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes ymb-zoom-out {
+    from { opacity: 1; transform: scale(1); }
+    to   { opacity: 0; transform: scale(0.95); }
+}
+
+@keyframes ymb-rise {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Radix toggles data-state as menus open and close. */
+[data-state="open"].animate-in,
+.animate-in[data-state="open"] {
+    animation: ymb-zoom-in 0.14s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-state="closed"].animate-out,
+.animate-out[data-state="closed"] {
+    animation: ymb-zoom-out 0.1s ease-in forwards;
+}
+
+/* Rows entering a list. The delay is set inline per row so the list arrives
+   in sequence instead of all at once. */
+.ymb-row-enter {
+    opacity: 0;
+    animation: ymb-rise 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .animate-in[data-state="open"],
+    .animate-out[data-state="closed"],
+    .ymb-row-enter {
+        animation: none;
+        opacity: 1;
     }
 }
