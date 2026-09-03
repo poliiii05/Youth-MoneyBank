@@ -1,13 +1,14 @@
 // resources/js/Components/Admin/Kyc/ApproveKycModal.jsx
 import { useState } from 'react';
 import { router } from '@inertiajs/react';
-import { createPortal } from 'react-dom';
-import { CheckCircle2, X } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
+import ModalShell from '../../Modals/ModalShell';
+import { Button } from '@/Components/ui/button';
 
 export default function ApproveKycModal({ isOpen, onClose, application }) {
     const [isProcessing, setIsProcessing] = useState(false);
 
-    if (!isOpen) return null;
+    if (!application) return null;
 
     const handleApprove = () => {
         setIsProcessing(true);
@@ -17,76 +18,56 @@ export default function ApproveKycModal({ isOpen, onClose, application }) {
         });
     };
 
-    return createPortal(
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-                {/* Header */}
-                <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
-                            <CheckCircle2 size={20} className="text-emerald-600" strokeWidth={2.5} />
-                        </div>
-                        <div>
-                            <h3 className="text-sm font-black text-slate-900">Approve Application</h3>
-                            <p className="text-[10px] text-slate-500 font-medium">Confirm this action</p>
-                        </div>
-                    </div>
-                    <button 
-                        onClick={onClose} 
-                        disabled={isProcessing}
-                        className="p-1 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer disabled:opacity-40"
-                    >
-                        <X size={16} className="text-slate-500" />
-                    </button>
-                </div>
-
-                {/* Body */}
-                <div className="p-5 space-y-3">
-                    <p className="text-sm text-slate-700 leading-relaxed">
-                        You are about to approve <strong>{application.user.name}'s</strong> KYC application.
-                    </p>
-
-                    <div className="bg-emerald-50/50 border border-emerald-200 rounded-lg p-3 space-y-1.5">
-                        <div className="flex justify-between text-xs">
-                            <span className="text-emerald-800 font-bold">User:</span>
-                            <span className="text-emerald-900 font-black">{application.user.name}</span>
-                        </div>
-                        <div className="flex justify-between text-xs">
-                            <span className="text-emerald-800 font-bold">Tier Upgrade:</span>
-                            <span className="text-emerald-900 font-black">
-                                T{application.original_tier} → T{application.target_tier}
-                            </span>
-                        </div>
-                        <div className="flex justify-between text-xs">
-                            <span className="text-emerald-800 font-bold">Documents:</span>
-                            <span className="text-emerald-900 font-black">{application.documents.length} files</span>
-                        </div>
-                    </div>
-
-                    <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
-                        This will immediately upgrade the user's tier and grant access to higher transaction limits. The user will be notified.
-                    </p>
-                </div>
-
-                {/* Footer buttons */}
-                <div className="px-5 py-4 bg-slate-50 border-t border-slate-100 flex gap-2 justify-end">
-                    <button
-                        onClick={onClose}
-                        disabled={isProcessing}
-                        className="px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
-                    >
+    return (
+        <ModalShell
+            isOpen={isOpen}
+            onClose={onClose}
+            eyebrow="Review decision"
+            title="Approve application"
+            icon={CheckCircle2}
+            isProcessing={isProcessing}
+            processingLabel="Approving…"
+            footer={
+                <>
+                    <Button variant="outline" onClick={onClose} disabled={isProcessing} className="flex-1">
                         Cancel
-                    </button>
-                    <button
-                        onClick={handleApprove}
-                        disabled={isProcessing}
-                        className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black rounded-lg transition-all shadow-md shadow-emerald-200 cursor-pointer disabled:opacity-60"
-                    >
-                        {isProcessing ? 'Approving...' : `Approve & Upgrade to T${application.target_tier}`}
-                    </button>
-                </div>
-            </div>
-        </div>,
-        document.body
+                    </Button>
+                    <Button onClick={handleApprove} disabled={isProcessing} className="flex-[2]">
+                        Approve &amp; upgrade to T{application.target_tier}
+                    </Button>
+                </>
+            }
+        >
+            <p className="text-sm text-foreground leading-relaxed mb-4">
+                You are about to approve <strong>{application.user.name}</strong>'s KYC application.
+            </p>
+
+            <dl className="rounded-xl border border-success/25 bg-success/5 p-3 space-y-1.5 mb-4">
+                <Row label="User">{application.user.name}</Row>
+                <Row label="Tier upgrade">
+                    T{application.original_tier} → T{application.target_tier}
+                </Row>
+                <Row label="Documents">{application.documents.length} files</Row>
+            </dl>
+
+            {/* No mention of notifying the user: nothing in the approval path
+                sends mail, and telling a reviewer otherwise would have them
+                assume the applicant already knows. */}
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+                This upgrades the tier immediately and raises the account's balance
+                limit. The change appears in the user's account the next time they
+                open it — no message is sent, so tell them separately if they are
+                waiting on it.
+            </p>
+        </ModalShell>
+    );
+}
+
+function Row({ label, children }) {
+    return (
+        <div className="flex justify-between gap-3 text-xs">
+            <dt className="text-muted-foreground font-medium">{label}</dt>
+            <dd className="font-bold text-foreground text-right">{children}</dd>
+        </div>
     );
 }
