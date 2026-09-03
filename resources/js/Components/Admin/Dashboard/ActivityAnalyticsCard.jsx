@@ -41,12 +41,39 @@ export default function ActivityAnalyticsCard({ analytics = null }) {
     return '₱' + amount.toFixed(0);
 };
 
-        const getYAxisDomain = () => {
-    return {
-        domain: [0, 100000],
-        ticks: [0, 20000, 40000, 60000, 80000, 100000],
+    /**
+     * Scale the axis to the data instead of to a fixed ceiling.
+     *
+     * The axis was pinned to PHP 0-100,000 regardless of what was plotted, so a
+     * quiet week sat flat against the baseline and told you nothing, while a
+     * busy month would have run off the top. Here the top of the axis is the
+     * largest value rounded up to a round number, with headroom above it so the
+     * peak never touches the frame.
+     *
+     * A floor keeps an empty period from collapsing into a meaningless
+     * hairline: with no activity the chart still draws a readable grid rather
+     * than a single line at zero.
+     */
+    const getYAxisDomain = (rows) => {
+        const FLOOR = 1000;
+        const HEADROOM = 1.25;
+
+        const peak = Math.max(0, ...(rows || []).map((d) => Number(d.volume) || 0));
+        const target = Math.max(peak * HEADROOM, FLOOR);
+
+        // Round up to 1, 2 or 5 times a power of ten, so the labels land on
+        // numbers people read easily rather than on whatever the data happened
+        // to be — 4,200 becomes 6,000, not 5,250.
+        const magnitude = Math.pow(10, Math.floor(Math.log10(target)));
+        const normalised = target / magnitude;
+        const step = normalised <= 1 ? 1 : normalised <= 2 ? 2 : normalised <= 5 ? 5 : 10;
+        const max = step * magnitude;
+
+        const tickCount = 5;
+        const ticks = Array.from({ length: tickCount }, (_, i) => (max / (tickCount - 1)) * i);
+
+        return { domain: [0, max], ticks };
     };
-};
 
     // Sparse X-axis interval based sa view
     const getXAxisProps = () => {
@@ -55,35 +82,35 @@ export default function ActivityAnalyticsCard({ analytics = null }) {
         return { interval: 0 };                              // All 12 months
     };
 
-    const yAxisConfig = getYAxisDomain();
+    const yAxisConfig = getYAxisDomain(current.chart_data);
     const xAxisProps = getXAxisProps();
 
     return (
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden h-full flex flex-col">
-            <div className="px-5 py-4 border-b border-slate-100 flex items-start justify-between gap-3">
+        <div className="bg-card rounded-xl border border-border overflow-hidden h-full flex flex-col">
+            <div className="px-5 py-4 border-b border-border flex items-start justify-between gap-3">
                 <div>
-                    <h3 className="text-sm font-black text-slate-900 tracking-tight">Analytics</h3>
-                    <p className="text-[10px] text-slate-500 font-medium mt-0.5">
+                    <h3 className="text-sm font-black text-foreground tracking-tight">Analytics</h3>
+                    <p className="text-[10px] text-muted-foreground font-medium mt-0.5">
                         {current.period_label}
                     </p>
                 </div>
                 <PeriodTabs view={view} onChange={setView} />
             </div>
 
-            <div className="px-5 py-3 border-b border-slate-100 grid grid-cols-3 gap-3">
+            <div className="px-5 py-3 border-b border-border grid grid-cols-3 gap-3">
                 <div>
-                    <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Volume</p>
-                    <p className="text-base font-black text-slate-900 mt-0.5">{formatPesoShort(current.total_volume)}</p>
+                    <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Volume</p>
+                    <p className="text-base font-black text-foreground mt-0.5">{formatPesoShort(current.total_volume)}</p>
                 </div>
                 <div>
-                    <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Transactions</p>
-                    <p className="text-base font-black text-slate-900 mt-0.5">{current.transaction_count.toLocaleString()}</p>
+                    <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Transactions</p>
+                    <p className="text-base font-black text-foreground mt-0.5">{current.transaction_count.toLocaleString()}</p>
                 </div>
                 <div>
-                    <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">{current.trend_label}</p>
+                    <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">{current.trend_label}</p>
                     {current.trend ? (
                         <div className={`inline-flex items-center gap-1 mt-0.5 ${
-                            current.trend.direction === 'up' ? 'text-emerald-700' : 'text-red-700'
+                            current.trend.direction === 'up' ? 'text-success' : 'text-destructive'
                         }`}>
                             {current.trend.direction === 'up' 
                                 ? <ArrowUp size={12} strokeWidth={3} />
@@ -92,7 +119,7 @@ export default function ActivityAnalyticsCard({ analytics = null }) {
                             <span className="text-base font-black">{current.trend.value}%</span>
                         </div>
                     ) : (
-                        <p className="text-base font-black text-slate-400 mt-0.5">—</p>
+                        <p className="text-base font-black text-muted-foreground mt-0.5">—</p>
                     )}
                 </div>
             </div>
@@ -103,44 +130,45 @@ export default function ActivityAnalyticsCard({ analytics = null }) {
                         <AreaChart data={current.chart_data} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
                             <defs>
                                 <linearGradient id="colorVolume" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.4} />
-                                    <stop offset="100%" stopColor="#3b82f6" stopOpacity={0} />
+                                    <stop offset="0%" stopColor="var(--tier-2)" stopOpacity={0.4} />
+                                    <stop offset="100%" stopColor="var(--tier-2)" stopOpacity={0} />
                                 </linearGradient>
                             </defs>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                             <XAxis 
                                 dataKey="label" 
-                                tick={{ fontSize: 10, fill: '#64748b', fontWeight: 600 }}
+                                tick={{ fontSize: 10, fill: 'var(--muted-foreground)', fontWeight: 600 }}
                                 axisLine={false}
                                 tickLine={false}
                                 interval={xAxisProps.interval}
                             />
                             <YAxis 
-                                tick={{ fontSize: 9, fill: '#94a3b8' }}
+                                tick={{ fontSize: 9, fill: 'var(--muted-foreground)' }}
                                 axisLine={false}
                                 tickLine={false}
                                 tickFormatter={formatPesoShort}
                                 width={50}
-                                domain={[0, 100000]}
-                                ticks={[0, 20000, 40000, 60000, 80000, 100000]}
+                                domain={yAxisConfig.domain}
+                                ticks={yAxisConfig.ticks}
                                 interval={0}
                             />
                             <Tooltip 
                                 contentStyle={{ 
                                     fontSize: '11px', 
                                     fontWeight: 'bold',
-                                    background: '#0f172a',
+                                    background: 'var(--foreground)',
                                     border: 'none',
-                                    borderRadius: '6px',
-                                    color: 'white',
+                                    borderRadius: '8px',
                                 }}
+                                itemStyle={{ color: 'var(--background)' }}
+                                labelStyle={{ color: 'var(--background)', opacity: 0.7 }}
                                 formatter={(value) => [formatPeso(value), 'Volume']}
                                 labelFormatter={(label, payload) => payload?.[0]?.payload?.fullDate || label}
                             />
                             <Area 
                                 type="monotone" 
                                 dataKey="volume" 
-                                stroke="#3b82f6" 
+                                stroke="var(--tier-2)" 
                                 strokeWidth={2.5}
                                 fill="url(#colorVolume)" 
                             />
@@ -148,7 +176,7 @@ export default function ActivityAnalyticsCard({ analytics = null }) {
                     </ResponsiveContainer>
                 ) : (
                     <div className="h-full flex items-center justify-center">
-                        <p className="text-xs text-slate-400 font-medium">No data for this period</p>
+                        <p className="text-xs text-muted-foreground font-medium">No data for this period</p>
                     </div>
                 )}
             </div>
@@ -163,15 +191,15 @@ function PeriodTabs({ view, onChange }) {
         { id: 'yearly', label: 'Year' },
     ];
     return (
-        <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-0.5 shrink-0">
+        <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5 shrink-0">
             {tabs.map((tab) => (
                 <button
                     key={tab.id}
                     onClick={() => onChange(tab.id)}
                     className={`px-2 py-1 text-[9px] font-bold uppercase tracking-wider rounded transition-all cursor-pointer ${
                         view === tab.id
-                            ? 'bg-white text-slate-900 shadow-sm'
-                            : 'text-slate-500 hover:text-slate-700'
+                            ? 'bg-card text-foreground shadow-sm'
+                            : 'text-muted-foreground hover:text-foreground'
                     }`}
                 >
                     {tab.label}

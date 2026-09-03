@@ -1,5 +1,6 @@
 // resources/js/Components/Admin/Sidebar.jsx
 import { Link } from '@inertiajs/react';
+import YmbLockup from '../Common/YmbLockup';
 import { 
     LayoutDashboard, FileCheck, Users, Receipt, Headphones,
     Activity, Settings as SettingsIcon, Lock, Shield, X, Power,
@@ -148,53 +149,34 @@ export default function AdminSidebar({ user, pendingCounts = {}, maintenanceMode
     ];
 
     return (
-        <aside className={`fixed lg:sticky top-0 left-0 z-30 h-screen w-60 bg-slate-900 text-slate-200 border-r border-slate-800 transform transition-transform lg:transform-none flex flex-col ${
+        <aside className={`dark fixed lg:sticky top-0 left-0 z-30 h-screen w-60 bg-card text-foreground border-r border-border transform transition-transform lg:transform-none flex flex-col ${
             sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}>
          {/* TOP: Brand */}
-                <div className="p-4 pb-3 border-b border-slate-800/80">
+                <div className="p-4 pb-3 border-b border-border">
                     <div className="flex items-center justify-between">
                         <Link 
                             href="/admin" 
                             className="flex items-center hover:opacity-90 transition-opacity cursor-pointer"
                         >
-                            <div className="bg-white pl-2 pr-3 py-1.5 rounded-xl flex items-center gap-2 shadow-lg">
-                                <img 
-                                    src="/images/YMB_HeaderLogo.png" 
-                                    alt="YMB"
-                                    className="h-7 w-auto"
-                                />
-                                <p className="text-xs font-black text-blue-700 tracking-tight whitespace-nowrap">
-                                    Youth Money Bank
-                                </p>
-                            </div>
+                            {/* The old mark sat in a white pill because the PNG
+                                had a white background baked in. The inline logo
+                                needs no plate — it recolours for dark surfaces. */}
+                            <YmbLockup variant="dark" size="sm" showTagline={false} />
                         </Link>
                         
                         {/* Mobile close button */}
-                        <button onClick={onClose} className="lg:hidden text-slate-400 hover:text-white p-1 cursor-pointer">
+                        <button onClick={onClose} className="lg:hidden text-muted-foreground hover:text-foreground p-1 cursor-pointer">
                             <X size={18} />
                         </button>
                     </div>
                 </div>
 
-            {/* Role + Nickname */}
-            <div className="px-4 py-3 border-b border-slate-800/80">
-                <div className="flex items-baseline gap-1.5">
-                    <span className={`text-[9px] font-black uppercase tracking-widest ${
-                        isSuperAdmin ? 'text-amber-400' : 'text-blue-400'
-                    }`}>
-                        {roleLabel}
-                    </span>
-                    <span className="text-slate-600 text-[9px]">:</span>
-                    <span className="text-xs font-bold text-white truncate">{nickname}</span>
-                </div>
-            </div>
-
             {/* Nav sections */}
             <nav className="flex-1 overflow-y-auto p-3 space-y-4">
                 {sections.map((section) => (
                     <div key={section.title}>
-                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1.5 px-2">
+                        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1.5 px-2">
                             {section.title}
                         </p>
                         <div className="space-y-0.5">
@@ -212,15 +194,15 @@ export default function AdminSidebar({ user, pendingCounts = {}, maintenanceMode
                                     return (
                                         <div
                                             key={item.href}
-                                            className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-500 text-xs font-semibold cursor-not-allowed opacity-60"
+                                            className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-muted-foreground text-xs font-semibold cursor-not-allowed opacity-60"
                                             title={tooltipText}
                                         >
                                             <Icon size={14} strokeWidth={2} className="opacity-50" />
                                             <span className="flex-1">{item.label}</span>
                                             {comingSoon ? (
-                                                <span className="text-[8px] font-bold text-amber-500 uppercase tracking-widest">Soon</span>
+                                                <span className="text-[8px] font-bold text-accent uppercase tracking-widest">Soon</span>
                                             ) : (
-                                                <Lock size={10} strokeWidth={2.5} className="text-slate-600" />
+                                                <Lock size={10} strokeWidth={2.5} className="text-muted-foreground/60" />
                                             )}
                                         </div>
                                     );
@@ -233,14 +215,14 @@ export default function AdminSidebar({ user, pendingCounts = {}, maintenanceMode
                                         onClick={onClose}
                                         className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all text-xs ${
                                             active
-                                                ? 'bg-white text-slate-900 font-bold shadow-md'
-                                                : 'text-slate-300 hover:bg-slate-800 hover:text-white font-semibold'
+                                                ? 'bg-primary text-primary-foreground font-bold shadow-md'
+                                                : 'text-muted-foreground hover:bg-muted hover:text-foreground font-semibold'
                                         }`}
                                     >
                                         <Icon size={14} strokeWidth={active ? 2.5 : 2} />
                                         <span className="flex-1">{item.label}</span>
                                         {item.badge && (
-                                            <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full bg-red-500 text-white text-[9px] font-bold">
+                                            <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full bg-destructive text-foreground text-[9px] font-bold">
                                                 {item.badge}
                                             </span>
                                             )}
@@ -256,10 +238,10 @@ export default function AdminSidebar({ user, pendingCounts = {}, maintenanceMode
             </nav>
 
             {/* Footer */}
-            <div className="px-4 py-3 border-t border-slate-800/80">
-                <p className="text-[9px] font-medium text-slate-500 text-center leading-relaxed">
+            <div className="px-4 py-3 border-t border-border">
+                <p className="text-[9px] font-medium text-muted-foreground text-center leading-relaxed">
                     Banking Admin Console<br/>
-                    <span className="text-slate-600">v1.0 · {new Date().getFullYear()}</span>
+                    <span className="text-muted-foreground/60">v1.0 · {new Date().getFullYear()}</span>
                 </p>
             </div>
         </aside>
