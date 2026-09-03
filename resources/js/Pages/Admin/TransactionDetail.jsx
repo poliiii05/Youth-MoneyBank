@@ -42,7 +42,7 @@ export default function TransactionDetail({ auth, transaction, pendingCounts = {
                 return (
                     <Link 
                         href={fromCS ? '/admin/customer-support' : '/admin/transactions'}
-                        className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-900 transition-colors cursor-pointer"
+                        className="inline-flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                     >
                         <ChevronLeft size={14} strokeWidth={2.5} />
                         {fromCS ? 'Back to Customer Support' : 'Back to Transactions'}
@@ -52,15 +52,15 @@ export default function TransactionDetail({ auth, transaction, pendingCounts = {
 
                 {/* Flagged banner */}
                 {transaction.is_flagged && (
-                    <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                    <div className="bg-destructive/10 border border-destructive/25 rounded-xl p-4">
                         <div className="flex items-start gap-3">
-                            <Flag size={20} className="text-red-600 shrink-0 mt-0.5" strokeWidth={2.5} />
+                            <Flag size={20} className="text-destructive shrink-0 mt-0.5" strokeWidth={2.5} />
                             <div className="flex-1">
                                 <p className="text-sm font-black text-red-900 mb-1">Flagged for Review</p>
-                                <p className="text-xs text-red-800">
+                                <p className="text-xs text-destructive">
                                     <span className="font-bold">Reason:</span> {transaction.flag_reason}
                                 </p>
-                                <p className="text-[10px] text-red-700 font-medium mt-1">
+                                <p className="text-[10px] text-destructive font-medium mt-1">
                                     Flagged by {transaction.flagger?.name || 'admin'} on {transaction.flagged_at}
                                 </p>
                             </div>
@@ -70,16 +70,16 @@ export default function TransactionDetail({ auth, transaction, pendingCounts = {
 
                 {/* Resolution status banner */}
                 {transaction.is_resolved && (
-                    <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+                    <div className="bg-success/10 border border-success/25 rounded-xl p-4">
                         <div className="flex items-start gap-3">
-                            <ClipboardCheck size={20} className="text-emerald-600 shrink-0 mt-0.5" strokeWidth={2.5} />
+                            <ClipboardCheck size={20} className="text-success shrink-0 mt-0.5" strokeWidth={2.5} />
                             <div className="flex-1">
                                 <div className="flex items-center gap-2 flex-wrap">
                                     <p className="text-sm font-black text-emerald-900">Resolved</p>
                                     <ResolutionTypeBadge type={transaction.resolution_type} />
                                 </div>
-                                <p className="text-xs text-emerald-800 mt-1">{transaction.resolution_notes}</p>
-                                <p className="text-[10px] text-emerald-700 font-medium mt-2">
+                                <p className="text-xs text-success mt-1">{transaction.resolution_notes}</p>
+                                <p className="text-[10px] text-success font-medium mt-2">
                                     Resolved by {transaction.resolver?.name || 'admin'} on {transaction.resolved_at}
                                 </p>
                             </div>
@@ -89,13 +89,13 @@ export default function TransactionDetail({ auth, transaction, pendingCounts = {
 
                 {/* Transaction header */}
               {/* Transaction header (compact) */}
-                <div className="bg-white rounded-xl border border-slate-200 p-5">
+                <div className="bg-card rounded-xl border border-border p-5">
                     <div className="flex items-start justify-between gap-4 flex-wrap">
                         <div className="flex items-center gap-3">
                             <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${
                                 transaction.is_positive 
-                                    ? 'bg-emerald-100 text-emerald-700' 
-                                    : 'bg-red-100 text-red-700'
+                                    ? 'bg-success/15 text-success' 
+                                    : 'bg-destructive/15 text-destructive'
                             }`}>
                                 {transaction.is_positive 
                                     ? <ArrowDown size={28} strokeWidth={2.5} />
@@ -103,17 +103,17 @@ export default function TransactionDetail({ auth, transaction, pendingCounts = {
                                 }
                             </div>
                             <div>
-                                <h1 className="text-lg font-black text-slate-900 tracking-tight">{transaction.title}</h1>
+                                <h1 className="text-lg font-black text-foreground tracking-tight">{transaction.title}</h1>
                                 <div className="flex items-center gap-2 mt-1">
-                                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{transaction.type}</span>
-                                    <span className="text-slate-300">·</span>
-                                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">#{transaction.public_reference_id}</span>
+                                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{transaction.type}</span>
+                                    <span className="text-muted-foreground/50">·</span>
+                                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">#{transaction.public_reference_id}</span>
                                 </div>
                             </div>
                         </div>
                         <div className="text-right">
                             <p className={`text-3xl font-black tracking-tight ${
-                                transaction.is_positive ? 'text-emerald-700' : 'text-red-700'
+                                transaction.is_positive ? 'text-success' : 'text-destructive'
                             }`}>
                                 {transaction.is_positive ? '+' : '-'}{formatPeso(transaction.amount)}
                             </p>
@@ -126,9 +126,9 @@ export default function TransactionDetail({ auth, transaction, pendingCounts = {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                     
                     {/* User card */}
-                    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-                        <div className="px-5 py-3 border-b border-slate-100">
-                            <h3 className="text-sm font-black text-slate-900 tracking-tight">Account Holder</h3>
+                    <div className="bg-card rounded-xl border border-border overflow-hidden">
+                        <div className="px-5 py-3 border-b border-border">
+                            <h3 className="text-sm font-black text-foreground tracking-tight">Account Holder</h3>
                         </div>
                         <div className="p-5">
                             <div className="flex items-center gap-3 mb-4">
@@ -138,11 +138,11 @@ export default function TransactionDetail({ auth, transaction, pendingCounts = {
                                     size="lg"
                                 />
                                 <div className="min-w-0 flex-1">
-                                    <p className="text-sm font-bold text-slate-900 truncate">{transaction.user.name}</p>
-                                    <p className="text-[11px] text-slate-500 font-medium truncate">{transaction.user.email}</p>
+                                    <p className="text-sm font-bold text-foreground truncate">{transaction.user.name}</p>
+                                    <p className="text-[11px] text-muted-foreground font-medium truncate">{transaction.user.email}</p>
                                 </div>
                             </div>
-                            <div className="space-y-2 pt-3 border-t border-slate-100">
+                            <div className="space-y-2 pt-3 border-t border-border">
                                 <InfoRow icon={Hash} label="Account #" value={transaction.user.account_number} />
                                 <InfoRow icon={UserIcon} label="KYC Tier" value={`Tier ${transaction.user.kyc_tier}`} />
                             </div>
@@ -150,7 +150,7 @@ export default function TransactionDetail({ auth, transaction, pendingCounts = {
                             {transaction.user.id && (
                                 <Link
                                     href={`/admin/users/${transaction.user.id}`}
-                                    className="mt-4 flex items-center justify-center gap-1.5 px-3 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-black rounded-lg transition-all cursor-pointer"
+                                    className="mt-4 flex items-center justify-center gap-1.5 px-3 py-2 bg-primary hover:bg-primary text-white text-xs font-black rounded-lg transition-all cursor-pointer"
                                 >
                                     View User Profile
                                 </Link>
@@ -159,9 +159,9 @@ export default function TransactionDetail({ auth, transaction, pendingCounts = {
                     </div>
 
                     {/* Transaction details */}
-                    <div className="lg:col-span-2 bg-white rounded-xl border border-slate-200 overflow-hidden">
-                        <div className="px-5 py-3 border-b border-slate-100">
-                            <h3 className="text-sm font-black text-slate-900 tracking-tight">Transaction Details</h3>
+                    <div className="lg:col-span-2 bg-card rounded-xl border border-border overflow-hidden">
+                        <div className="px-5 py-3 border-b border-border">
+                            <h3 className="text-sm font-black text-foreground tracking-tight">Transaction Details</h3>
                         </div>
                         <div className="p-5 grid grid-cols-2 gap-x-5 gap-y-3">
                             <InfoRow icon={Calendar} label="Created" value={transaction.created_formatted} />
@@ -189,24 +189,24 @@ export default function TransactionDetail({ auth, transaction, pendingCounts = {
 
                 {/* Linked transactions */}
                 {(transaction.parent_transaction || (transaction.correction_transactions && transaction.correction_transactions.length > 0)) && (
-                    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-                        <div className="px-5 py-3 border-b border-slate-100">
-                            <h3 className="text-sm font-black text-slate-900 tracking-tight">Linked Transactions</h3>
+                    <div className="bg-card rounded-xl border border-border overflow-hidden">
+                        <div className="px-5 py-3 border-b border-border">
+                            <h3 className="text-sm font-black text-foreground tracking-tight">Linked Transactions</h3>
                         </div>
                         <div className="p-5 space-y-2">
                             {transaction.parent_transaction && (
                                 <Link
                                     href={`/admin/transactions/${transaction.parent_transaction.id}`}
-                                    className="flex items-center justify-between p-3 border border-slate-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-all cursor-pointer"
+                                    className="flex items-center justify-between p-3 border border-border rounded-lg hover:border-primary/40 hover:bg-primary/10 transition-all cursor-pointer"
                                 >
                                     <div className="flex items-center gap-2">
-                                        <Link2 size={14} className="text-slate-400" strokeWidth={2.5} />
+                                        <Link2 size={14} className="text-muted-foreground" strokeWidth={2.5} />
                                         <div>
-                                            <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Correction For</p>
-                                            <p className="text-xs font-bold text-slate-900">{transaction.parent_transaction.title}</p>
+                                            <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Correction For</p>
+                                            <p className="text-xs font-bold text-foreground">{transaction.parent_transaction.title}</p>
                                         </div>
                                     </div>
-                                    <span className="text-[10px] font-black text-slate-700">#{transaction.parent_transaction.public_reference_id}</span>
+                                    <span className="text-[10px] font-black text-foreground">#{transaction.parent_transaction.public_reference_id}</span>
                                 </Link>
                             )}
                             
@@ -214,21 +214,21 @@ export default function TransactionDetail({ auth, transaction, pendingCounts = {
                                 <Link
                                     key={corr.id}
                                     href={`/admin/transactions/${corr.id}`}
-                                    className="flex items-center justify-between p-3 border border-emerald-200 bg-emerald-50/30 rounded-lg hover:bg-emerald-50 transition-all cursor-pointer"
+                                    className="flex items-center justify-between p-3 border border-success/25 bg-success/10/30 rounded-lg hover:bg-success/10 transition-all cursor-pointer"
                                 >
                                     <div className="flex items-center gap-2">
-                                        <Banknote size={14} className="text-emerald-600" strokeWidth={2.5} />
+                                        <Banknote size={14} className="text-success" strokeWidth={2.5} />
                                         <div>
-                                            <p className="text-[9px] font-bold text-emerald-700 uppercase tracking-widest">Manual Credit Applied</p>
-                                            <p className="text-xs font-bold text-slate-900">
+                                            <p className="text-[9px] font-bold text-success uppercase tracking-widest">Manual Credit Applied</p>
+                                            <p className="text-xs font-bold text-foreground">
                                                 ₱{Number(corr.amount).toLocaleString('en-PH', { minimumFractionDigits: 2 })}
                                             </p>
-                                            <p className="text-[10px] text-slate-500 font-medium">Proof: {corr.correction_proof}</p>
+                                            <p className="text-[10px] text-muted-foreground font-medium">Proof: {corr.correction_proof}</p>
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-[10px] font-black text-slate-700">#{corr.public_reference_id}</p>
-                                        <p className="text-[9px] text-slate-500 font-medium">{corr.created_relative}</p>
+                                        <p className="text-[10px] font-black text-foreground">#{corr.public_reference_id}</p>
+                                        <p className="text-[9px] text-muted-foreground font-medium">{corr.created_relative}</p>
                                     </div>
                                 </Link>
                             ))}
@@ -237,11 +237,11 @@ export default function TransactionDetail({ auth, transaction, pendingCounts = {
                 )}
 
                 {/* Combined Actions Panel — both CS + Admin actions */}
-                <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-                    <div className="px-5 py-3 border-b border-slate-100 flex items-center justify-between">
+                <div className="bg-card rounded-xl border border-border overflow-hidden">
+                    <div className="px-5 py-3 border-b border-border flex items-center justify-between">
                         <div>
-                            <h3 className="text-sm font-black text-slate-900 tracking-tight">Actions</h3>
-                            <p className="text-[10px] text-slate-500 font-medium mt-0.5">
+                            <h3 className="text-sm font-black text-foreground tracking-tight">Actions</h3>
+                            <p className="text-[10px] text-muted-foreground font-medium mt-0.5">
                                 {transaction.is_resolved 
                                     ? 'Transaction has been resolved' 
                                     : 'Resolve, refund, or flag this transaction'
@@ -250,12 +250,12 @@ export default function TransactionDetail({ auth, transaction, pendingCounts = {
                         </div>
                         <div className={`flex items-center gap-1 px-2 py-1 border rounded ${
                             transaction.is_resolved 
-                                ? 'bg-emerald-50 border-emerald-200' 
-                                : 'bg-blue-50 border-blue-200'
+                                ? 'bg-success/10 border-success/25' 
+                                : 'bg-primary/10 border-primary/25'
                         }`}>
-                            <FileText size={11} className={transaction.is_resolved ? 'text-emerald-700' : 'text-blue-700'} strokeWidth={2.5} />
+                            <FileText size={11} className={transaction.is_resolved ? 'text-success' : 'text-primary'} strokeWidth={2.5} />
                             <span className={`text-[9px] font-bold uppercase tracking-widest ${
-                                transaction.is_resolved ? 'text-emerald-700' : 'text-blue-700'
+                                transaction.is_resolved ? 'text-success' : 'text-primary'
                             }`}>
                                 {transaction.is_resolved ? 'Resolved' : 'Open'}
                             </span>
@@ -267,7 +267,7 @@ export default function TransactionDetail({ auth, transaction, pendingCounts = {
                                 {canManualCredit && (
                                     <button
                                         onClick={() => setCreditModalOpen(true)}
-                                        className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black rounded-lg shadow-md shadow-emerald-200 transition-all cursor-pointer"
+                                        className="flex items-center gap-2 px-4 py-2.5 bg-success hover:bg-success/90 text-white text-xs font-black rounded-lg shadow-md shadow-success/25 transition-all cursor-pointer"
                                     >
                                         <Banknote size={14} strokeWidth={2.5} />
                                         Manual Credit
@@ -275,7 +275,7 @@ export default function TransactionDetail({ auth, transaction, pendingCounts = {
                                 )}
                                 <button
                                     onClick={() => setResolveModalOpen(true)}
-                                    className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black rounded-lg shadow-md shadow-blue-200 transition-all cursor-pointer"
+                                    className="flex items-center gap-2 px-4 py-2.5 bg-primary hover:bg-primary/90 text-white text-xs font-black rounded-lg shadow-md shadow-primary/25 transition-all cursor-pointer"
                                 >
                                     <ClipboardCheck size={14} strokeWidth={2.5} />
                                     Mark Resolved
@@ -292,8 +292,8 @@ export default function TransactionDetail({ auth, transaction, pendingCounts = {
                                 disabled={!isSuperAdmin}
                                 className={`flex items-center gap-2 px-4 py-2.5 rounded-lg transition-all cursor-pointer disabled:cursor-not-allowed disabled:opacity-40 font-bold text-xs ${
                                     transaction.is_flagged
-                                        ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-200 disabled:hover:bg-emerald-600'
-                                        : 'bg-red-600 hover:bg-red-700 text-white shadow-md shadow-red-200 disabled:hover:bg-red-600'
+                                        ? 'bg-success hover:bg-success/90 text-white shadow-md shadow-success/25 disabled:hover:bg-success'
+                                        : 'bg-destructive hover:bg-destructive/90 text-white shadow-md shadow-destructive/25 disabled:hover:bg-destructive'
                                 }`}
                                 title={!isSuperAdmin ? 'Super Admin only' : ''}
                             >
@@ -332,8 +332,8 @@ export default function TransactionDetail({ auth, transaction, pendingCounts = {
 function Stat({ label, value }) {
     return (
         <div>
-            <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1">{label}</p>
-            <p className="text-xs font-bold text-slate-900 truncate">{value}</p>
+            <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mb-1">{label}</p>
+            <p className="text-xs font-bold text-foreground truncate">{value}</p>
         </div>
     );
 }
@@ -341,10 +341,10 @@ function Stat({ label, value }) {
 function InfoRow({ icon: Icon, label, value }) {
     return (
         <div className="flex items-start gap-2.5">
-            <Icon size={14} className="text-slate-400 mt-0.5 shrink-0" strokeWidth={2} />
+            <Icon size={14} className="text-muted-foreground mt-0.5 shrink-0" strokeWidth={2} />
             <div className="min-w-0 flex-1">
-                <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-0.5">{label}</p>
-                <p className="text-xs font-bold text-slate-900 break-words">{value}</p>
+                <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">{label}</p>
+                <p className="text-xs font-bold text-foreground break-words">{value}</p>
             </div>
         </div>
     );
@@ -352,13 +352,13 @@ function InfoRow({ icon: Icon, label, value }) {
 
 function StatusBadge({ status }) {
     const styles = {
-        completed: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-        success: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-        failed: 'bg-red-50 text-red-700 border-red-200',
-        pending: 'bg-amber-50 text-amber-700 border-amber-200',
+        completed: 'bg-success/10 text-success border-success/25',
+        success: 'bg-success/10 text-success border-success/25',
+        failed: 'bg-destructive/10 text-destructive border-destructive/25',
+        pending: 'bg-accent/10 text-accent-foreground border-accent/30',
     };
     return (
-        <span className={`inline-block mt-1 text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded border ${styles[status] || 'bg-slate-50 text-slate-700 border-slate-200'}`}>
+        <span className={`inline-block mt-1 text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded border ${styles[status] || 'bg-muted text-foreground border-border'}`}>
             {status}
         </span>
     );
@@ -366,11 +366,11 @@ function StatusBadge({ status }) {
 
 function ResolutionTypeBadge({ type }) {
     const styles = {
-        refunded: 'bg-amber-50 text-amber-700 border-amber-200',
-        reprocessed: 'bg-blue-50 text-blue-700 border-blue-200',
-        cancelled: 'bg-red-50 text-red-700 border-red-200',
-        verified: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-        no_action: 'bg-slate-50 text-slate-700 border-slate-200',
+        refunded: 'bg-accent/10 text-accent-foreground border-accent/30',
+        reprocessed: 'bg-primary/10 text-primary border-primary/25',
+        cancelled: 'bg-destructive/10 text-destructive border-destructive/25',
+        verified: 'bg-success/10 text-success border-success/25',
+        no_action: 'bg-muted text-foreground border-border',
     };
     const labels = {
         refunded: 'Refunded',
@@ -394,7 +394,7 @@ function ReopenButton({ transactionId }) {
     return (
         <button
             onClick={handleReopen}
-            className="flex items-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-black rounded-lg shadow-md shadow-amber-200 transition-all cursor-pointer"
+            className="flex items-center gap-2 px-4 py-2.5 bg-accent hover:bg-accent/90 text-white text-xs font-black rounded-lg shadow-md shadow-accent/25 transition-all cursor-pointer"
         >
             <RefreshCcw size={14} strokeWidth={2.5} />
             Reopen Transaction

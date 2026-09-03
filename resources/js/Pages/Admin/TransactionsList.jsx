@@ -3,6 +3,12 @@ import { Head, Link, router } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import AdminLayout from '../../Components/Layouts/AdminLayout';
 import Avatar from '../../Components/Admin/Avatar';
+// Shared with the dashboard, rather than a second copy that drifts out of step.
+import StatCard from '../../Components/Admin/StatCard';
+import { Card } from '@/Components/ui/card';
+import { Button } from '@/Components/ui/button';
+import { Input } from '@/Components/ui/input';
+import { cn } from '@/lib/utils';
 import { 
     Search, ChevronLeft, ChevronRight, Receipt, 
     ArrowUp, ArrowDown, Flag, CheckCircle2, XCircle, Clock,
@@ -78,19 +84,19 @@ export default function TransactionsList({
                         label="Total Volume" 
                         value={formatPesoShort(stats.total_volume || 0)} 
                         icon={TrendingUp}
-                        color="blue"
+                        color="neutral"
                     />
                     <StatCard 
                         label="Total Transactions" 
                         value={(stats.total_count || 0).toLocaleString()} 
                         icon={Receipt}
-                        color="slate"
+                        color="neutral"
                     />
                     <StatCard 
                         label="Flagged" 
                         value={(stats.flagged_count || 0).toLocaleString()} 
                         icon={Flag}
-                        color="red"
+                        color="destructive"
                     />
                     <StatCard 
                         label="Failed" 
@@ -100,9 +106,9 @@ export default function TransactionsList({
                     />
                 </div>
 
-                <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                <div className="bg-card rounded-xl border border-border overflow-hidden">
                     {/* Filters bar */}
-                    <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4 border-b border-slate-100">
+                    <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4 border-b border-border">
                         <div className="flex items-center gap-3 flex-wrap">
                             <StatusFilterTabs current={filters.status || 'all'} counts={counts} onChange={setStatusFilter} />
                             <FlagFilterTabs current={filters.flagged || 'all'} flaggedCount={counts.flagged || 0} onChange={setFlagFilter} />
@@ -111,20 +117,20 @@ export default function TransactionsList({
                         {/* Search */}
                         <div className="flex items-center gap-2">
                             <div className="relative">
-                                <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                                <input
+                                <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                                <Input
                                     type="text"
                                     value={searchInput}
                                     onChange={(e) => setSearchInput(e.target.value)}
                                     placeholder="Search user, email, or reference..."
-                                    className="pl-8 pr-3 py-1.5 text-xs font-medium border border-slate-200 rounded-lg focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-50 transition-all w-72"
+                                    className="pl-8 h-8 text-xs w-72 bg-muted/50"
                                 />
                             </div>
                             {searchInput && (
                                 <button
                                     type="button"
                                     onClick={() => setSearchInput('')}
-                                    className="px-2 py-1.5 text-[10px] font-bold text-slate-500 hover:text-slate-900 transition-colors cursor-pointer"
+                                    className="px-2 py-1.5 text-[10px] font-bold text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                                 >
                                     Clear
                                 </button>
@@ -135,18 +141,18 @@ export default function TransactionsList({
                     {transactions.length > 0 ? (
                         <>
                             {/* Table header */}
-                            <div className="hidden sm:grid grid-cols-12 items-center gap-3 px-5 py-2.5 bg-slate-50 border-b border-slate-200">
+                            <div className="hidden sm:grid grid-cols-12 items-center gap-3 px-5 py-2.5 bg-muted border-b border-border">
                                 <div className="col-span-5">
-                                    <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">User & Transaction</p>
+                                    <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">User & Transaction</p>
                                 </div>
                                 <div className="col-span-3 text-center">
-                                    <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Amount</p>
+                                    <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Amount</p>
                                 </div>
                                 <div className="hidden md:block col-span-2 text-center">
-                                    <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Date</p>
+                                    <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Date</p>
                                 </div>
                                 <div className="col-span-2 text-center">
-                                    <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Status</p>
+                                    <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Status</p>
                                 </div>
                             </div>
                             
@@ -158,25 +164,25 @@ export default function TransactionsList({
                             </div>
 
                             {/* Pagination */}
-                            <div className="px-5 py-3 border-t border-slate-100 flex items-center justify-between gap-3">
-                                <p className="text-[11px] text-slate-500 font-medium">
-                                    Showing <span className="font-bold text-slate-900">{pagination.from}-{pagination.to}</span> of <span className="font-bold text-slate-900">{pagination.total_count}</span>
+                            <div className="px-5 py-3 border-t border-border flex items-center justify-between gap-3">
+                                <p className="text-[11px] text-muted-foreground font-medium">
+                                    Showing <span className="font-bold text-foreground">{pagination.from}-{pagination.to}</span> of <span className="font-bold text-foreground">{pagination.total_count}</span>
                                 </p>
                                 <div className="flex items-center gap-1">
                                     <button
                                         onClick={() => goToPage(pagination.current_page - 1)}
                                         disabled={pagination.current_page <= 1}
-                                        className="p-1.5 rounded border border-slate-200 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                                        className="p-1.5 rounded border border-border hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
                                     >
                                         <ChevronLeft size={12} />
                                     </button>
-                                    <span className="text-[11px] font-bold text-slate-700 px-2">
+                                    <span className="text-[11px] font-bold text-foreground px-2">
                                         Page {pagination.current_page} of {pagination.total_pages}
                                     </span>
                                     <button
                                         onClick={() => goToPage(pagination.current_page + 1)}
                                         disabled={pagination.current_page >= pagination.total_pages}
-                                        className="p-1.5 rounded border border-slate-200 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                                        className="p-1.5 rounded border border-border hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
                                     >
                                         <ChevronRight size={12} />
                                     </button>
@@ -185,11 +191,11 @@ export default function TransactionsList({
                         </>
                     ) : (
                         <div className="p-16 text-center">
-                            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <Receipt size={28} className="text-slate-400" strokeWidth={1.5} />
+                            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                                <Receipt size={28} className="text-muted-foreground" strokeWidth={1.5} />
                             </div>
-                            <p className="text-sm font-bold text-slate-700 mb-1">No transactions found</p>
-                            <p className="text-[11px] text-slate-500 font-medium max-w-xs mx-auto">
+                            <p className="text-sm font-bold text-foreground mb-1">No transactions found</p>
+                            <p className="text-[11px] text-muted-foreground font-medium max-w-xs mx-auto">
                                 {filters.search 
                                     ? `No matches for "${filters.search}"`
                                     : 'Transactions will appear here.'
@@ -203,31 +209,7 @@ export default function TransactionsList({
     );
 }
 
-function StatCard({ label, value, icon: Icon, color }) {
-    const colorStyles = {
-        blue: 'bg-blue-50 border-blue-200',
-        slate: 'bg-slate-50 border-slate-200',
-        red: 'bg-red-50 border-red-200',
-        amber: 'bg-amber-50 border-amber-200',
-    };
-    const iconStyles = {
-        blue: 'bg-blue-100 text-blue-700',
-        slate: 'bg-slate-100 text-slate-700',
-        red: 'bg-red-100 text-red-700',
-        amber: 'bg-amber-100 text-amber-700',
-    };
-    return (
-        <div className={`rounded-xl border p-4 ${colorStyles[color]}`}>
-            <div className="flex items-center justify-between mb-2">
-                <p className="text-[9px] font-bold text-slate-700 uppercase tracking-widest">{label}</p>
-                <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${iconStyles[color]}`}>
-                    <Icon size={14} strokeWidth={2.5} />
-                </div>
-            </div>
-            <p className="text-xl font-black text-slate-900 tracking-tight">{value}</p>
-        </div>
-    );
-}
+
 
 function StatusFilterTabs({ current, counts, onChange }) {
     const tabs = [
@@ -237,15 +219,15 @@ function StatusFilterTabs({ current, counts, onChange }) {
         { id: 'pending', label: 'Pending' },
     ];
     return (
-        <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-0.5">
+        <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5">
             {tabs.map((tab) => (
                 <button
                     key={tab.id}
                     onClick={() => onChange(tab.id)}
                     className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded transition-all cursor-pointer ${
                         current === tab.id
-                            ? 'bg-white text-slate-900 shadow-sm'
-                            : 'text-slate-500 hover:text-slate-700'
+                            ? 'bg-card text-foreground shadow-sm'
+                            : 'text-muted-foreground hover:text-foreground'
                     }`}
                 >
                     {tab.label}
@@ -262,7 +244,7 @@ function FlagFilterTabs({ current, flaggedCount, onChange }) {
         { id: 'clean', label: 'Clean' },
     ];
     return (
-        <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-0.5">
+        <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5">
             {tabs.map((tab) => (
                 <button
                     key={tab.id}
@@ -270,15 +252,15 @@ function FlagFilterTabs({ current, flaggedCount, onChange }) {
                     className={`flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded transition-all cursor-pointer ${
                         current === tab.id
                             ? tab.id === 'flagged' 
-                                ? 'bg-red-500 text-white shadow-sm shadow-red-200'
-                                : 'bg-white text-slate-900 shadow-sm'
-                            : 'text-slate-500 hover:text-slate-700'
+                                ? 'bg-destructive/100 text-white shadow-sm shadow-red-200'
+                                : 'bg-card text-foreground shadow-sm'
+                            : 'text-muted-foreground hover:text-foreground'
                     }`}
                 >
                     {tab.id === 'flagged' && <Flag size={10} strokeWidth={2.5} />}
                     {tab.label}
                     {tab.count > 0 && current !== tab.id && (
-                        <span className="text-[9px] font-black px-1 rounded-full bg-red-200 text-red-700">
+                        <span className="text-[9px] font-black px-1 rounded-full bg-red-200 text-destructive">
                             {tab.count}
                         </span>
                     )}
@@ -292,7 +274,7 @@ function TransactionRow({ transaction, formatPeso }) {
     return (
         <Link
             href={`/admin/transactions/${transaction.id}`}
-            className="grid grid-cols-12 items-center gap-3 px-5 py-3 hover:bg-slate-50 transition-colors cursor-pointer border-b border-slate-100 last:border-b-0"
+            className="grid grid-cols-12 items-center gap-3 px-5 py-3 hover:bg-muted transition-colors cursor-pointer border-b border-border last:border-b-0"
         >
             {/* Column 1: User + transaction (5 cols) */}
             <div className="col-span-12 sm:col-span-5 flex items-center gap-3 min-w-0">
@@ -303,38 +285,38 @@ function TransactionRow({ transaction, formatPeso }) {
                 />
                 <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
-                        <p className="text-xs font-bold text-slate-900 truncate">{transaction.user.name}</p>
+                        <p className="text-xs font-bold text-foreground truncate">{transaction.user.name}</p>
                         {transaction.is_flagged && (
-                            <span className="inline-flex items-center px-1 py-0.5 bg-red-50 border border-red-200 rounded">
-                                <Flag size={8} className="text-red-600" strokeWidth={2.5} />
+                            <span className="inline-flex items-center px-1 py-0.5 bg-destructive/10 border border-destructive/25 rounded">
+                                <Flag size={8} className="text-destructive" strokeWidth={2.5} />
                             </span>
                         )}
                     </div>
-                    <p className="text-[10px] text-slate-500 font-medium truncate">{transaction.title}</p>
+                    <p className="text-[10px] text-muted-foreground font-medium truncate">{transaction.title}</p>
                 </div>
             </div>
 
             {/* Column 2: Amount (3 cols) */}
             <div className="hidden sm:flex flex-col items-center col-span-3">
                 <p className={`text-sm font-black ${
-                    transaction.is_positive ? 'text-emerald-700' : 'text-red-700'
+                    transaction.is_positive ? 'text-success' : 'text-destructive'
                 }`}>
                     {transaction.is_positive ? '+' : '-'}{formatPeso(transaction.amount)}
                 </p>
-                <p className="text-[9px] text-slate-500 font-medium uppercase tracking-widest">
+                <p className="text-[9px] text-muted-foreground font-medium uppercase tracking-widest">
                     {transaction.type}
                 </p>
             </div>
 
             {/* Column 3: Date (2 cols) */}
             <div className="hidden md:flex flex-col items-center col-span-2">
-                <p className="text-[11px] font-bold text-slate-700">{transaction.created_relative}</p>
+                <p className="text-[11px] font-bold text-foreground">{transaction.created_relative}</p>
             </div>
 
             {/* Column 4: Status (2 cols) */}
             <div className="col-span-12 sm:col-span-2 flex justify-center items-center gap-1.5">
                 <StatusBadge status={transaction.status} />
-                <ChevronRight size={14} className="text-slate-300 shrink-0" />
+                <ChevronRight size={14} className="text-muted-foreground/50 shrink-0" />
             </div>
         </Link>
     );
@@ -342,12 +324,12 @@ function TransactionRow({ transaction, formatPeso }) {
 
 function StatusBadge({ status }) {
     const styles = {
-        completed: { color: 'bg-emerald-50 text-emerald-700 border-emerald-200', icon: CheckCircle2, label: 'Completed' },
-        success: { color: 'bg-emerald-50 text-emerald-700 border-emerald-200', icon: CheckCircle2, label: 'Success' },
-        failed: { color: 'bg-red-50 text-red-700 border-red-200', icon: XCircle, label: 'Failed' },
-        pending: { color: 'bg-amber-50 text-amber-700 border-amber-200', icon: Clock, label: 'Pending' },
+        completed: { color: 'bg-success/10 text-success border-success/25', icon: CheckCircle2, label: 'Completed' },
+        success: { color: 'bg-success/10 text-success border-success/25', icon: CheckCircle2, label: 'Success' },
+        failed: { color: 'bg-destructive/10 text-destructive border-destructive/25', icon: XCircle, label: 'Failed' },
+        pending: { color: 'bg-accent/10 text-accent-foreground border-accent/30', icon: Clock, label: 'Pending' },
     };
-    const style = styles[status] || { color: 'bg-slate-50 text-slate-500 border-slate-200', icon: AlertTriangle, label: status };
+    const style = styles[status] || { color: 'bg-muted text-muted-foreground border-border', icon: AlertTriangle, label: status };
     const Icon = style.icon;
     return (
         <span className={`inline-flex items-center gap-1 px-2 py-1 text-[9px] font-bold uppercase tracking-widest rounded border ${style.color}`}>
