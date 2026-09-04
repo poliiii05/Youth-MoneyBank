@@ -5,7 +5,6 @@ import AdminSidebar from '../Admin/Sidebar';
 import SignOutModal from '../Modals/SignOutModal';
 import { useState, useEffect } from 'react';
 import { usePage } from '@inertiajs/react';
-import { Toaster } from 'react-hot-toast';
 import { cn } from '@/lib/utils';
 
 export default function AdminLayout({ user, header = 'Dashboard', actions = null, pendingCounts = {}, children }) {
@@ -205,7 +204,6 @@ export default function AdminLayout({ user, header = 'Dashboard', actions = null
                     {children}
                 </main>
 
-                <Toaster position="top-right" />
             </div>
 
             <SignOutModal
