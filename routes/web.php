@@ -267,6 +267,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'not.suspended', 'ro
         Route::post('/{id}/reply', [\App\Http\Controllers\Admin\CustomerSupportTicketsController::class, 'reply'])
             ->whereNumber('id')
             ->name('reply');
+
+        Route::post('/{id}/priority', [\App\Http\Controllers\Admin\CustomerSupportTicketsController::class, 'setPriority'])
+            ->name('priority');
+
         
         Route::post('/{id}/resolve', [\App\Http\Controllers\Admin\CustomerSupportTicketsController::class, 'resolve'])
             ->whereNumber('id')

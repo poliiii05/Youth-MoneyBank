@@ -44,15 +44,15 @@ export default function AdminCustomerSupportTickets({ auth, tickets = [], counts
             <Head title="Customer Support | Admin" />
 
             {/* Hero card */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-5 mb-4">
+            <div className="bg-card rounded-2xl border border-border p-5 mb-4">
                 <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                            <Headphones size={22} className="text-blue-700" strokeWidth={2.5} />
+                        <div className="w-12 h-12 bg-primary/15 rounded-xl flex items-center justify-center">
+                            <Headphones size={22} className="text-primary" strokeWidth={2.5} />
                         </div>
                         <div>
-                            <h2 className="text-base font-black text-slate-900">Customer Support Queue</h2>
-                            <p className="text-[11px] text-slate-500 font-medium">
+                            <h2 className="text-base font-black text-foreground">Customer Support Queue</h2>
+                            <p className="text-[11px] text-muted-foreground font-medium">
                                 {counts.open || 0} active conversations · {counts.urgent || 0} urgent · {counts.unassigned || 0} unassigned
                             </p>
                         </div>
@@ -61,9 +61,9 @@ export default function AdminCustomerSupportTickets({ auth, tickets = [], counts
             </div>
 
             {/* Filters */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-3 mb-4 flex flex-wrap items-center gap-2">
+            <div className="bg-card rounded-2xl border border-border p-3 mb-4 flex flex-wrap items-center gap-2">
                 {/* Status tabs */}
-                <div className="flex items-center gap-1 bg-slate-50 rounded-xl p-1">
+                <div className="flex items-center gap-1 bg-muted rounded-xl p-1">
                     <FilterTab label="Open" count={counts.open} active={activeStatus === 'open'} onClick={() => handleStatusChange('open')} />
                     <FilterTab label="Resolved" count={counts.resolved} active={activeStatus === 'resolved'} onClick={() => handleStatusChange('resolved')} />
                     <FilterTab label="Closed" count={counts.closed} active={activeStatus === 'closed'} onClick={() => handleStatusChange('closed')} />
@@ -71,7 +71,7 @@ export default function AdminCustomerSupportTickets({ auth, tickets = [], counts
                 </div>
 
                 {/* Priority chips */}
-                <div className="flex items-center gap-1 ml-2 border-l border-slate-200 pl-2">
+                <div className="flex items-center gap-1 ml-2 border-l border-border pl-2">
                     <PriorityChip label="Urgent" priority="urgent" active={activePriority === 'urgent'} onClick={() => handlePriorityChange('urgent')} />
                     <PriorityChip label="High" priority="high" active={activePriority === 'high'} onClick={() => handlePriorityChange('high')} />
                 </div>
@@ -79,13 +79,13 @@ export default function AdminCustomerSupportTickets({ auth, tickets = [], counts
                 {/* Search */}
                 <form onSubmit={handleSearch} className="ml-auto flex items-center gap-2 flex-1 max-w-md">
                     <div className="relative flex-1">
-                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" strokeWidth={2.5} />
+                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" strokeWidth={2.5} />
                         <input
                             type="text"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Search by reference, subject, or user..."
-                            className="w-full pl-9 pr-3 py-2 text-xs font-medium border border-slate-200 rounded-xl focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-50"
+                            className="w-full pl-9 pr-3 py-2 text-xs font-medium border border-border rounded-xl focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
                         />
                     </div>
                 </form>
@@ -110,13 +110,13 @@ function FilterTab({ label, count, active, onClick }) {
         <button
             onClick={onClick}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-black transition-all cursor-pointer ${
-                active ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                active ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
             }`}
         >
             {label}
             {count > 0 && (
                 <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold ${
-                    active ? 'bg-blue-100 text-blue-700' : 'bg-slate-200 text-slate-600'
+                    active ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'
                 }`}>
                     {count}
                 </span>
@@ -127,8 +127,8 @@ function FilterTab({ label, count, active, onClick }) {
 
 function PriorityChip({ label, priority, active, onClick }) {
     const colors = {
-        urgent: active ? 'bg-red-600 text-white border-red-600' : 'bg-white text-red-700 border-red-200 hover:border-red-400',
-        high: active ? 'bg-orange-600 text-white border-orange-600' : 'bg-white text-orange-700 border-orange-200 hover:border-orange-400',
+        urgent: active ? 'bg-destructive text-white border-red-600' : 'bg-card text-destructive border-destructive/25 hover:border-red-400',
+        high: active ? 'bg-accent text-accent-foreground border-accent' : 'bg-card text-accent-foreground border-accent/30 hover:border-accent',
     };
     return (
         <button
@@ -142,11 +142,11 @@ function PriorityChip({ label, priority, active, onClick }) {
 
 function TicketRow({ ticket }) {
     const statusStyles = {
-        open: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200', label: 'Open', icon: MessageCircle },
-        in_progress: { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200', label: 'In Progress', icon: Clock },
-        awaiting_user: { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200', label: 'Waiting User', icon: AlertCircle },
-        resolved: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200', label: 'Resolved', icon: CheckCircle2 },
-        closed: { bg: 'bg-slate-50', text: 'text-slate-600', border: 'border-slate-200', label: 'Closed', icon: XCircle },
+        open: { bg: 'bg-primary/10', text: 'text-primary', border: 'border-primary/25', label: 'Open', icon: MessageCircle },
+        in_progress: { bg: 'bg-accent/10', text: 'text-accent-foreground', border: 'border-accent/30', label: 'In Progress', icon: Clock },
+        awaiting_user: { bg: 'bg-accent/10', text: 'text-accent-foreground', border: 'border-accent/30', label: 'Waiting User', icon: AlertCircle },
+        resolved: { bg: 'bg-success/10', text: 'text-success', border: 'border-success/25', label: 'Resolved', icon: CheckCircle2 },
+        closed: { bg: 'bg-muted', text: 'text-muted-foreground', border: 'border-border', label: 'Closed', icon: XCircle },
     };
     
     const status = statusStyles[ticket.status] || statusStyles.open;
@@ -155,7 +155,7 @@ function TicketRow({ ticket }) {
     return (
         <Link
             href={`/admin/customer-support/${ticket.id}`}
-            className="block bg-white rounded-2xl border border-slate-200 p-4 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer"
+            className="block bg-card rounded-2xl border border-border p-4 hover:border-primary/40 hover:shadow-md transition-all cursor-pointer"
         >
             <div className="flex items-start gap-3">
                 {/* User avatar */}
@@ -163,8 +163,8 @@ function TicketRow({ ticket }) {
                     {ticket.user.profile_picture ? (
                         <img src={ticket.user.profile_picture} alt={ticket.user.name} className="w-10 h-10 rounded-full" />
                     ) : (
-                        <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center">
-                            <UserIcon size={16} className="text-slate-500" strokeWidth={2.5} />
+                        <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center">
+                            <UserIcon size={16} className="text-muted-foreground" strokeWidth={2.5} />
                         </div>
                     )}
                 </div>
@@ -178,40 +178,40 @@ function TicketRow({ ticket }) {
                             {status.label}
                         </span>
                         {ticket.priority === 'urgent' && (
-                            <span className="inline-flex items-center text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded border bg-red-50 text-red-700 border-red-200">
+                            <span className="inline-flex items-center text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded border bg-destructive/10 text-destructive border-destructive/25">
                                 Urgent
                             </span>
                         )}
                         {ticket.priority === 'high' && (
-                            <span className="inline-flex items-center text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded border bg-orange-50 text-orange-700 border-orange-200">
+                            <span className="inline-flex items-center text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded border bg-accent/15 text-accent-foreground border-accent/30">
                                 High
                             </span>
                         )}
-                        <span className="inline-flex items-center text-[9px] font-bold text-slate-500 uppercase tracking-widest px-1.5">
+                        <span className="inline-flex items-center text-[9px] font-bold text-muted-foreground uppercase tracking-widest px-1.5">
                             T{ticket.user.tier}
                         </span>
-                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                        <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
                             #{ticket.public_reference_id}
                         </span>
                         {ticket.unread_admin > 0 && (
-                            <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full bg-red-500 text-white text-[9px] font-black">
+                            <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full bg-destructive/100 text-white text-[9px] font-black">
                                 {ticket.unread_admin} new
                             </span>
                         )}
                     </div>
 
                     {/* Subject */}
-                    <p className="text-sm font-black text-slate-900 mb-0.5 truncate">{ticket.subject}</p>
+                    <p className="text-sm font-black text-foreground mb-0.5 truncate">{ticket.subject}</p>
                     
                     {/* User name */}
-                    <p className="text-[11px] text-slate-600 font-medium mb-1">
+                    <p className="text-[11px] text-muted-foreground font-medium mb-1">
                         <span className="font-bold">{ticket.user.name}</span>
-                        {ticket.user.is_suspended && <span className="ml-1.5 text-red-600 font-bold">⚠ Suspended</span>}
+                        {ticket.user.is_suspended && <span className="ml-1.5 text-destructive font-bold">⚠ Suspended</span>}
                     </p>
                     
                     {/* Last message preview */}
                     {ticket.last_message_preview && (
-                        <p className="text-[11px] text-slate-500 font-medium italic line-clamp-1">
+                        <p className="text-[11px] text-muted-foreground font-medium italic line-clamp-1">
                             {ticket.last_message_role === 'user' && '👤 '}
                             {ticket.last_message_role === 'ai' && '🤖 '}
                             {(ticket.last_message_role === 'admin' || ticket.last_message_role === 'super_admin') && '🛡️ '}
@@ -222,15 +222,15 @@ function TicketRow({ ticket }) {
 
                 {/* Right side: meta */}
                 <div className="shrink-0 text-right flex flex-col items-end gap-1">
-                    <p className="text-[10px] text-slate-400 font-bold">{ticket.updated_relative}</p>
+                    <p className="text-[10px] text-muted-foreground font-bold">{ticket.updated_relative}</p>
                     {ticket.assignee ? (
-                        <p className="text-[9px] text-slate-500 font-medium">
+                        <p className="text-[9px] text-muted-foreground font-medium">
                             Assigned to <span className="font-bold">{ticket.assignee.name}</span>
                         </p>
                     ) : (
-                        <p className="text-[9px] text-amber-600 font-black uppercase tracking-widest">Unassigned</p>
+                        <p className="text-[9px] text-accent font-black uppercase tracking-widest">Unassigned</p>
                     )}
-                    <ArrowRight size={12} className="text-slate-400" strokeWidth={2.5} />
+                    <ArrowRight size={12} className="text-muted-foreground" strokeWidth={2.5} />
                 </div>
             </div>
         </Link>
@@ -247,12 +247,12 @@ function EmptyState({ activeStatus }) {
     const msg = messages[activeStatus] || messages.all;
 
     return (
-        <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
-            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <MessageCircle size={28} className="text-slate-400" strokeWidth={2} />
+        <div className="bg-card rounded-2xl border border-border p-12 text-center">
+            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                <MessageCircle size={28} className="text-muted-foreground" strokeWidth={2} />
             </div>
-            <h3 className="text-sm font-black text-slate-900 mb-1">{msg.title}</h3>
-            <p className="text-xs text-slate-500 font-medium">{msg.desc}</p>
+            <h3 className="text-sm font-black text-foreground mb-1">{msg.title}</h3>
+            <p className="text-xs text-muted-foreground font-medium">{msg.desc}</p>
         </div>
     );
 }

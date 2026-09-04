@@ -7,6 +7,9 @@ use App\Models\SupportTicket;
 use App\Models\SupportMessage;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 
 class CustomerSupportTicketsController extends Controller
@@ -53,7 +56,9 @@ class CustomerSupportTicketsController extends Controller
             ->orderBy('updated_at', 'desc')
             ->limit(50)
             ->get()
-            ->map(function ($t) {
+            // Annotated so the analyser can follow the relationships and model
+            // methods used below; a collection callback gives it nothing to go on.
+            ->map(function (SupportTicket $t) {
                 return [
                     'id' => $t->id,
                     'public_reference_id' => $t->public_reference_id,
@@ -75,7 +80,7 @@ class CustomerSupportTicketsController extends Controller
                     ] : null,
                     'unread_admin' => $t->unreadCountFor('admin'),
                     'last_message_preview' => $t->latestMessage?->message 
-                        ? \Str::limit($t->latestMessage->message, 80) 
+                        ? Str::limit($t->latestMessage->message, 80) 
                         : null,
                     'last_message_role' => $t->latestMessage?->sender_role,
                     'created_relative' => $t->created_at?->diffForHumans(),
@@ -113,7 +118,8 @@ class CustomerSupportTicketsController extends Controller
      */
     public function show(int $id)
     {
-        $admin = auth()->user();
+        /** @var \App\Models\User $admin */
+        $admin = Auth::user();
         
         $ticket = SupportTicket::with([
             'user:id,name,email,phone_number,profile_picture,kyc_tier,is_suspended,account_number,created_at',
@@ -223,7 +229,8 @@ class CustomerSupportTicketsController extends Controller
      */
     public function reply(Request $request, int $id)
     {
-        $admin = auth()->user();
+        /** @var \App\Models\User $admin */
+        $admin = Auth::user();
 
         $validated = $request->validate([
             'message' => 'required|string|min:1|max:5000',
@@ -281,7 +288,7 @@ class CustomerSupportTicketsController extends Controller
         $ticket->update(['status' => 'awaiting_user']);
         $ticket->touch();
 
-        \Log::info('Admin replied to ticket', [
+        Log::info('Admin replied to ticket', [
             'ticket_id' => $ticket->id,
             'admin_id' => $admin->id,
         ]);
@@ -292,9 +299,42 @@ class CustomerSupportTicketsController extends Controller
     /**
      * Admin marks ticket as resolved.
      */
+    /**
+     * Set a ticket's priority.
+     *
+     * Escalation raises priority on its own, but only ever to "high". An agent
+     * who has read the conversation is the one who can tell the difference
+     * between a frustrated user and a security problem, so urgent and low stay
+     * a human decision.
+     */
+    public function setPriority(Request $request, int $id)
+    {
+        $validated = $request->validate([
+            'priority' => 'required|in:low,normal,high,urgent',
+        ]);
+
+        $ticket = SupportTicket::findOrFail($id);
+        $previous = $ticket->priority;
+
+        $ticket->update(['priority' => $validated['priority']]);
+
+        SupportMessage::create([
+            'ticket_id' => $ticket->id,
+            'sender_id' => $request->user()->id,
+            'sender_role' => 'system',
+            'message' => "Priority changed from {$previous} to {$validated['priority']}.",
+            'is_system' => true,
+            'read_by_user' => true,
+            'read_by_admin' => true,
+        ]);
+
+        return back()->with('success', 'Priority updated.');
+    }
+
     public function resolve(Request $request, int $id)
     {
-        $admin = auth()->user();
+        /** @var \App\Models\User $admin */
+        $admin = Auth::user();
 
         $validated = $request->validate([
             'resolution_notes' => 'nullable|string|max:1000',
@@ -323,7 +363,7 @@ class CustomerSupportTicketsController extends Controller
             'read_by_user' => false,
         ]);
 
-        \Log::info('Admin resolved ticket', [
+        Log::info('Admin resolved ticket', [
             'ticket_id' => $ticket->id,
             'admin_id' => $admin->id,
         ]);
@@ -336,7 +376,8 @@ class CustomerSupportTicketsController extends Controller
      */
     public function close(Request $request, int $id)
     {
-        $admin = auth()->user();
+        /** @var \App\Models\User $admin */
+        $admin = Auth::user();
         $ticket = SupportTicket::findOrFail($id);
 
         $ticket->update([
@@ -363,7 +404,8 @@ class CustomerSupportTicketsController extends Controller
      */
     public function reopen(Request $request, int $id)
     {
-        $admin = auth()->user();
+        /** @var \App\Models\User $admin */
+        $admin = Auth::user();
         $ticket = SupportTicket::findOrFail($id);
 
         if ($ticket->status === 'open' || $ticket->status === 'in_progress') {
@@ -395,7 +437,8 @@ class CustomerSupportTicketsController extends Controller
      */
     public function assign(Request $request, int $id)
     {
-        $admin = auth()->user();
+        /** @var \App\Models\User $admin */
+        $admin = Auth::user();
         
         $validated = $request->validate([
             'admin_id' => 'nullable|integer|exists:users,id',
