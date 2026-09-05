@@ -4,8 +4,15 @@ import { useState, useEffect } from 'react';
 import AdminLayout from '../../Components/Layouts/AdminLayout';
 import Avatar from '../../Components/Admin/Avatar';
 import { 
-    Search, ChevronLeft, ChevronRight, Check, Users,
+    Search, ChevronLeft, ChevronRight, Check, Users, Sprout, TrendingUp, Trophy,
 } from 'lucide-react';
+// Third copy of this component in the admin panel — UserList, AdminsList and
+// AuditLog each had their own, so a fix to one never reached the others.
+import StatCard from '../../Components/Admin/StatCard';
+import { Card } from '@/Components/ui/card';
+import { Button } from '@/Components/ui/button';
+import { Input } from '@/Components/ui/input';
+import { cn } from '@/lib/utils';
 
 export default function UserList({ 
     auth, 
@@ -17,8 +24,10 @@ export default function UserList({
 }) {
     const user = auth?.user;
     const [searchInput, setSearchInput] = useState(filters.search || '');
-    // Check kung may unverified users sa current view
-    const hasUnverified = users.some(u => !u.email_verified);
+    // The verified tabs used to render only when the visible page contained an
+    // unverified user. Selecting "Verified" then emptied that condition, so the
+    // control removed itself the moment it was used and there was no way back
+    // to All. A filter's presence cannot depend on what it filtered.
     // Debounced auto-search
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -62,42 +71,39 @@ export default function UserList({
             <div className="max-w-7xl space-y-4">
                 {/* Quick stats cards */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                    <StatCard label="Total Users" value={counts.all || 0} color="slate" />
-                    <StatCard label="Tier 1 — Starter" value={counts.tier1 || 0} color="teal" />
-                    <StatCard label="Tier 2 — Builder" value={counts.tier2 || 0} color="blue" />
-                    <StatCard label="Tier 3 — Achiever" value={counts.tier3 || 0} color="amber" />
+                    <StatCard label="Total Users" value={counts.all || 0} icon={Users} color="neutral" />
+                    <StatCard label="Tier 1 — Starter" value={counts.tier1 || 0} icon={Sprout} color="tier1" />
+                    <StatCard label="Tier 2 — Builder" value={counts.tier2 || 0} icon={TrendingUp} color="tier2" />
+                    <StatCard label="Tier 3 — Achiever" value={counts.tier3 || 0} icon={Trophy} color="tier3" />
                 </div>
 
-                <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                <Card className="bg-card overflow-hidden">
                     {/* Filters bar */}
-                    <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4 border-b border-slate-100">
+                    <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4 border-b border-border">
                       <div className="flex items-center gap-3 flex-wrap">
                         {/* Tier filter */}
                         <TierFilterTabs current={filters.tier || 'all'} onChange={setTierFilter} />
                         
-                        {/* Verified filter — only show kung may unverified users */}
-                        {hasUnverified && (
-                            <VerifiedFilterTabs current={filters.verified || 'all'} onChange={setVerifiedFilter} />
-                        )}
+                        <VerifiedFilterTabs current={filters.verified || 'all'} onChange={setVerifiedFilter} />
                     </div>
                         
                         {/* Search */}
                         <div className="flex items-center gap-2">
                             <div className="relative">
-                                <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                                <input
+                                <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                                <Input
                                     type="text"
                                     value={searchInput}
                                     onChange={(e) => setSearchInput(e.target.value)}
                                     placeholder="Search name, email, or account..."
-                                    className="pl-8 pr-3 py-1.5 text-xs font-medium border border-slate-200 rounded-lg focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-50 transition-all w-64"
+                                    className="pl-8 h-8 text-xs w-64 bg-muted/50"
                                 />
                             </div>
                             {searchInput && (
                                 <button
                                     type="button"
                                     onClick={() => setSearchInput('')}
-                                    className="px-2 py-1.5 text-[10px] font-bold text-slate-500 hover:text-slate-900 transition-colors cursor-pointer"
+                                    className="px-2 py-1.5 text-[10px] font-bold text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                                 >
                                     Clear
                                 </button>
@@ -108,18 +114,18 @@ export default function UserList({
                     {users.length > 0 ? (
                         <>
                             {/* Table header */}
-                            <div className="hidden sm:grid grid-cols-12 items-center gap-3 px-5 py-2.5 bg-slate-50 border-b border-slate-200">
+                            <div className="hidden sm:grid grid-cols-12 items-center gap-3 px-5 py-2.5 bg-muted border-b border-border">
                                 <div className="col-span-6">
-                                    <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">User</p>
+                                    <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">User</p>
                                 </div>
                                 <div className="col-span-2 text-center">
-                                    <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Tier</p>
+                                    <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Tier</p>
                                 </div>
                                 <div className="hidden md:block col-span-2 text-center">
-                                    <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Joined</p>
+                                    <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Joined</p>
                                 </div>
                                 <div className="col-span-2 text-center">
-                                    <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Status</p>
+                                    <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Status</p>
                                 </div>
                             </div>
                             
@@ -131,25 +137,25 @@ export default function UserList({
                             </div>
 
                             {/* Pagination */}
-                            <div className="px-5 py-3 border-t border-slate-100 flex items-center justify-between gap-3">
-                                <p className="text-[11px] text-slate-500 font-medium">
-                                    Showing <span className="font-bold text-slate-900">{pagination.from}-{pagination.to}</span> of <span className="font-bold text-slate-900">{pagination.total_count}</span>
+                            <div className="px-5 py-3 border-t border-border flex items-center justify-between gap-3">
+                                <p className="text-[11px] text-muted-foreground font-medium">
+                                    Showing <span className="font-bold text-foreground">{pagination.from}-{pagination.to}</span> of <span className="font-bold text-foreground">{pagination.total_count}</span>
                                 </p>
                                 <div className="flex items-center gap-1">
                                     <button
                                         onClick={() => goToPage(pagination.current_page - 1)}
                                         disabled={pagination.current_page <= 1}
-                                        className="p-1.5 rounded border border-slate-200 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                                        className="p-1.5 rounded border border-border hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
                                     >
                                         <ChevronLeft size={12} />
                                     </button>
-                                    <span className="text-[11px] font-bold text-slate-700 px-2">
+                                    <span className="text-[11px] font-bold text-foreground px-2">
                                         Page {pagination.current_page} of {pagination.total_pages}
                                     </span>
                                     <button
                                         onClick={() => goToPage(pagination.current_page + 1)}
                                         disabled={pagination.current_page >= pagination.total_pages}
-                                        className="p-1.5 rounded border border-slate-200 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                                        className="p-1.5 rounded border border-border hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
                                     >
                                         <ChevronRight size={12} />
                                     </button>
@@ -158,11 +164,11 @@ export default function UserList({
                         </>
                     ) : (
                         <div className="p-16 text-center">
-                        <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <Users size={28} className="text-slate-400" strokeWidth={1.5} />
+                        <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                            <Users size={28} className="text-muted-foreground" strokeWidth={1.5} />
                         </div>
-                        <p className="text-sm font-bold text-slate-700 mb-1">No users found</p>
-                        <p className="text-[11px] text-slate-500 font-medium max-w-xs mx-auto">
+                        <p className="text-sm font-bold text-foreground mb-1">No users found</p>
+                        <p className="text-[11px] text-muted-foreground font-medium max-w-xs mx-auto">
                             {filters.search 
                                 ? `No matches for "${filters.search}". Try a different keyword.` 
                                 : filters.tier !== 'all'
@@ -172,7 +178,7 @@ export default function UserList({
                         </p>
                     </div>
                     )}
-                </div>
+                </Card>
             </div>
         </AdminLayout>
     );
@@ -180,31 +186,30 @@ export default function UserList({
 function TierFilterTabs({ current, onChange }) {
     const tabs = [
         { id: 'all', label: 'All Users' },
-        { id: '1', label: 'Tier 1', color: 'teal' },
-        { id: '2', label: 'Tier 2', color: 'blue' },
-        { id: '3', label: 'Tier 3', color: 'amber' },
+        { id: '1', label: 'Tier 1', tier: 1 },
+        { id: '2', label: 'Tier 2', tier: 2 },
+        { id: '3', label: 'Tier 3', tier: 3 },
     ];
 
-    const activeColors = {
-        teal: 'bg-teal-600 text-white shadow-sm shadow-teal-200',
-        blue: 'bg-blue-600 text-white shadow-sm shadow-blue-200',
-        amber: 'bg-amber-500 text-white shadow-sm shadow-amber-200',
-    };
-
     return (
-        <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-0.5">
+        <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5">
             {tabs.map((tab) => {
                 const isActive = current === tab.id;
-                const activeStyle = tab.color ? activeColors[tab.color] : 'bg-white text-slate-900 shadow-sm';
+                // Tier tabs take their fill from the --tier-N tokens, the same
+                // source the sidebar indicator and goal themes read, so a tier
+                // means one colour everywhere.
+                const activeStyle = tab.tier ? 'text-white shadow-sm' : 'bg-card text-foreground shadow-sm';
+                const activeVar = tab.tier ? { backgroundColor: `var(--tier-${tab.tier})` } : undefined;
                 
                 return (
                     <button
                         key={tab.id}
                         onClick={() => onChange(tab.id)}
+                        style={isActive ? activeVar : undefined}
                         className={`px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded transition-all cursor-pointer ${
                             isActive
                                 ? activeStyle
-                                : 'text-slate-500 hover:text-slate-700'
+                                : 'text-muted-foreground hover:text-foreground'
                         }`}
                     >
                         {tab.label}
@@ -222,15 +227,15 @@ function VerifiedFilterTabs({ current, onChange }) {
         { id: 'unverified', label: 'Unverified' },
     ];
     return (
-        <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-0.5">
+        <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5">
             {tabs.map((tab) => (
                 <button
                     key={tab.id}
                     onClick={() => onChange(tab.id)}
                     className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded transition-all cursor-pointer ${
                         current === tab.id
-                            ? 'bg-white text-slate-900 shadow-sm'
-                            : 'text-slate-500 hover:text-slate-700'
+                            ? 'bg-card text-foreground shadow-sm'
+                            : 'text-muted-foreground hover:text-foreground'
                     }`}
                 >
                     {tab.label}
@@ -244,14 +249,14 @@ function UserListItem({ user }) {
     return (
         <Link
             href={`/admin/users/${user.id}`}
-            className="grid grid-cols-12 items-center gap-3 px-5 py-3 hover:bg-slate-50 transition-colors cursor-pointer border-b border-slate-100 last:border-b-0"
+            className="grid grid-cols-12 items-center gap-3 px-5 py-3 hover:bg-muted transition-colors cursor-pointer border-b border-border last:border-b-0"
         >
             {/* Column 1: User — 6 cols */}
             <div className="col-span-12 sm:col-span-6 flex items-center gap-3 min-w-0">
                 <Avatar src={user.profile_picture} name={user.name} size="md" />
                 <div className="min-w-0 flex-1">
-                    <p className="text-xs font-bold text-slate-900 truncate">{user.name}</p>
-                    <p className="text-[10px] text-slate-500 font-medium truncate">{user.email}</p>
+                    <p className="text-xs font-bold text-foreground truncate">{user.name}</p>
+                    <p className="text-[10px] text-muted-foreground font-medium truncate">{user.email}</p>
                 </div>
             </div>
 
@@ -262,23 +267,23 @@ function UserListItem({ user }) {
 
             {/* Column 3: Joined — 2 cols, centered */}
             <div className="hidden md:flex flex-col items-center col-span-2">
-                <p className="text-[11px] font-bold text-slate-700">{user.member_since}</p>
-                <p className="text-[9px] text-slate-500 font-medium">{user.created_relative}</p>
+                <p className="text-[11px] font-bold text-foreground">{user.member_since}</p>
+                <p className="text-[9px] text-muted-foreground font-medium">{user.created_relative}</p>
             </div>
 
            {/* Column 4: Status — 2 cols, centered */}
                 <div className="col-span-12 sm:col-span-2 flex justify-center items-center gap-1.5">
                     {user.email_verified ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[9px] font-bold uppercase tracking-widest rounded">
+                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-success/10 text-success border border-success/25 text-[9px] font-bold uppercase tracking-widest rounded">
                             <Check size={10} strokeWidth={3} />
                             Verified
                         </span>
                     ) : (
-                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-slate-50 text-slate-500 border border-slate-200 text-[9px] font-bold uppercase tracking-widest rounded">
+                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-muted text-muted-foreground border border-border text-[9px] font-bold uppercase tracking-widest rounded">
                             Pending
                         </span>
                     )}
-                    <ChevronRight size={14} className="text-slate-300 shrink-0" />
+                    <ChevronRight size={14} className="text-muted-foreground/50 shrink-0" />
                 </div>
         </Link>
     );
@@ -286,9 +291,9 @@ function UserListItem({ user }) {
 
 function TierBadge({ tier }) {
     const styles = {
-        1: { color: 'bg-teal-50 text-teal-700 border-teal-200', label: 'Starter' },
-        2: { color: 'bg-blue-50 text-blue-700 border-blue-200', label: 'Builder' },
-        3: { color: 'bg-amber-50 text-amber-700 border-amber-200', label: 'Achiever' },
+        1: { color: 'bg-secondary text-primary border-primary/25', label: 'Starter' },
+        2: { color: 'bg-primary/10 text-primary border-primary/25', label: 'Builder' },
+        3: { color: 'bg-accent/10 text-accent-foreground border-accent/30', label: 'Achiever' },
     };
     const style = styles[tier] || styles[1];
     return (
@@ -296,32 +301,7 @@ function TierBadge({ tier }) {
             <span className={`text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded border ${style.color}`}>
                 Tier {tier}
             </span>
-            <p className="text-[9px] text-slate-500 font-medium">{style.label}</p>
-        </div>
-    );
-}
-
-function StatCard({ label, value, color = 'slate' }) {
-    const colorStyles = {
-        slate: 'bg-slate-50 border-slate-200 text-slate-900',
-        teal: 'bg-teal-50 border-teal-200 text-teal-900',
-        blue: 'bg-blue-50 border-blue-200 text-blue-900',
-        amber: 'bg-amber-50 border-amber-200 text-amber-900',
-    };
-
-    const accentColors = {
-        slate: 'text-slate-500',
-        teal: 'text-teal-600',
-        blue: 'text-blue-600',
-        amber: 'text-amber-600',
-    };
-
-    return (
-        <div className={`rounded-xl border p-4 ${colorStyles[color]}`}>
-            <p className={`text-[9px] font-bold uppercase tracking-widest mb-1 ${accentColors[color]}`}>
-                {label}
-            </p>
-            <p className="text-2xl font-black tracking-tight">{value}</p>
+            <p className="text-[9px] text-muted-foreground font-medium">{style.label}</p>
         </div>
     );
 }
