@@ -2,6 +2,13 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import AdminLayout from '../../Components/Layouts/AdminLayout';
+// Last of the three private copies. All four admin pages now read the same
+// component, so a change to a stat card lands everywhere at once.
+import StatCard from '../../Components/Admin/StatCard';
+import { Card } from '@/Components/ui/card';
+import { Button } from '@/Components/ui/button';
+import { Input } from '@/Components/ui/input';
+import { cn } from '@/lib/utils';
 import Avatar from '../../Components/Admin/Avatar';
 import { 
     Search, ChevronLeft, ChevronRight, History,
@@ -75,19 +82,19 @@ export default function AuditLog({
             <div className="max-w-7xl space-y-4">
                 {/* Stats */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <StatCard label="Today" value={stats.total_today || 0} subtitle="actions today" icon={Activity} color="blue" />
-                    <StatCard label="Last 7 Days" value={stats.total_7days || 0} subtitle="recent activity" icon={Calendar} color="emerald" />
-                    <StatCard label="Active Admins" value={stats.unique_actors_7days || 0} subtitle="in last 7 days" icon={Users} color="amber" />
-                    <StatCard label="All Time" value={stats.total_all_time || 0} subtitle="audit entries" icon={History} color="slate" />
+                    <StatCard label="Today" value={stats.total_today || 0} subText="actions today" icon={Activity} color="primary" />
+                    <StatCard label="Last 7 Days" value={stats.total_7days || 0} subText="recent activity" icon={Calendar} color="primary" />
+                    <StatCard label="Active Admins" value={stats.unique_actors_7days || 0} subText="in last 7 days" icon={Users} color="accent" />
+                    <StatCard label="All Time" value={stats.total_all_time || 0} subText="audit entries" icon={History} color="neutral" />
                 </div>
 
-                <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                <div className="bg-card rounded-xl border border-border overflow-hidden">
                 
 
                     {/* Filter bar */}
-                    <div className="px-5 py-4 border-b border-slate-100 space-y-3">
+                    <div className="px-5 py-4 border-b border-border space-y-3">
                         {/* Category tabs */}
-                        <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-0.5 flex-wrap">
+                        <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5 flex-wrap">
                             <CategoryTab label="All" value="all" current={filters.category} onClick={updateFilter} count={categoryCounts.all} icon={Filter} />
                             <CategoryTab label="Admins" value="admin_management" current={filters.category} onClick={updateFilter} count={categoryCounts.admin_management} icon={Shield} />
                             <CategoryTab label="KYC" value="kyc" current={filters.category} onClick={updateFilter} count={categoryCounts.kyc} icon={FileCheck} />
@@ -101,7 +108,7 @@ export default function AuditLog({
                                 <select
                                     value={filters.date_range || '7days'}
                                     onChange={(e) => updateFilter('date_range', e.target.value)}
-                                    className="text-[11px] font-bold border border-slate-200 rounded-lg px-2.5 py-1.5 cursor-pointer focus:outline-none focus:border-blue-400"
+                                    className="text-[11px] font-bold border border-border rounded-lg px-2.5 py-1.5 cursor-pointer focus:outline-none focus:border-primary"
                                 >
                                     <option value="today">Today</option>
                                     <option value="7days">Last 7 days</option>
@@ -113,7 +120,7 @@ export default function AuditLog({
                                 <select
                                     value={filters.actor_id || 'all'}
                                     onChange={(e) => updateFilter('actor_id', e.target.value)}
-                                    className="text-[11px] font-bold border border-slate-200 rounded-lg px-2.5 py-1.5 cursor-pointer focus:outline-none focus:border-blue-400"
+                                    className="text-[11px] font-bold border border-border rounded-lg px-2.5 py-1.5 cursor-pointer focus:outline-none focus:border-primary"
                                 >
                                     <option value="all">All admins</option>
                                     {actors.map(actor => (
@@ -123,20 +130,20 @@ export default function AuditLog({
 
                                 {/* Search */}
                                 <div className="relative flex-1 max-w-md">
-                                    <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                                    <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
                                        <input
                                         type="text"
                                         value={searchInput}
                                         onChange={(e) => setSearchInput(e.target.value)}
                                         placeholder="Search by reason or user name..."
-                                        className="w-full pl-8 pr-3 py-1.5 text-xs font-medium border border-slate-200 rounded-lg focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-50 transition-all"
+                                        className="w-full pl-8 pr-3 py-1.5 text-xs font-medium border border-border rounded-lg focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
                                     />
                                 </div>
 
                                 {hasActiveFilters && (
                                     <button
                                         onClick={clearFilters}
-                                        className="flex items-center gap-1 px-2.5 py-1.5 text-[10px] font-bold text-slate-700 hover:bg-slate-100 rounded-lg cursor-pointer transition-colors"
+                                        className="flex items-center gap-1 px-2.5 py-1.5 text-[10px] font-bold text-foreground hover:bg-muted rounded-lg cursor-pointer transition-colors"
                                     >
                                         <X size={11} />
                                         Clear filters
@@ -147,7 +154,7 @@ export default function AuditLog({
                                 <button
                                     onClick={handleExport}
                                     disabled={logs.length === 0}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white text-[10px] font-black rounded-lg transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ml-auto"
+                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-primary hover:bg-primary text-white text-[10px] font-black rounded-lg transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ml-auto"
                                 >
                                     <Download size={11} strokeWidth={2.5} />
                                     Export CSV
@@ -160,21 +167,21 @@ export default function AuditLog({
                     {logs.length > 0 ? (
                             <>
                                 {/* Table header */}
-                                <div className="hidden md:grid grid-cols-12 items-center gap-3 px-5 py-2.5 bg-slate-50 border-b border-slate-200">
+                                <div className="hidden md:grid grid-cols-12 items-center gap-3 px-5 py-2.5 bg-muted border-b border-border">
                                     <div className="col-span-2">
-                                        <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Action</p>
+                                        <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Action</p>
                                     </div>
                                     <div className="col-span-2">
-                                        <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Actor → Target</p>
+                                        <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Actor → Target</p>
                                     </div>
                                     <div className="col-span-3">
-                                        <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Reason</p>
+                                        <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Reason</p>
                                     </div>
                                     <div className="col-span-3">
-                                        <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Metadata</p>
+                                        <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Metadata</p>
                                     </div>
                                     <div className="col-span-2 text-right">
-                                        <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Date</p>
+                                        <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Date</p>
                                     </div>
                                 </div>
                                 
@@ -185,25 +192,25 @@ export default function AuditLog({
                                 </div>
 
                             {/* Pagination */}
-                            <div className="px-5 py-3 border-t border-slate-100 flex items-center justify-between gap-3">
-                                <p className="text-[11px] text-slate-500 font-medium">
-                                    Showing <span className="font-bold text-slate-900">{pagination.from}-{pagination.to}</span> of <span className="font-bold text-slate-900">{pagination.total_count}</span> entries
+                            <div className="px-5 py-3 border-t border-border flex items-center justify-between gap-3">
+                                <p className="text-[11px] text-muted-foreground font-medium">
+                                    Showing <span className="font-bold text-foreground">{pagination.from}-{pagination.to}</span> of <span className="font-bold text-foreground">{pagination.total_count}</span> entries
                                 </p>
                                 <div className="flex items-center gap-1">
                                     <button
                                         onClick={() => goToPage(pagination.current_page - 1)}
                                         disabled={pagination.current_page <= 1}
-                                        className="p-1.5 rounded border border-slate-200 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                                        className="p-1.5 rounded border border-border hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
                                     >
                                         <ChevronLeft size={12} />
                                     </button>
-                                    <span className="text-[11px] font-bold text-slate-700 px-2">
+                                    <span className="text-[11px] font-bold text-foreground px-2">
                                         Page {pagination.current_page} of {pagination.total_pages}
                                     </span>
                                     <button
                                         onClick={() => goToPage(pagination.current_page + 1)}
                                         disabled={pagination.current_page >= pagination.total_pages}
-                                        className="p-1.5 rounded border border-slate-200 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                                        className="p-1.5 rounded border border-border hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
                                     >
                                         <ChevronRight size={12} />
                                     </button>
@@ -212,11 +219,11 @@ export default function AuditLog({
                         </>
                     ) : (
                         <div className="p-16 text-center">
-                            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <History size={28} className="text-slate-400" strokeWidth={1.5} />
+                            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                                <History size={28} className="text-muted-foreground" strokeWidth={1.5} />
                             </div>
-                            <p className="text-sm font-bold text-slate-700 mb-1">No audit entries</p>
-                            <p className="text-[11px] text-slate-500 font-medium">
+                            <p className="text-sm font-bold text-foreground mb-1">No audit entries</p>
+                            <p className="text-[11px] text-muted-foreground font-medium">
                                 {hasActiveFilters ? 'No entries match the filters' : 'No actions logged yet'}
                             </p>
                         </div>
@@ -227,32 +234,7 @@ export default function AuditLog({
     );
 }
 
-function StatCard({ label, value, subtitle, icon: Icon, color }) {
-    const colorStyles = {
-        blue: 'bg-blue-50 border-blue-200',
-        emerald: 'bg-emerald-50 border-emerald-200',
-        amber: 'bg-amber-50 border-amber-200',
-        slate: 'bg-slate-50 border-slate-200',
-    };
-    const iconStyles = {
-        blue: 'bg-blue-100 text-blue-700',
-        emerald: 'bg-emerald-100 text-emerald-700',
-        amber: 'bg-amber-100 text-amber-700',
-        slate: 'bg-slate-100 text-slate-700',
-    };
-    return (
-        <div className={`rounded-xl border p-4 ${colorStyles[color]}`}>
-            <div className="flex items-center justify-between mb-2">
-                <p className="text-[10px] font-bold text-slate-700 uppercase tracking-widest">{label}</p>
-                <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${iconStyles[color]}`}>
-                    <Icon size={14} strokeWidth={2.5} />
-                </div>
-            </div>
-            <p className="text-2xl font-black text-slate-900 tracking-tight">{value}</p>
-            {subtitle && <p className="text-[10px] text-slate-500 font-medium mt-1">{subtitle}</p>}
-        </div>
-    );
-}
+
 
 function CategoryTab({ label, value, current, onClick, count, icon: Icon }) {
     const active = current === value;
@@ -261,15 +243,15 @@ function CategoryTab({ label, value, current, onClick, count, icon: Icon }) {
             onClick={() => onClick('category', value)}
             className={`flex items-center gap-1.5 px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded transition-all cursor-pointer ${
                 active
-                    ? 'bg-white text-slate-900 shadow-sm'
-                    : 'text-slate-500 hover:text-slate-700'
+                    ? 'bg-card text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
             }`}
         >
             <Icon size={11} strokeWidth={2.5} />
             {label}
             {count > 0 && (
                 <span className={`text-[9px] font-black px-1 rounded-full ${
-                    active ? 'bg-slate-200 text-slate-700' : 'bg-slate-200 text-slate-500'
+                    active ? 'bg-muted text-foreground' : 'bg-muted text-muted-foreground'
                 }`}>
                     {count}
                 </span>
@@ -306,15 +288,15 @@ function AuditLogEntry({ log }) {
     const color = actionStyles[log.action_type] || 'slate';
     
     const colorClasses = {
-        blue: 'bg-blue-50 text-blue-700 border-blue-200',
-        emerald: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-        red: 'bg-red-50 text-red-700 border-red-200',
-        amber: 'bg-amber-50 text-amber-700 border-amber-200',
-        slate: 'bg-slate-50 text-slate-700 border-slate-200',
+        blue: 'bg-primary/10 text-primary border-primary/25',
+        emerald: 'bg-success/10 text-success border-success/25',
+        red: 'bg-destructive/10 text-destructive border-destructive/25',
+        amber: 'bg-accent/10 text-accent-foreground border-accent/30',
+        slate: 'bg-muted text-foreground border-border',
     };
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-12 items-center gap-3 px-5 py-3 border-b border-slate-100 last:border-b-0 hover:bg-slate-50/50 transition-colors">
+        <div className="grid grid-cols-1 md:grid-cols-12 items-center gap-3 px-5 py-3 border-b border-border last:border-b-0 hover:bg-muted/50 transition-colors">
             {/* Action badge — col-span-2 */}
             <div className="md:col-span-2">
                 <span className={`inline-flex items-center text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded border ${colorClasses[color]}`}>
@@ -325,26 +307,26 @@ function AuditLogEntry({ log }) {
             {/* Actor → Target — col-span-2 */}
             <div className="md:col-span-2 min-w-0">
                 <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-[11px] font-bold text-slate-900 truncate">
+                    <span className="text-[11px] font-bold text-foreground truncate">
                         {log.actor?.name || 'System'}
                     </span>
                     {log.target_user && (
                         <>
-                            <ArrowRight size={10} className="text-slate-400 shrink-0" />
-                            <span className="text-[11px] font-bold text-slate-700 truncate">
+                            <ArrowRight size={10} className="text-muted-foreground shrink-0" />
+                            <span className="text-[11px] font-bold text-foreground truncate">
                                 {log.target_user.name}
                             </span>
                         </>
                     )}
                 </div>
-                <p className="text-[9px] text-slate-400 font-medium uppercase tracking-wider mt-0.5">
+                <p className="text-[9px] text-muted-foreground font-medium uppercase tracking-wider mt-0.5">
                     {log.category_label}
                 </p>
             </div>
 
             {/* Reason — col-span-3 */}
             <div className="md:col-span-3 min-w-0">
-                <p className="text-[11px] text-slate-600 font-medium italic line-clamp-2">
+                <p className="text-[11px] text-muted-foreground font-medium italic line-clamp-2">
                     "{log.reason}"
                 </p>
             </div>
@@ -388,26 +370,26 @@ function AuditLogEntry({ log }) {
                         )}
                     </div>
                 ) : (
-                    <span className="text-[10px] text-slate-400 font-medium">—</span>
+                    <span className="text-[10px] text-muted-foreground font-medium">—</span>
                 )}
             </div>
 
             {/* Date — col-span-2 */}
             <div className="md:col-span-2 text-right">
-                <p className="text-[10px] font-bold text-slate-700">{log.created_relative}</p>
-                <p className="text-[9px] text-slate-400 font-medium">{log.created_at}</p>
+                <p className="text-[10px] font-bold text-foreground">{log.created_relative}</p>
+                <p className="text-[9px] text-muted-foreground font-medium">{log.created_at}</p>
             </div>
         </div>
     );
 }
 function MetadataChip({ label, variant = 'default' }) {
     const variantStyles = {
-        default: 'bg-slate-100 text-slate-600 border-slate-200',
-        role: 'bg-amber-50 text-amber-700 border-amber-200',
-        tier: 'bg-blue-50 text-blue-700 border-blue-200',
-        amount: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-        ref: 'bg-purple-50 text-purple-700 border-purple-200',
-        status: 'bg-slate-100 text-slate-700 border-slate-300',
+        default: 'bg-muted text-muted-foreground border-border',
+        role: 'bg-accent/10 text-accent-foreground border-accent/30',
+        tier: 'bg-primary/10 text-primary border-primary/25',
+        amount: 'bg-success/10 text-success border-success/25',
+        ref: 'bg-primary/10 text-primary border-primary/25',
+        status: 'bg-muted text-foreground border-input',
     };
     return (
         <span className={`inline-flex items-center text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border ${variantStyles[variant]}`}>

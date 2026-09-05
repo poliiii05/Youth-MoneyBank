@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use App\Models\AdminAuditLog;
 
@@ -62,46 +63,17 @@ class AdminManagementController extends Controller
             'super_admin' => User::where('admin_role', 'super_admin')->count(),
             'admin' => User::where('admin_role', 'admin')->count(),
         ];
-        // Recent audit logs for admin management actions
-        $auditLogs = AdminAuditLog::with('actor:id,name,profile_picture', 'targetUser:id,name,profile_picture')
-            ->where('category', 'admin_management')
-            ->orderBy('created_at', 'desc')
-            ->limit(20)
-            ->get()
-            ->map(function ($log) {
-                $actionLabels = [
-                    'promote_admin' => 'Promoted',
-                    'change_role' => 'Changed Role',
-                    'revoke_admin' => 'Revoked Access',
-                ];
-                
-                return [
-                    'id' => $log->id,
-                    'action_type' => $log->action_type,
-                    'action_label' => $actionLabels[$log->action_type] ?? $log->action_type,
-                    'actor' => $log->actor ? [
-                        'id' => $log->actor->id,
-                        'name' => $log->actor->name,
-                        'profile_picture' => $log->actor->profile_picture,
-                    ] : null,
-                    'target_user' => $log->targetUser ? [
-                        'id' => $log->targetUser->id,
-                        'name' => $log->targetUser->name,
-                        'profile_picture' => $log->targetUser->profile_picture,
-                    ] : ($log->metadata['target_name'] ?? null ? ['name' => $log->metadata['target_name']] : null),
-                    'reason' => $log->reason,
-                    'metadata' => $log->metadata,
-                    'created_at' => $log->created_at?->format('M j, Y g:i A'),
-                    'created_relative' => $log->created_at?->diffForHumans(),
-                ];
-            });
+        // The audit query that lived here fed a second copy of the audit log on
+        // this page. The dedicated Audit Log page already renders the same rows
+        // from the same table, so this was a parallel implementation that could
+        // drift — and did: it rendered "Unknown User" for system-wide actions
+        // that legitimately have no target.
 
         return Inertia::render('Admin/AdminsList', [
             'auth' => ['user' => $admin],
             'admins' => $admins,
             'counts' => $counts,
             'filters' => ['search' => $search],
-            'auditLogs' => $auditLogs,
             'pendingCounts' => $this->getAdminPendingCounts(),
         ]);
     }
@@ -162,7 +134,7 @@ class AdminManagementController extends Controller
                 ],
             ]);
 
-            \Log::info('Super admin promoted user', [
+            Log::info('Super admin promoted user', [
                 'admin_id' => $admin->id,
                 'admin_name' => $admin->name,
                 'target_user_id' => $targetUser->id,
@@ -177,7 +149,7 @@ class AdminManagementController extends Controller
                 ->with('success', "{$targetUser->name} has been promoted to {$roleLabel}.");
 
         } catch (\Exception $e) {
-            \Log::error('Admin promotion failed', [
+            Log::error('Admin promotion failed', [
                 'admin_id' => $admin->id,
                 'error' => $e->getMessage(),
             ]);
@@ -254,7 +226,7 @@ class AdminManagementController extends Controller
                 ],
             ]);
 
-            \Log::info('Super admin changed admin role', [
+            Log::info('Super admin changed admin role', [
                 'admin_id' => $admin->id,
                 'admin_name' => $admin->name,
                 'target_user_id' => $targetUser->id,
@@ -270,7 +242,7 @@ class AdminManagementController extends Controller
                 ->with('success', "{$targetUser->name}'s role changed to {$roleLabel}.");
 
         } catch (\Exception $e) {
-            \Log::error('Role change failed', [
+            Log::error('Role change failed', [
                 'target_user_id' => $id,
                 'admin_id' => $admin->id,
                 'error' => $e->getMessage(),
@@ -330,7 +302,7 @@ class AdminManagementController extends Controller
                 'admin_role_change_reason' => $validated['reason'],
             ]);
 
-            \Log::info('Super admin revoked admin role', [
+            Log::info('Super admin revoked admin role', [
                 'admin_id' => $admin->id,
                 'admin_name' => $admin->name,
                 'target_user_id' => $targetUser->id,
@@ -343,7 +315,7 @@ class AdminManagementController extends Controller
                 ->with('success', "{$targetUser->name}'s admin access has been revoked.");
 
         } catch (\Exception $e) {
-            \Log::error('Admin revocation failed', [
+            Log::error('Admin revocation failed', [
                 'target_user_id' => $id,
                 'admin_id' => $admin->id,
                 'error' => $e->getMessage(),
