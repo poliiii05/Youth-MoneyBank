@@ -7,6 +7,8 @@ use App\Models\User;
 use App\Models\Transaction;
 use App\Models\KycApplication;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use App\Models\AdminAuditLog;
 
@@ -184,6 +186,10 @@ class UserManagementController extends Controller
                 'last_active' => $targetUser->updated_at?->diffForHumans(),
                 'google_linked' => !is_null($targetUser->google_id),
                 'is_suspended' => (bool) $targetUser->is_suspended,
+                // Self-service closure, distinct from an admin suspension —
+                // without this the console shows an account as normal while the
+                // owner has already shut it.
+                'deactivated_at' => $targetUser->deactivated_at?->format('F j, Y'),
                 'suspended_at' => $targetUser->suspended_at?->format('F j, Y \a\t g:i A'),
                 'suspension_reason' => $targetUser->suspension_reason,
             ],
@@ -255,7 +261,7 @@ class UserManagementController extends Controller
                 ],
             ]);
 
-            \Log::info('Admin tier override', [
+            Log::info('Admin tier override', [
                 'admin_id' => $admin->id,
                 'admin_name' => $admin->name,
                 'target_user_id' => $targetUser->id,
@@ -269,7 +275,7 @@ class UserManagementController extends Controller
                 ->with('success', "Tier updated. {$targetUser->name} is now Tier {$validated['new_tier']}.");
 
         } catch (\Exception $e) {
-            \Log::error('Tier override failed', [
+            Log::error('Tier override failed', [
                 'user_id' => $id,
                 'admin_id' => $admin->id,
                 'error' => $e->getMessage(),
@@ -345,7 +351,7 @@ class UserManagementController extends Controller
                 ],
             ]);
 
-            \Log::info("Admin {$action} user account", [
+            Log::info("Admin {$action} user account", [
                 'admin_id' => $admin->id,
                 'target_user_id' => $targetUser->id,
                 'target_user_name' => $targetUser->name,
@@ -357,7 +363,7 @@ class UserManagementController extends Controller
                 ->with('success', $message);
 
         } catch (\Exception $e) {
-            \Log::error('Suspension toggle failed', [
+            Log::error('Suspension toggle failed', [
                 'user_id' => $id,
                 'admin_id' => $admin->id,
                 'error' => $e->getMessage(),
@@ -397,7 +403,7 @@ class UserManagementController extends Controller
             ]);
 
             // Delete database sessions for this user (if using database driver)
-            \DB::table('sessions')
+            DB::table('sessions')
                 ->where('user_id', $targetUser->id)
                 ->delete();
 
@@ -413,7 +419,7 @@ class UserManagementController extends Controller
                 ],
             ]);
 
-            \Log::info('Admin force logged out user', [
+            Log::info('Admin force logged out user', [
                 'admin_id' => $admin->id,
                 'target_user_id' => $targetUser->id,
                 'target_user_name' => $targetUser->name,
@@ -423,7 +429,7 @@ class UserManagementController extends Controller
                 ->with('success', "{$targetUser->name} has been logged out from all sessions.");
 
         } catch (\Exception $e) {
-            \Log::error('Force logout failed', [
+            Log::error('Force logout failed', [
                 'user_id' => $id,
                 'admin_id' => $admin->id,
                 'error' => $e->getMessage(),

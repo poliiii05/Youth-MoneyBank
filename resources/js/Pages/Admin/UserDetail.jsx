@@ -2,12 +2,15 @@
 import { Head, Link } from '@inertiajs/react';
 import { useState } from 'react';
 import AdminLayout from '../../Components/Layouts/AdminLayout';
+import { Card } from '@/Components/ui/card';
+import { Button } from '@/Components/ui/button';
+import { cn } from '@/lib/utils';
 import Avatar from '../../Components/Admin/Avatar';
 import OverrideTierModal from '../../Components/Admin/Users/OverrideTierModal';
 import SuspendUserModal from '../../Components/Admin/Users/SuspendUserModal';
 import ForceLogoutModal from '../../Components/Admin/Users/ForceLogoutModal';
 import { 
-    ChevronLeft, Mail, Phone, CreditCard, Calendar, 
+    ChevronLeft, Mail, CreditCard, Calendar, UserX, 
     Check, Shield, Wallet, PiggyBank, TrendingUp,
     AlertTriangle, LogOut, Settings, ArrowUp, ArrowDown,
     Ban, CheckCircle2,
@@ -47,23 +50,35 @@ export default function UserDetail({
                 {/* Back link */}
                 <Link 
                     href="/admin/users"
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-900 transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                 >
                     <ChevronLeft size={14} strokeWidth={2.5} />
                     Back to Users
                 </Link>
 
                 {/* Suspension banner */}
+                {targetUser.deactivated_at && (
+                    <div className="rounded-xl border border-border bg-muted p-3 flex items-start gap-2.5">
+                        <UserX size={15} className="text-muted-foreground mt-0.5 shrink-0" strokeWidth={2.5} />
+                        <div>
+                            <p className="text-xs font-bold text-foreground">Account deactivated by the user</p>
+                            <p className="text-[11px] text-muted-foreground mt-0.5">
+                                Closed on {targetUser.deactivated_at}. They cannot sign in until it is reopened.
+                            </p>
+                        </div>
+                    </div>
+                )}
+
                 {targetUser.is_suspended && (
-                    <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                    <div className="bg-destructive/10 border border-destructive/25 rounded-xl p-4">
                         <div className="flex items-start gap-3">
-                            <Ban size={20} className="text-red-600 shrink-0 mt-0.5" strokeWidth={2.5} />
+                            <Ban size={20} className="text-destructive shrink-0 mt-0.5" strokeWidth={2.5} />
                             <div className="flex-1">
                                 <p className="text-sm font-black text-red-900 mb-1">Account Suspended</p>
-                                <p className="text-xs text-red-800">
+                                <p className="text-xs text-destructive">
                                     <span className="font-bold">Reason:</span> {targetUser.suspension_reason}
                                 </p>
-                                <p className="text-[10px] text-red-700 font-medium mt-1">
+                                <p className="text-[10px] text-destructive font-medium mt-1">
                                     Suspended on {targetUser.suspended_at}
                                 </p>
                             </div>
@@ -72,7 +87,7 @@ export default function UserDetail({
                 )}
 
                 {/* User header card */}
-                <div className="bg-white rounded-xl border border-slate-200 p-5">
+                <Card className="bg-card p-5">
                     <div className="flex items-start justify-between gap-4 mb-4 flex-wrap">
                         <div className="flex items-center gap-3">
                             <Avatar 
@@ -82,27 +97,27 @@ export default function UserDetail({
                             />
                             <div>
                                 <div className="flex items-center gap-2 flex-wrap">
-                                    <h1 className="text-lg font-black text-slate-900 tracking-tight">{targetUser.name}</h1>
+                                    <h1 className="text-lg font-black text-foreground tracking-tight">{targetUser.name}</h1>
                                     {targetUser.email_verified && (
-                                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[9px] font-bold uppercase tracking-widest rounded">
+                                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-success/10 text-success border border-success/25 text-[9px] font-bold uppercase tracking-widest rounded">
                                             <Check size={9} strokeWidth={3} />
                                             Verified
                                         </span>
                                     )}
                                 </div>
-                                <p className="text-xs text-slate-500 font-medium">{targetUser.email}</p>
+                                <p className="text-xs text-muted-foreground font-medium">{targetUser.email}</p>
                             </div>
                         </div>
                         <TierBadge tier={targetUser.kyc_tier} />
                     </div>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-slate-100">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-border">
                         <Stat label="User ID" value={`#${targetUser.id}`} />
                         <Stat label="Account #" value={targetUser.account_number} />
                         <Stat label="Member Since" value={targetUser.member_since} />
                         <Stat label="Last Active" value={targetUser.last_active} />
                     </div>
-                </div>
+                </Card>
 
                 {/* Balance cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -110,21 +125,21 @@ export default function UserDetail({
                         label="Wallet Balance" 
                         amount={balances.wallet} 
                         icon={Wallet}
-                        color="blue"
+                        color="wallet"
                         formatPeso={formatPeso}
                     />
                     <BalanceCard 
                         label="Savings Balance" 
                         amount={balances.savings} 
                         icon={PiggyBank}
-                        color="emerald"
+                        color="savings"
                         formatPeso={formatPeso}
                     />
                     <BalanceCard 
                         label="Total Balance" 
                         amount={balances.total} 
                         icon={TrendingUp}
-                        color="purple"
+                        color="total"
                         formatPeso={formatPeso}
                     />
                 </div>
@@ -133,39 +148,38 @@ export default function UserDetail({
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                     
                     {/* User Information */}
-                    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-                        <div className="px-5 py-4 border-b border-slate-100">
-                            <h3 className="text-sm font-black text-slate-900 tracking-tight">User Information</h3>
+                    <Card className="bg-card overflow-hidden">
+                        <div className="px-5 py-4 border-b border-border">
+                            <h3 className="text-sm font-black text-foreground tracking-tight">User Information</h3>
                         </div>
                         <div className="p-5 space-y-3">
                             <InfoRow icon={Mail} label="Email" value={targetUser.email} />
-                            <InfoRow icon={Phone} label="Phone" value={targetUser.phone_number || '—'} />
                             <InfoRow icon={CreditCard} label="Account #" value={targetUser.account_number} />
                             <InfoRow icon={Calendar} label="Joined" value={targetUser.member_since} />
                             <InfoRow icon={Shield} label="Google Linked" value={targetUser.google_linked ? 'Yes' : 'No'} />
                         </div>
-                    </div>
+                    </Card>
 
                     {/* Recent Transactions */}
-                    <div className="lg:col-span-2 bg-white rounded-xl border border-slate-200 overflow-hidden">
-                        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+                    <Card className="lg:col-span-2 overflow-hidden">
+                        <div className="px-5 py-4 border-b border-border flex items-center justify-between">
                             <div>
-                                <h3 className="text-sm font-black text-slate-900 tracking-tight">Recent Transactions</h3>
-                                <p className="text-[10px] text-slate-500 font-medium mt-0.5">
+                                <h3 className="text-sm font-black text-foreground tracking-tight">Recent Transactions</h3>
+                                <p className="text-[10px] text-muted-foreground font-medium mt-0.5">
                                     Total: {stats.total_transactions} · Volume: {formatPesoShort(stats.total_volume)}
                                 </p>
                             </div>
                         </div>
                         {recent_transactions.length > 0 ? (
-                            <div className="divide-y divide-slate-100 max-h-80 overflow-y-auto">
+                            <div className="divide-y divide-border max-h-80 overflow-y-auto">
                                 {recent_transactions.map((tx) => (
-                                    <div key={tx.id} className="px-5 py-3 hover:bg-slate-50 transition-colors">
+                                    <div key={tx.id} className="px-5 py-3 hover:bg-muted transition-colors">
                                         <div className="flex items-center justify-between gap-3">
                                             <div className="flex items-center gap-3 min-w-0 flex-1">
                                                 <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
                                                     tx.is_positive 
-                                                        ? 'bg-emerald-100 text-emerald-700' 
-                                                        : 'bg-red-100 text-red-700'
+                                                        ? 'bg-success/15 text-success' 
+                                                        : 'bg-destructive/15 text-destructive'
                                                 }`}>
                                                     {tx.is_positive 
                                                         ? <ArrowDown size={12} strokeWidth={2.5} />
@@ -173,12 +187,12 @@ export default function UserDetail({
                                                     }
                                                 </div>
                                                 <div className="min-w-0 flex-1">
-                                                    <p className="text-xs font-bold text-slate-900 truncate">{tx.title}</p>
-                                                    <p className="text-[10px] text-slate-500 font-medium truncate">{tx.created_relative}</p>
+                                                    <p className="text-xs font-bold text-foreground truncate">{tx.title}</p>
+                                                    <p className="text-[10px] text-muted-foreground font-medium truncate">{tx.created_relative}</p>
                                                 </div>
                                             </div>
                                             <p className={`text-xs font-black shrink-0 ${
-                                                tx.is_positive ? 'text-emerald-700' : 'text-red-700'
+                                                tx.is_positive ? 'text-success' : 'text-destructive'
                                             }`}>
                                                 {tx.is_positive ? '+' : '-'}{formatPeso(tx.amount)}
                                             </p>
@@ -188,59 +202,59 @@ export default function UserDetail({
                             </div>
                         ) : (
                             <div className="p-8 text-center">
-                                <p className="text-xs text-slate-500 font-medium">No transactions yet</p>
+                                <p className="text-xs text-muted-foreground font-medium">No transactions yet</p>
                             </div>
                         )}
-                    </div>
+                    </Card>
                 </div>
 
                 {/* KYC History */}
                 {kyc_history.length > 0 && (
-                    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-                        <div className="px-5 py-4 border-b border-slate-100">
-                            <h3 className="text-sm font-black text-slate-900 tracking-tight">KYC History</h3>
-                            <p className="text-[10px] text-slate-500 font-medium mt-0.5">
+                    <Card className="bg-card overflow-hidden">
+                        <div className="px-5 py-4 border-b border-border">
+                            <h3 className="text-sm font-black text-foreground tracking-tight">KYC History</h3>
+                            <p className="text-[10px] text-muted-foreground font-medium mt-0.5">
                                 {stats.kyc_applications} application{stats.kyc_applications !== 1 ? 's' : ''}
                             </p>
                         </div>
-                        <div className="divide-y divide-slate-100">
+                        <div className="divide-y divide-border">
                             {kyc_history.map((app) => (
                                 <Link
                                     key={app.id}
                                     href={`/admin/kyc/${app.id}`}
-                                    className="flex items-center justify-between px-5 py-3 hover:bg-slate-50 transition-colors cursor-pointer"
+                                    className="flex items-center justify-between px-5 py-3 hover:bg-muted transition-colors cursor-pointer"
                                 >
                                     <div className="flex items-center gap-3">
-                                        <div className="text-xs font-black text-slate-900">
+                                        <div className="text-xs font-black text-foreground">
                                             T{app.original_tier} → T{app.target_tier}
                                         </div>
                                         <div>
-                                            <p className="text-[11px] font-bold text-slate-700">App #{app.id}</p>
-                                            <p className="text-[9px] text-slate-500 font-medium">{app.submitted_relative}</p>
+                                            <p className="text-[11px] font-bold text-foreground">App #{app.id}</p>
+                                            <p className="text-[9px] text-muted-foreground font-medium">{app.submitted_relative}</p>
                                         </div>
                                     </div>
                                     <KycStatusBadge status={app.status} />
                                 </Link>
                             ))}
                         </div>
-                    </div>
+                    </Card>
                 )}
 
                 {/* Admin Actions */}
-                <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-                    <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+                <Card className="bg-card overflow-hidden">
+                    <div className="px-5 py-4 border-b border-border flex items-center justify-between">
                         <div>
-                            <h3 className="text-sm font-black text-slate-900 tracking-tight">Admin Actions</h3>
-                            <p className="text-[10px] text-slate-500 font-medium mt-0.5">
+                            <h3 className="text-sm font-black text-foreground tracking-tight">Admin Actions</h3>
+                            <p className="text-[10px] text-muted-foreground font-medium mt-0.5">
                                 {isSuperAdmin 
                                     ? 'Super Admin privileges enabled' 
                                     : 'Only Super Admin can perform these actions'
                                 }
                             </p>
                         </div>
-                        <div className="flex items-center gap-1 px-2 py-1 bg-amber-50 border border-amber-200 rounded">
-                            <Settings size={11} className="text-amber-700" strokeWidth={2.5} />
-                            <span className="text-[9px] font-bold text-amber-700 uppercase tracking-widest">Restricted</span>
+                        <div className="flex items-center gap-1 px-2 py-1 bg-accent/10 border border-accent/30 rounded">
+                            <Settings size={11} className="text-accent-foreground" strokeWidth={2.5} />
+                            <span className="text-[9px] font-bold text-accent-foreground uppercase tracking-widest">Restricted</span>
                         </div>
                     </div>
                     <div className="p-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -248,15 +262,15 @@ export default function UserDetail({
                         <button
                             onClick={() => isSuperAdmin && setOverrideOpen(true)}
                             disabled={!isSuperAdmin}
-                            className="flex flex-col items-start gap-2 p-4 border border-slate-200 hover:border-blue-400 hover:bg-blue-50 rounded-lg transition-all cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-slate-200 disabled:hover:bg-white text-left group"
+                            className="flex flex-col items-start gap-2 p-4 border border-border hover:border-primary hover:bg-primary/10 rounded-lg transition-all cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-border disabled:hover:bg-card text-left group"
                             title={!isSuperAdmin ? 'Super Admin only' : ''}
                         >
-                            <div className="w-9 h-9 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center">
+                            <div className="w-9 h-9 rounded-lg bg-primary/15 text-primary flex items-center justify-center">
                                 <TrendingUp size={16} strokeWidth={2.5} />
                             </div>
                             <div>
-                                <p className="text-xs font-black text-slate-900 mb-0.5">Override Tier</p>
-                                <p className="text-[10px] text-slate-500 font-medium">Manually adjust KYC tier</p>
+                                <p className="text-xs font-black text-foreground mb-0.5">Override Tier</p>
+                                <p className="text-[10px] text-muted-foreground font-medium">Manually adjust KYC tier</p>
                             </div>
                         </button>
 
@@ -264,17 +278,17 @@ export default function UserDetail({
                         <button
                             onClick={() => isSuperAdmin && setSuspendOpen(true)}
                             disabled={!isSuperAdmin}
-                            className={`flex flex-col items-start gap-2 p-4 border rounded-lg transition-all cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-slate-200 disabled:hover:bg-white text-left group ${
+                            className={`flex flex-col items-start gap-2 p-4 border rounded-lg transition-all cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-border disabled:hover:bg-card text-left group ${
                                 targetUser.is_suspended
-                                    ? 'border-slate-200 hover:border-emerald-400 hover:bg-emerald-50'
-                                    : 'border-slate-200 hover:border-red-400 hover:bg-red-50'
+                                    ? 'border-border hover:border-emerald-400 hover:bg-success/10'
+                                    : 'border-border hover:border-red-400 hover:bg-destructive/10'
                             }`}
                             title={!isSuperAdmin ? 'Super Admin only' : ''}
                         >
                             <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
                                 targetUser.is_suspended
-                                    ? 'bg-emerald-100 text-emerald-700'
-                                    : 'bg-red-100 text-red-700'
+                                    ? 'bg-success/15 text-success'
+                                    : 'bg-destructive/15 text-destructive'
                             }`}>
                                 {targetUser.is_suspended 
                                     ? <CheckCircle2 size={16} strokeWidth={2.5} />
@@ -282,10 +296,10 @@ export default function UserDetail({
                                 }
                             </div>
                             <div>
-                                <p className="text-xs font-black text-slate-900 mb-0.5">
+                                <p className="text-xs font-black text-foreground mb-0.5">
                                     {targetUser.is_suspended ? 'Reactivate Account' : 'Suspend Account'}
                                 </p>
-                                <p className="text-[10px] text-slate-500 font-medium">
+                                <p className="text-[10px] text-muted-foreground font-medium">
                                     {targetUser.is_suspended ? 'Restore user access' : 'Block user from logging in'}
                                 </p>
                             </div>
@@ -295,19 +309,19 @@ export default function UserDetail({
                         <button
                             onClick={() => isSuperAdmin && setLogoutOpen(true)}
                             disabled={!isSuperAdmin}
-                            className="flex flex-col items-start gap-2 p-4 border border-slate-200 hover:border-amber-400 hover:bg-amber-50 rounded-lg transition-all cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-slate-200 disabled:hover:bg-white text-left group"
+                            className="flex flex-col items-start gap-2 p-4 border border-border hover:border-amber-400 hover:bg-accent/10 rounded-lg transition-all cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-border disabled:hover:bg-card text-left group"
                             title={!isSuperAdmin ? 'Super Admin only' : ''}
                         >
-                            <div className="w-9 h-9 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center">
+                            <div className="w-9 h-9 rounded-lg bg-accent/15 text-accent-foreground flex items-center justify-center">
                                 <LogOut size={16} strokeWidth={2.5} />
                             </div>
                             <div>
-                                <p className="text-xs font-black text-slate-900 mb-0.5">Force Logout</p>
-                                <p className="text-[10px] text-slate-500 font-medium">End all active sessions</p>
+                                <p className="text-xs font-black text-foreground mb-0.5">Force Logout</p>
+                                <p className="text-[10px] text-muted-foreground font-medium">End all active sessions</p>
                             </div>
                         </button>
                     </div>
-                </div>
+                </Card>
             </div>
 
             {/* Modals */}
@@ -337,8 +351,8 @@ export default function UserDetail({
 function Stat({ label, value }) {
     return (
         <div>
-            <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1">{label}</p>
-            <p className="text-sm font-bold text-slate-900 truncate">{value}</p>
+            <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mb-1">{label}</p>
+            <p className="text-sm font-bold text-foreground truncate">{value}</p>
         </div>
     );
 }
@@ -346,45 +360,48 @@ function Stat({ label, value }) {
 function InfoRow({ icon: Icon, label, value }) {
     return (
         <div className="flex items-start gap-2.5">
-            <Icon size={14} className="text-slate-400 mt-0.5 shrink-0" strokeWidth={2} />
+            <Icon size={14} className="text-muted-foreground mt-0.5 shrink-0" strokeWidth={2} />
             <div className="min-w-0 flex-1">
-                <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-0.5">{label}</p>
-                <p className="text-xs font-bold text-slate-900 break-words">{value}</p>
+                <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">{label}</p>
+                <p className="text-xs font-bold text-foreground break-words">{value}</p>
             </div>
         </div>
     );
 }
 
 function BalanceCard({ label, amount, icon: Icon, color, formatPeso }) {
+    // Total is the sum of the two beside it, so it reads as the emphasis rather
+    // than as a third unrelated category — the purple it used to carry made it
+    // look like something else entirely.
     const colorStyles = {
-        blue: 'bg-blue-50 border-blue-200',
-        emerald: 'bg-emerald-50 border-emerald-200',
-        purple: 'bg-purple-50 border-purple-200',
+        wallet: 'bg-primary/10 border-primary/25',
+        savings: 'bg-success/10 border-success/25',
+        total: 'bg-foreground/[0.04] border-border',
     };
     const iconStyles = {
-        blue: 'bg-blue-100 text-blue-700',
-        emerald: 'bg-emerald-100 text-emerald-700',
-        purple: 'bg-purple-100 text-purple-700',
+        wallet: 'bg-primary/15 text-primary',
+        savings: 'bg-success/15 text-success',
+        total: 'bg-foreground/10 text-foreground',
     };
 
     return (
-        <div className={`rounded-xl border p-4 ${colorStyles[color]}`}>
+        <Card className={`p-4 ${colorStyles[color]}`}>
             <div className="flex items-center justify-between mb-2">
-                <p className="text-[9px] font-bold text-slate-700 uppercase tracking-widest">{label}</p>
+                <p className="text-[9px] font-bold text-foreground uppercase tracking-widest">{label}</p>
                 <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${iconStyles[color]}`}>
                     <Icon size={14} strokeWidth={2.5} />
                 </div>
             </div>
-            <p className="text-xl font-black text-slate-900 tracking-tight">{formatPeso(amount)}</p>
-        </div>
+            <p className="text-xl font-black text-foreground tracking-tight">{formatPeso(amount)}</p>
+        </Card>
     );
 }
 
 function TierBadge({ tier }) {
     const styles = {
-        1: { color: 'bg-teal-50 text-teal-700 border-teal-200', label: 'Starter', limit: '₱5K' },
-        2: { color: 'bg-blue-50 text-blue-700 border-blue-200', label: 'Builder', limit: '₱20K' },
-        3: { color: 'bg-amber-50 text-amber-700 border-amber-200', label: 'Achiever', limit: '₱100K' },
+        1: { color: 'bg-secondary text-primary border-primary/25', label: 'Starter', limit: '₱5K' },
+        2: { color: 'bg-primary/10 text-primary border-primary/25', label: 'Builder', limit: '₱20K' },
+        3: { color: 'bg-accent/10 text-accent-foreground border-accent/30', label: 'Achiever', limit: '₱100K' },
     };
     const style = styles[tier] || styles[1];
     return (
@@ -400,9 +417,9 @@ function TierBadge({ tier }) {
 
 function KycStatusBadge({ status }) {
     const styles = {
-        pending: 'bg-amber-50 text-amber-700 border-amber-200',
-        approved: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-        rejected: 'bg-red-50 text-red-700 border-red-200',
+        pending: 'bg-accent/10 text-accent-foreground border-accent/30',
+        approved: 'bg-success/10 text-success border-success/25',
+        rejected: 'bg-destructive/10 text-destructive border-destructive/25',
     };
     const label = status?.toUpperCase() || 'UNKNOWN';
     return (
